@@ -915,6 +915,11 @@ body {
           </div>
         </div>
       </div>
+      <!-- ENTRY USER PERFORMANCE -->
+      <div class="card-j p-3 mt-3">
+        <div style="font-weight:800;margin-bottom:1rem;color:var(--ink-mid);font-size:0.85rem;"><i class="fas fa-user-chart" style="color:var(--gold)"></i> تقييم المدخلين (عدد الطلبات)</div>
+        <div id="entryUserRanking"></div>
+      </div>
     </div>
 
     <!-- ORDERS BOARD -->
@@ -957,7 +962,7 @@ body {
         <h1 class="page-title">إدخال طلب جديد</h1>
         <p class="page-subtitle">أضف طلب بيع جديد وحدد المنتج من المستودع</p>
       </div>
-      <div class="card-j p-4" style="max-width:750px; margin:0 auto;">
+      <div class="card-j p-4" style="max-width:800px; margin:0 auto;">
         <div class="form-group">
           <label class="form-label-j">اسم الزبون <span style="color:var(--ruby-light)">*</span></label>
           <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
@@ -966,92 +971,87 @@ body {
           <div class="col-8">
             <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
             <div class="input-prefix">
-              <span class="prefix-label" id="ePhonePrefix">+962</span>
-              <input type="text" id="eCustMob" class="form-control-j" placeholder="79 123 4567" dir="ltr">
+              <span class="prefix-label" id="ePhonePrefix" style="min-width:36px">07</span>
+              <input type="text" id="eCustMob" class="form-control-j" placeholder="9 123 4567" dir="ltr" maxlength="12">
             </div>
             <div id="eDupWarn" class="mt-2" style="display:none;font-size:0.8rem;color:var(--gold-dark);background:rgba(201,168,76,0.1);padding:0.5rem 0.75rem;border-radius:10px;border-right:3px solid var(--gold)">
               <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
             </div>
           </div>
           <div class="col-4">
-            <label class="form-label-j">الدولة</label>
-            <div class="select-wrapper">
-              <select id="eCountry" class="form-control-j select-j" onchange="app.updateCountry()">
-                <option value="Jordan">الأردن</option>
-                <option value="Palestine">فلسطين</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
             <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
             <div class="select-wrapper">
-              <select id="eGovernorate" class="form-control-j select-j"></select>
+              <select id="eGovernorate" class="form-control-j select-j">
+                <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
+                <option value="إربد">إربد</option>
+                <option value="الزرقاء">الزرقاء</option>
+                <option value="المفرق">المفرق</option>
+                <option value="البلقاء">البلقاء</option>
+                <option value="الكرك">الكرك</option>
+                <option value="الطفيلة">الطفيلة</option>
+                <option value="معان">معان</option>
+                <option value="العقبة">العقبة</option>
+                <option value="جرش">جرش</option>
+                <option value="عجلون">عجلون</option>
+                <option value="مادبا">مادبا</option>
+              </select>
             </div>
           </div>
-          <div class="col-md-6">
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-12">
             <label class="form-label-j">العنوان التفصيلي <span style="color:var(--ruby-light)">*</span></label>
-            <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة - الشارع">
+            <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة - الشارع - أقرب نقطة دالة">
           </div>
         </div>
+
         <div class="divider"></div>
+
+        <!-- ITEMS LIST -->
+        <div style="font-weight:800;margin-bottom:0.75rem;color:var(--ink)"><i class="fas fa-boxes" style="color:var(--gold)"></i> المنتجات <span style="font-size:0.8rem;font-weight:400;color:var(--ink-mid)">(يمكن إضافة أكثر من منتج)</span></div>
+        <div id="eItemsList"></div>
+        <button class="btn-j btn-ghost btn-sm-j mb-3" onclick="app.addItemRow()"><i class="fas fa-plus"></i> إضافة منتج آخر</button>
+
         <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label class="form-label-j">المنتج من المستودع <span style="color:var(--ruby-light)">*</span></label>
-            <div class="select-wrapper">
-              <select id="eItem" class="form-control-j select-j" onchange="app.loadItemSizes()">
-                <option value="">اختر المنتج</option>
-              </select>
-            </div>
+          <div class="col-md-3">
+            <label class="form-label-j">الوزن الإجمالي</label>
+            <input type="text" id="eWeight" class="form-control-j" placeholder="كغ">
           </div>
           <div class="col-md-3">
-            <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
-            <div class="select-wrapper">
-              <select id="eSize" class="form-control-j select-j">
-                <option value="">المقاس</option>
-              </select>
-            </div>
-            <div id="eStockInfo" style="font-size:0.75rem;color:var(--gold-dark);margin-top:4px;"></div>
+            <label class="form-label-j">الطول</label>
+            <input type="text" id="eHeight" class="form-control-j" placeholder="سم">
           </div>
           <div class="col-md-3">
-            <label class="form-label-j">الكمية</label>
-            <div class="qty-control">
-              <button class="qty-btn" onclick="app.adjustQty('eQty', -1)">−</button>
-              <input type="number" id="eQty" class="form-control-j qty-input" value="1" min="1">
-              <button class="qty-btn" onclick="app.adjustQty('eQty', 1)">+</button>
-            </div>
-          </div>
-        </div>
-        <div class="row g-3 mb-3">
-          <div class="col-md-4">
-            <label class="form-label-j">السعر (شامل التوصيل) <span style="color:var(--ruby-light)">*</span></label>
+            <label class="form-label-j">السعر شامل التوصيل <span style="color:var(--ruby-light)">*</span></label>
             <div class="input-prefix">
               <input type="number" id="ePrice" class="form-control-j" placeholder="0.00" step="0.5">
               <span class="prefix-label" id="eCurrencyLabel" style="border-right:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">JOD</span>
             </div>
           </div>
-          <div class="col-md-4">
-            <label class="form-label-j">المصدر (الصفحة)</label>
-            <div class="select-wrapper">
-              <select id="ePageName" class="form-control-j select-j">
-                <option value="">اختر المصدر</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label-j">ملاحظات / Tags</label>
             <input type="text" id="eTags" class="form-control-j" placeholder="vip, هدية...">
           </div>
         </div>
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label-j">المدخل</label>
+            <label class="form-label-j">اسم الصفحة (المصدر) <span style="color:var(--ruby-light)">*</span></label>
+            <div style="display:flex;gap:6px">
+              <div class="select-wrapper" style="flex:1">
+                <select id="ePageName" class="form-control-j select-j">
+                  <option value="">اختر الصفحة</option>
+                </select>
+              </div>
+              <input type="text" id="ePageNameCustom" class="form-control-j" placeholder="أو اكتب مباشرة" style="flex:1">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label-j">المدخل <span style="color:var(--ruby-light)">*</span></label>
             <div class="select-wrapper">
               <select id="eEntryUser" class="form-control-j select-j"></select>
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-3">
             <label class="form-label-j">تاريخ الإدخال</label>
             <input type="text" id="eDate" class="form-control-j" readonly>
           </div>
@@ -1106,9 +1106,16 @@ body {
             </div>
           </div>
           <div class="col-md-2">
+            <div class="select-wrapper">
+              <select id="rPage" class="form-control-j select-j" onchange="app.renderTable()">
+                <option value="">كل الصفحات</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-1">
             <input type="date" id="rFrom" class="form-control-j" onchange="app.renderTable()">
           </div>
-          <div class="col-md-2">
+          <div class="col-md-1">
             <input type="date" id="rTo" class="form-control-j" onchange="app.renderTable()">
           </div>
           <div class="col-md-1">
@@ -1150,9 +1157,11 @@ body {
               <th>الزبون</th>
               <th>الموبايل</th>
               <th>المنتج</th>
+              <th>اللون</th>
               <th>المقاس</th>
               <th>الكمية</th>
               <th>السعر</th>
+              <th>الصفحة</th>
               <th>الحالة</th>
               <th>التاريخ</th>
               <th>إجراءات</th>
@@ -1181,7 +1190,7 @@ body {
       </div>
 
       <!-- BARCODE SCANNER in warehouse -->
-      <div class="card-j p-3 mb-4" style="border:2px dashed var(--gold);background:rgba(201,168,76,0.03);">
+      <div class="card-j p-3 mb-3" style="border:2px dashed var(--gold);background:rgba(201,168,76,0.03);">
         <div style="font-weight:800;margin-bottom:0.5rem;font-size:0.85rem;color:var(--gold)"><i class="fas fa-barcode me-2"></i> مسح باركود للبحث السريع في المستودع</div>
         <div style="display:flex;gap:0.75rem;align-items:center">
           <div class="search-bar" style="flex:1;border-color:rgba(201,168,76,0.35)">
@@ -1191,6 +1200,45 @@ body {
               onkeydown="if(event.key==='Enter') app.scanWarehouseBarcode()" oninput="app.scanWarehouseBarcode()">
           </div>
           <button class="btn-j btn-ghost btn-sm-j" onclick="document.getElementById('wBarcodeScanner').value='';app.renderWarehouse()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <!-- WAREHOUSE FILTERS -->
+      <div class="card-j p-3 mb-4">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-3">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="wSearch" placeholder="بحث باسم المنتج..." oninput="app.renderWarehouse()">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="select-wrapper">
+              <select id="wColorFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                <option value="">كل الألوان</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="select-wrapper">
+              <select id="wPageFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                <option value="">كل الصفحات</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="select-wrapper">
+              <select id="wStockFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                <option value="">كل الكميات</option>
+                <option value="low">منخفض (أقل من 5)</option>
+                <option value="zero">نفد المخزون</option>
+                <option value="ok">متوفر</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-1">
+            <button class="btn-j btn-ghost btn-sm-j w-100" onclick="app.resetWarehouseFilters()"><i class="fas fa-undo"></i></button>
+          </div>
         </div>
       </div>
 
@@ -1217,8 +1265,19 @@ body {
             <div style="font-size:0.72rem;color:var(--ink-mid);margin-top:3px">اضغط <i class="fas fa-magic"></i> للتوليد التلقائي</div>
           </div>
           <div class="col-6">
-            <label class="form-label-j">المورد</label>
-            <input type="text" id="nimSupplier" class="form-control-j" placeholder="اسم المورد">
+            <label class="form-label-j">اسم الصفحة / المصدر</label>
+            <div class="select-wrapper">
+              <select id="nimPage" class="form-control-j select-j">
+                <option value="">اختر الصفحة</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="form-label-j">لون المنتج</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" id="nimColorPicker" value="#C9A84C" style="width:44px;height:38px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
+              <input type="text" id="nimColor" class="form-control-j" placeholder="مثال: أسود، أبيض، #FF0000" style="flex:1">
+            </div>
           </div>
           <div class="col-6">
             <label class="form-label-j">سعر الشراء (JOD)</label>
@@ -1297,9 +1356,20 @@ body {
                 <label class="form-label-j">سعر البيع المقترح</label>
                 <input type="number" id="pSellPrice" class="form-control-j" placeholder="0.00" step="0.5">
               </div>
+              <div class="col-md-4">
+                <label class="form-label-j">لون المنتج</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="color" id="pColorPicker" value="#C9A84C" style="width:44px;height:38px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px" oninput="document.getElementById('pColor').value=this.value">
+                  <input type="text" id="pColor" class="form-control-j" placeholder="مثال: أسود، أبيض" style="flex:1">
+                </div>
+              </div>
               <div class="col-md-6">
-                <label class="form-label-j">المورد / المصدر</label>
-                <input type="text" id="pSupplier" class="form-control-j" placeholder="اسم المورد">
+                <label class="form-label-j">اسم الصفحة / المصدر</label>
+                <div class="select-wrapper">
+                  <select id="pPageName" class="form-control-j select-j">
+                    <option value="">اختر الصفحة</option>
+                  </select>
+                </div>
               </div>
               <div class="col-md-6">
                 <label class="form-label-j">تاريخ الفاتورة</label>
@@ -1537,7 +1607,7 @@ const USERS = {
 
 const GOV = {
   Jordan: ['العاصمة (عمّان)','إربد','الزرقاء','المفرق','البلقاء','الكرك','الطفيلة','معان','العقبة','جرش','عجلون','مادبا'],
-  Palestine: ['القدس','رام الله والبيرة','الخليل','نابلس','جنين','طولكرم','قلقيلية','بيت لحم','سلفيت','طوباس','أريحا والأغوار','غزة','شمال غزة','دير البلح','خان يونس','رفح']
+  Palestine: [],
 };
 
 const STATUS_AR = { new:'جديدة', process:'قيد التحضير', done:'جاهزة', delivered:'مسلمة', postponed:'مؤجل', canceled:'ملغي' };
@@ -1572,6 +1642,7 @@ window.app = {
     this.applyPermissions();
     this.startListeners();
     this.updateCountry();
+    this.initItemRows();
     this.toast('مرحباً ' + ud.name, 'success');
     document.getElementById('dashDate').textContent = new Date().toLocaleDateString('ar-JO', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
     document.addEventListener('keydown', e => { if(e.key==='Enter' && document.getElementById('loginUser').value) this.login(); });
@@ -1627,6 +1698,7 @@ window.app = {
       b.classList.toggle('active', b.dataset.page === id);
     });
     if (id === 'dashboard') this.renderDashboard();
+    if (id === 'entry') { this.initItemRows(); }
     if (id === 'orders') this.renderBoard();
     if (id === 'reports') { this.renderTable(); this.renderStageCards(); }
     if (id === 'warehouse') this.renderWarehouse();
@@ -1676,8 +1748,17 @@ window.app = {
 
   // ============ DEFINITIONS ============
   updatePageSelect() {
-    const sel = document.getElementById('ePageName');
-    if (sel) sel.innerHTML = '<option value="">اختر المصدر</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+    const opts = '<option value="">اختر الصفحة</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+    ['ePageName','pPageName','nimPage'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.innerHTML = opts;
+    });
+    // Update reports page filter
+    const rPage = document.getElementById('rPage');
+    if (rPage) rPage.innerHTML = '<option value="">كل الصفحات</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+    // Update warehouse page filter
+    const wPage = document.getElementById('wPageFilter');
+    if (wPage) wPage.innerHTML = '<option value="">كل الصفحات</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
   },
   updateEntryUserSelect() {
     const sel = document.getElementById('eEntryUser');
@@ -1731,35 +1812,181 @@ window.app = {
 
   // ============ COUNTRY / GOV ============
   updateCountry() {
-    const c = document.getElementById('eCountry')?.value || 'Jordan';
-    const govSel = document.getElementById('eGovernorate');
-    if (govSel) govSel.innerHTML = GOV[c].map(g=>`<option value="${g}">${g}</option>`).join('');
+    // Kept for compatibility — country is now Jordan only, prefix is 07
     const prefix = document.getElementById('ePhonePrefix');
     const cur = document.getElementById('eCurrencyLabel');
-    if (prefix) prefix.textContent = c === 'Jordan' ? '+962' : '+970';
-    if (cur) cur.textContent = c === 'Jordan' ? 'JOD' : 'ILS';
+    if (prefix) prefix.textContent = '07';
+    if (cur) cur.textContent = 'JOD';
     this.checkDuplicate();
   },
 
   checkDuplicate() {
     const mob = document.getElementById('eCustMob')?.value.replace(/\s/g,'') || '';
-    const prefix = document.getElementById('ePhonePrefix')?.textContent || '+962';
-    const full = prefix + mob;
+    const full = '07' + mob;
     const dups = Object.values(this.orders).filter(o=>o.custMob===full);
     const warn = document.getElementById('eDupWarn');
     const msg = document.getElementById('eDupMsg');
     if (warn && msg) {
-      if (mob.length >= 8 && dups.length > 0) {
+      if (mob.length >= 7 && dups.length > 0) {
         warn.style.display = 'block';
         msg.textContent = `هذا الرقم لديه ${dups.length} طلبات سابقة`;
-      } else {
-        warn.style.display = 'none';
-      }
+      } else { warn.style.display = 'none'; }
     }
   },
 
-  // ============ ITEM SIZE LOAD ============
-  loadItemSizes() {
+  // ============ ITEM ROWS (multi-product entry) ============
+  initItemRows() {
+    this.itemRows = [{ id: Date.now() }];
+    this.renderItemRows();
+  },
+
+  addItemRow() {
+    this.itemRows.push({ id: Date.now() });
+    this.renderItemRows();
+  },
+
+  removeItemRow(idx) {
+    if (this.itemRows.length <= 1) return;
+    this.itemRows.splice(idx, 1);
+    this.renderItemRows();
+  },
+
+  renderItemRows() {
+    const container = document.getElementById('eItemsList');
+    if (!container) return;
+    container.innerHTML = this.itemRows.map((row, idx) => `
+      <div class="card-j p-3 mb-2" style="border-right:3px solid var(--gold)" id="itemrow_${idx}">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
+            <div style="display:flex;gap:4px">
+              <div class="select-wrapper" style="flex:1">
+                <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
+                  <option value="">اختر أو ابحث...</option>
+                  ${Object.entries(this.warehouse).map(([id,w])=>`<option value="${id}" data-color="${w.color||''}">${w.name}${w.color?' - '+w.color:''}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label-j">اللون</label>
+            <input type="text" class="form-control-j ir-color" data-idx="${idx}" placeholder="اللون" readonly style="background:rgba(201,168,76,0.05)">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
+            <div class="select-wrapper">
+              <select class="form-control-j select-j ir-size" data-idx="${idx}">
+                <option value="">المقاس</option>
+              </select>
+            </div>
+            <div class="ir-stock" data-idx="${idx}" style="font-size:0.72rem;margin-top:2px;color:var(--emerald)"></div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label-j">الكمية</label>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="app.adjustRowQty(${idx},-1)">−</button>
+              <input type="number" class="form-control-j qty-input ir-qty" data-idx="${idx}" value="1" min="1">
+              <button class="qty-btn" onclick="app.adjustRowQty(${idx},1)">+</button>
+            </div>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            ${idx > 0 ? `<button class="btn-j btn-ruby btn-sm-j w-100" onclick="app.removeItemRow(${idx})"><i class="fas fa-times"></i> حذف</button>` : '<div></div>'}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  loadRowSizes(idx) {
+    const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
+    const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+    const colorInput = document.querySelector(`.ir-color[data-idx="${idx}"]`);
+    const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
+    if (!sel || !sizeSel) return;
+    const itemId = sel.value;
+    const item = this.warehouse[itemId];
+    sizeSel.innerHTML = '<option value="">المقاس</option>';
+    if (!item) { if(colorInput) colorInput.value=''; return; }
+    if (colorInput) colorInput.value = item.color || '';
+    Object.entries(item.sizes||{}).forEach(([s,q])=>{
+      sizeSel.innerHTML += `<option value="${s}" data-qty="${q}">${s} (${q})</option>`;
+    });
+    sizeSel.onchange = () => {
+      const opt = sizeSel.selectedOptions[0];
+      const qty = opt?.dataset?.qty || 0;
+      if(stockInfo) { stockInfo.textContent = qty > 0 ? `✓ متوفر: ${qty}` : '✗ نفد'; stockInfo.style.color = qty > 0 ? 'var(--emerald)' : 'var(--ruby-light)'; }
+    };
+  },
+
+  adjustRowQty(idx, delta) {
+    const inp = document.querySelector(`.ir-qty[data-idx="${idx}"]`);
+    if (!inp) return;
+    inp.value = Math.max(1, (parseInt(inp.value)||1) + delta);
+  },
+
+  // ============ SAVE ORDER ============
+  async saveOrder() {
+    const custName = document.getElementById('eCustName').value.trim();
+    const mob = document.getElementById('eCustMob').value.replace(/\s/g,'');
+    const gov = document.getElementById('eGovernorate').value;
+    const addr = document.getElementById('eAddr').value.trim();
+    const price = parseFloat(document.getElementById('ePrice').value);
+    const pageSel = document.getElementById('ePageName').value;
+    const pageCustom = document.getElementById('ePageNameCustom').value.trim();
+    const pageName = pageCustom || pageSel;
+    const entryUser = document.getElementById('eEntryUser').value;
+    const tags = document.getElementById('eTags').value.trim();
+    const weight = document.getElementById('eWeight').value.trim();
+    const height = document.getElementById('eHeight').value.trim();
+
+    if (!custName) { this.toast('يرجى إدخال اسم الزبون', 'error'); return; }
+    if (mob.length < 7) { this.toast('رقم الموبايل غير صحيح', 'error'); return; }
+    if (!addr) { this.toast('يرجى إدخال العنوان', 'error'); return; }
+    if (!pageName) { this.toast('اسم الصفحة إجباري', 'error'); return; }
+    if (!entryUser) { this.toast('اسم المدخل إجباري', 'error'); return; }
+    if (!price || price <= 0) { this.toast('يرجى إدخال السعر', 'error'); return; }
+
+    // Collect items from rows
+    const items = [];
+    const itemSelectors = document.querySelectorAll('.ir-item');
+    for (let i=0; i<itemSelectors.length; i++) {
+      const itemId = itemSelectors[i].value;
+      const size = document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
+      const qty = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value)||1;
+      const color = document.querySelector(`.ir-color[data-idx="${i}"]`)?.value||'';
+      if (!itemId || !size) { this.toast(`يرجى اختيار المنتج والمقاس للصف ${i+1}`, 'error'); return; }
+      const item = this.warehouse[itemId];
+      if (!item) { this.toast('منتج غير موجود في المستودع', 'error'); return; }
+      const avail = item.sizes?.[size] || 0;
+      if (qty > avail) { this.toast(`الكمية المطلوبة (${qty}) للمنتج "${item.name}" أكبر من المتوفر (${avail})`, 'error'); return; }
+      items.push({ itemId, itemName: item.name, itemColor: color || item.color || '', size, qty });
+    }
+
+    const payload = {
+      timestamp: Date.now(),
+      date: document.getElementById('eDate').value,
+      custName, custMob: '07' + mob,
+      country: 'الأردن', governorate: gov, custAddr: addr,
+      // keep first item at root for backward compat
+      itemId: items[0].itemId,
+      itemName: items[0].itemName,
+      itemColor: items[0].itemColor,
+      size: items[0].size,
+      qty: items[0].qty,
+      items, // full list
+      price, currency: 'JOD',
+      weight, height,
+      pageName, entryUser, tags,
+      status: 'new'
+    };
+
+    const newRef = await push(ordersRef, payload);
+    this.lastOrderId = newRef.key;
+    this.log('create', newRef.key, `إنشاء طلب للزبون: ${custName} | صفحة: ${pageName}`);
+    this.toast('تم حفظ الطلب بنجاح ✓', 'success');
+    this.resetOrderForm();
+    document.getElementById('lastOrderPrintBtn').style.display = 'block';
+  },
     const itemId = document.getElementById('eItem').value;
     const sizeSel = document.getElementById('eSize');
     const info = document.getElementById('eStockInfo');
@@ -1826,12 +2053,12 @@ window.app = {
   },
 
   resetOrderForm() {
-    ['eCustName','eCustMob','eAddr','eTags','ePrice','eQty'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = id === 'eQty' ? '1' : '';
+    ['eCustName','eCustMob','eAddr','eTags','ePrice','eWeight','eHeight','ePageNameCustom'].forEach(id => {
+      const el=document.getElementById(id); if(el) el.value='';
     });
+    const pageSel = document.getElementById('ePageName'); if(pageSel) pageSel.value='';
     document.getElementById('eDupWarn').style.display = 'none';
-    document.getElementById('eStockInfo').textContent = '';
+    this.initItemRows();
   },
 
   printLastOrder() {
@@ -1906,18 +2133,49 @@ window.app = {
     const alerts = [];
     Object.values(this.warehouse).forEach(w => {
       const total = Object.values(w.sizes||{}).reduce((a,b)=>a+b,0);
-      if (total < 5) alerts.push({ name: w.name, qty: total });
+      if (total < 5) alerts.push({ name: w.name, qty: total, color: w.color });
     });
     const alertsEl = document.getElementById('stockAlerts');
-    if (alerts.length === 0) {
-      alertsEl.innerHTML = `<div style="color:var(--emerald);font-weight:700;text-align:center;padding:2rem;"><i class="fas fa-check-circle fa-2x mb-2 d-block"></i>المستودع بحالة جيدة</div>`;
-    } else {
-      alertsEl.innerHTML = alerts.map(a => `
-        <div class="stock-alert">
-          <i class="fas fa-exclamation-triangle" style="color:var(--ruby-light);font-size:1.3rem;flex-shrink:0"></i>
-          <div><div style="font-weight:800;font-size:0.9rem;">${a.name}</div><div style="font-size:0.78rem;color:var(--ruby-light);">الكمية المتبقية: ${a.qty} قطعة</div></div>
-        </div>
-      `).join('');
+    if (alertsEl) {
+      if (alerts.length === 0) {
+        alertsEl.innerHTML = `<div style="color:var(--emerald);font-weight:700;text-align:center;padding:2rem;"><i class="fas fa-check-circle fa-2x mb-2 d-block"></i>المستودع بحالة جيدة</div>`;
+      } else {
+        alertsEl.innerHTML = alerts.map(a => `
+          <div class="stock-alert">
+            <i class="fas fa-exclamation-triangle" style="color:var(--ruby-light);font-size:1.3rem;flex-shrink:0"></i>
+            <div>
+              <div style="font-weight:800;font-size:0.9rem;">${a.name}${a.color?` <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${a.color};border:1px solid #ccc;margin-right:4px;vertical-align:middle"></span>`:''}
+              </div>
+              <div style="font-size:0.78rem;color:var(--ruby-light);">المتبقي: ${a.qty} قطعة</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Entry user ranking
+    const userRanking = document.getElementById('entryUserRanking');
+    if (userRanking) {
+      const userCounts = {};
+      orders.forEach(o => { if(o.entryUser) userCounts[o.entryUser] = (userCounts[o.entryUser]||0)+1; });
+      const sorted = Object.entries(userCounts).sort((a,b)=>b[1]-a[1]);
+      const max = sorted[0]?.[1] || 1;
+      const medals = ['🥇','🥈','🥉'];
+      userRanking.innerHTML = sorted.length === 0
+        ? `<div style="color:var(--ink-mid);text-align:center;padding:1rem">لا توجد بيانات بعد</div>`
+        : sorted.map(([name,count],i) => `
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+            <span style="font-size:1.3rem;flex-shrink:0;width:28px">${medals[i]||''}</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-weight:700;font-size:0.9rem">${name}</span>
+                <span style="font-weight:800;color:var(--gold)">${count} طلب</span>
+              </div>
+              <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${Math.round(count/max*100)}%;background:linear-gradient(90deg,var(--gold),var(--gold-dark));border-radius:4px"></div>
+              </div>
+            </div>
+          </div>`).join('');
     }
   },
 
@@ -2103,6 +2361,186 @@ window.app = {
   // ============ PRINT ============
   printOrder(o, id) {
     const win = window.open('', '_blank');
+    const pageLogo = o.pageName || 'جواهر';
+    const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty, price: o.price }];
+    const itemsRows = items.map(it => `
+      <tr>
+        <td colspan="2" style="padding:4px 6px;border-bottom:1px solid #eee;">
+          <span style="font-weight:800">${it.itemName||''}</span>
+          ${it.itemColor?`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${it.itemColor};border:1px solid #ccc;margin:0 4px;vertical-align:middle"></span><span style="font-size:0.75rem">${it.itemColor}</span>`:''}
+          — مقاس: <strong>${it.size||''}</strong> × ${it.qty||1}
+        </td>
+      </tr>`).join('');
+
+    win.document.write(`<!DOCTYPE html><html dir="rtl"><head>
+      <meta charset="UTF-8">
+      <title>بوليصة #${id.slice(-6)}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"><\/script>
+      <style>
+        @page { size: 10cm 10cm; margin: 0; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Almarai',Arial; margin: 0; padding: 4mm; background:#fff; color:#111; width:10cm; height:10cm; overflow:hidden; }
+        .wrap { width:100%; height:100%; display:flex; flex-direction:column; border:1.5px solid #222; border-radius:4px; }
+        .header { text-align:center; padding:3px 6px; border-bottom:1.5px solid #222; background:#111; color:#C9A84C; }
+        .logo { font-size:1rem; font-weight:800; letter-spacing:1px; }
+        .ref { font-size:0.6rem; color:#aaa; }
+        .body { flex:1; display:flex; flex-direction:column; padding:3px; }
+        .cols { display:grid; grid-template-columns:1fr 1fr; gap:2px; flex:1; }
+        .col { display:flex; flex-direction:column; gap:2px; }
+        .field { background:#f9f9f9; border-radius:3px; padding:2px 5px; border:1px solid #eee; }
+        .field-label { font-size:0.52rem; color:#888; line-height:1.2; }
+        .field-value { font-size:0.72rem; font-weight:700; line-height:1.3; }
+        .field-value.big { font-size:1rem; font-weight:800; color:#111; }
+        .field-value.price { font-size:1.1rem; font-weight:800; color:#1A6B4A; }
+        .field-value.phone { font-size:0.95rem; font-weight:800; direction:ltr; text-align:right; }
+        .items-row { background:#fff8e6; border:1px solid #f0d080; border-radius:3px; padding:2px 5px; margin-top:2px; }
+        .items-label { font-size:0.52rem; color:#888; }
+        .items-value { font-size:0.7rem; font-weight:700; }
+        .barcode-area { text-align:center; padding:2px; border-top:1px solid #eee; }
+        .barcode-area svg { max-width:100%; height:20px !important; }
+        @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+      </style>
+    </head><body>
+      <div class="wrap">
+        <div class="header">
+          <div class="logo">◆ ${pageLogo} ◆</div>
+          <div class="ref">#${id.slice(-8)} | ${o.date||''} | ${o.entryUser||''}</div>
+        </div>
+        <div class="body">
+          <div class="cols">
+            <div class="col">
+              <div class="field">
+                <div class="field-label">اسم الزبون</div>
+                <div class="field-value big">${o.custName||''}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">العنوان</div>
+                <div class="field-value">${o.governorate||''} - ${o.custAddr||''}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">الوزن</div>
+                <div class="field-value">${o.weight||'-'}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">ملاحظات</div>
+                <div class="field-value">${o.tags||'-'}</div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="field">
+                <div class="field-label">رقم الهاتف</div>
+                <div class="field-value phone">${o.custMob||''}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">الطول</div>
+                <div class="field-value">${o.height||'-'}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">النمرة / المقاس</div>
+                <div class="field-value">${items.map(it=>it.size).join('، ')||'-'}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">السعر شامل التوصيل</div>
+                <div class="field-value price">${o.price||0} ${o.currency||'JOD'}</div>
+              </div>
+            </div>
+          </div>
+          <div class="items-row">
+            <div class="items-label">الموديل / المنتج</div>
+            <div class="items-value">${items.map(it=>`${it.itemName||''}${it.itemColor?' ('+it.itemColor+')':''} مقاس ${it.size||''} ×${it.qty||1}`).join(' | ')}</div>
+          </div>
+        </div>
+        <div class="barcode-area">
+          <svg id="barcodesvg_${id.slice(-8)}"></svg>
+        </div>
+      </div>
+      <script>JsBarcode("#barcodesvg_${id.slice(-8)}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });<\/script>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => { win.print(); }, 800);
+    update(ref(db, `jawaher_orders/${id}`), { status: 'done' });
+    this.deductStock(id);
+  },
+
+  executePrint(ids) {
+    const win = window.open('', '_blank');
+    let barcodeScripts = '';
+    let html = `<!DOCTYPE html><html dir="rtl"><head>
+      <meta charset="UTF-8"><title>طباعة بوليصات</title>
+      <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"><\/script>
+      <style>
+        @page { size: 10cm 10cm; margin: 0; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Almarai',Arial; margin:0; padding:0; background:#fff; }
+        .label { width:10cm; height:10cm; padding:4mm; display:flex; flex-direction:column; page-break-after:always; overflow:hidden; }
+        .wrap { width:100%; height:100%; display:flex; flex-direction:column; border:1.5px solid #222; border-radius:4px; }
+        .header { text-align:center; padding:3px 6px; border-bottom:1.5px solid #222; background:#111; color:#C9A84C; }
+        .logo { font-size:1rem; font-weight:800; }
+        .ref { font-size:0.6rem; color:#aaa; }
+        .body { flex:1; display:flex; flex-direction:column; padding:3px; }
+        .cols { display:grid; grid-template-columns:1fr 1fr; gap:2px; flex:1; }
+        .col { display:flex; flex-direction:column; gap:2px; }
+        .field { background:#f9f9f9; border-radius:3px; padding:2px 5px; border:1px solid #eee; }
+        .field-label { font-size:0.52rem; color:#888; line-height:1.2; }
+        .field-value { font-size:0.72rem; font-weight:700; line-height:1.3; }
+        .field-value.big { font-size:1rem; font-weight:800; }
+        .field-value.price { font-size:1.1rem; font-weight:800; color:#1A6B4A; }
+        .field-value.phone { font-size:0.95rem; font-weight:800; direction:ltr; text-align:right; }
+        .items-row { background:#fff8e6; border:1px solid #f0d080; border-radius:3px; padding:2px 5px; margin-top:2px; }
+        .items-label { font-size:0.52rem; color:#888; }
+        .items-value { font-size:0.7rem; font-weight:700; }
+        .barcode-area { text-align:center; padding:2px; border-top:1px solid #eee; }
+        .barcode-area svg { max-width:100%; height:20px !important; }
+        @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+      </style>
+    </head><body>`;
+
+    const updates = {};
+    ids.forEach(id => {
+      const o = this.orders[id];
+      if (!o) return;
+      const pageLogo = o.pageName || 'جواهر';
+      const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
+      html += `<div class="label"><div class="wrap">
+        <div class="header">
+          <div class="logo">◆ ${pageLogo} ◆</div>
+          <div class="ref">#${id.slice(-8)} | ${o.date||''} | ${o.entryUser||''}</div>
+        </div>
+        <div class="body">
+          <div class="cols">
+            <div class="col">
+              <div class="field"><div class="field-label">اسم الزبون</div><div class="field-value big">${o.custName||''}</div></div>
+              <div class="field"><div class="field-label">العنوان</div><div class="field-value">${o.governorate||''} - ${o.custAddr||''}</div></div>
+              <div class="field"><div class="field-label">الوزن</div><div class="field-value">${o.weight||'-'}</div></div>
+              <div class="field"><div class="field-label">ملاحظات</div><div class="field-value">${o.tags||'-'}</div></div>
+            </div>
+            <div class="col">
+              <div class="field"><div class="field-label">رقم الهاتف</div><div class="field-value phone">${o.custMob||''}</div></div>
+              <div class="field"><div class="field-label">الطول</div><div class="field-value">${o.height||'-'}</div></div>
+              <div class="field"><div class="field-label">النمرة / المقاس</div><div class="field-value">${items.map(it=>it.size).join('، ')||'-'}</div></div>
+              <div class="field"><div class="field-label">السعر شامل التوصيل</div><div class="field-value price">${o.price||0} ${o.currency||'JOD'}</div></div>
+            </div>
+          </div>
+          <div class="items-row">
+            <div class="items-label">الموديل / المنتج</div>
+            <div class="items-value">${items.map(it=>`${it.itemName||''}${it.itemColor?' ('+it.itemColor+')':''} مقاس ${it.size||''} ×${it.qty||1}`).join(' | ')}</div>
+          </div>
+        </div>
+        <div class="barcode-area"><svg id="bc_${id.slice(-8)}"></svg></div>
+      </div></div>`;
+      barcodeScripts += `JsBarcode("#bc_${id.slice(-8)}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });`;
+      updates[`jawaher_orders/${id}/status`] = 'done';
+    });
+
+    html += `<script>${barcodeScripts}<\/script></body></html>`;
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.print(); update(ref(db), updates).then(()=>{ ids.forEach(id=>this.deductStock(id)); }); }, 800);
+    this.toast('تمت الطباعة وتحويل الحالة إلى جاهزة', 'success');
+  },
+    const win = window.open('', '_blank');
     const barSvg = `<svg id="barcodesvg_${id.slice(-8)}"></svg>`;
     win.document.write(`<!DOCTYPE html><html dir="rtl"><head>
       <meta charset="UTF-8">
@@ -2201,12 +2639,14 @@ window.app = {
     const q = document.getElementById('rSearch')?.value.toLowerCase() || '';
     const st = document.getElementById('rStatus')?.value || '';
     const it = document.getElementById('rItem')?.value || '';
+    const pg = document.getElementById('rPage')?.value || '';
     const fr = document.getElementById('rFrom')?.value || '';
     const to = document.getElementById('rTo')?.value || '';
-    return Object.entries(this.orders).filter(([id,o]) => {
+    return Object.entries(this.orders).filter(([,o]) => {
       if (q && !JSON.stringify(o).toLowerCase().includes(q)) return false;
       if (st && o.status !== st) return false;
       if (it && o.itemName !== it) return false;
+      if (pg && o.pageName !== pg) return false;
       if (fr || to) {
         if (o.date) {
           const [d,m,y] = o.date.split('/');
@@ -2247,15 +2687,20 @@ window.app = {
       tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:3rem;color:var(--ink-mid);"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:0.5rem"></i>لا توجد بيانات</td></tr>`;
       return;
     }
-    tbody.innerHTML = filtered.map(([id,o])=>`<tr>
+    tbody.innerHTML = filtered.map(([id,o])=>{
+      const colorDot = o.itemColor ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${o.itemColor};border:1px solid #ccc;vertical-align:middle;margin-left:4px" title="${o.itemColor}"></span>` : '';
+      const colorText = o.itemColor ? `<span style="font-size:0.75rem;color:var(--ink-mid)">${o.itemColor}</span>` : '-';
+      return `<tr>
       <td><input type="checkbox" class="check-j r-check" value="${id}" onchange="app.updateRSel()" ${this.selectedR.has(id)?'checked':''}></td>
       <td style="font-size:0.8rem;font-weight:700;color:var(--gold)">${id.slice(-6)}</td>
       <td style="font-weight:700">${o.custName}</td>
       <td dir="ltr" style="text-align:right;font-size:0.85rem">${o.custMob}</td>
       <td>${o.itemName||'-'}</td>
+      <td>${colorDot}${colorText}</td>
       <td>${o.size||'-'}</td>
       <td style="text-align:center">${o.qty||1}</td>
       <td style="font-weight:700;color:var(--emerald)">${o.price||0} ${o.currency||'JOD'}</td>
+      <td style="font-size:0.8rem;color:var(--ink-mid)">${o.pageName||'-'}</td>
       <td>${sBadge(o.status)}</td>
       <td style="font-size:0.8rem" dir="ltr">${o.date||''}</td>
       <td>
@@ -2264,7 +2709,7 @@ window.app = {
           ${isAdmin?`<button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteOrder('${id}')"><i class="fas fa-trash"></i></button>`:''}
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;}).join('');
     document.getElementById('selectAllR').checked = filtered.length>0 && this.selectedR.size===filtered.length;
   },
 
@@ -2298,7 +2743,7 @@ window.app = {
     this.selectedR.clear(); this.updateRBulkPanel(); this.renderTable(); this.toast('تم الحذف','success');
   },
   resetReportFilters() {
-    ['rSearch','rStatus','rItem','rFrom','rTo'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    ['rSearch','rStatus','rItem','rPage','rFrom','rTo'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     this.renderTable();
   },
   exportExcel() {
@@ -2383,19 +2828,16 @@ window.app = {
   async saveNewItem() {
     const name = document.getElementById('nimName').value.trim();
     if (!name) { this.toast('يرجى إدخال اسم المنتج', 'error'); return; }
-
     let barcode = document.getElementById('nimBarcode').value.trim().toUpperCase();
     if (!barcode) barcode = 'JW' + Date.now().toString().slice(-8);
-
-    // Check barcode not duplicate
     const existing = Object.values(this.warehouse).find(w => (w.barcode||'').toUpperCase() === barcode);
     if (existing) { this.toast(`الباركود مستخدم مسبقاً للمنتج: ${existing.name}`, 'error'); return; }
-
     const buyPrice = parseFloat(document.getElementById('nimBuyPrice').value) || 0;
     const sellPrice = parseFloat(document.getElementById('nimSellPrice').value) || 0;
-    const supplier = document.getElementById('nimSupplier').value.trim();
-
-    // Collect sizes
+    const pageName = document.getElementById('nimPage').value.trim();
+    const colorPicker = document.getElementById('nimColorPicker').value;
+    const colorText = document.getElementById('nimColor').value.trim();
+    const color = colorText || colorPicker;
     const sizes = {};
     document.querySelectorAll('.nim-size-row').forEach(row => {
       const inputs = row.querySelectorAll('input');
@@ -2403,37 +2845,47 @@ window.app = {
       const qty = parseInt(inputs[1]?.value) || 0;
       if (sz) sizes[sz] = qty;
     });
-
-    const newRef = await push(warehouseRef, {
-      name, barcode, buyPrice, sellPrice, supplier,
-      sizes, createdAt: Date.now()
-    });
-
-    // Log purchase if quantities > 0
+    const newRef = await push(warehouseRef, { name, barcode, buyPrice, sellPrice, pageName, color, sizes, createdAt: Date.now() });
     const totalQty = Object.values(sizes).reduce((a,b)=>a+b,0);
     if (totalQty > 0) {
-      await push(purchasesRef, {
-        timestamp: Date.now(),
-        date: new Date().toLocaleDateString('en-GB'),
-        itemId: newRef.key, itemName: name,
-        sizes, buyPrice, supplier,
-        notes: 'إدخال أولي عند إنشاء المنتج',
-        user: this.userName
-      });
+      await push(purchasesRef, { timestamp: Date.now(), date: new Date().toLocaleDateString('en-GB'), itemId: newRef.key, itemName: name, sizes, buyPrice, pageName, notes: 'إدخال أولي', user: this.userName });
     }
-
-    this.log('create_item', newRef.key, `إضافة منتج جديد: ${name} | باركود: ${barcode}`);
-    this.toast(`تم إضافة المنتج "${name}" بباركود ${barcode} ✓`, 'success');
+    this.log('create_item', newRef.key, `إضافة منتج: ${name} | باركود: ${barcode} | لون: ${color}`);
+    this.toast(`تم إضافة "${name}" بباركود ${barcode} ✓`, 'success');
     this.closeModal('newItemModal');
-
-    // Show barcode after saving
     setTimeout(() => this.showBarcode(barcode, name), 400);
   },
 
   // ============ WAREHOUSE ============
+  resetWarehouseFilters() {
+    ['wSearch','wColorFilter','wPageFilter','wStockFilter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    this.renderWarehouse();
+  },
+
   renderWarehouse() {
     const q = document.getElementById('wSearch')?.value.toLowerCase() || '';
-    const items = Object.entries(this.warehouse).filter(([,w])=>!q||w.name.toLowerCase().includes(q)||( w.barcode||'').toLowerCase().includes(q));
+    const colorF = document.getElementById('wColorFilter')?.value || '';
+    const pageF = document.getElementById('wPageFilter')?.value || '';
+    const stockF = document.getElementById('wStockFilter')?.value || '';
+    let items = Object.entries(this.warehouse);
+
+    // Update color filter options dynamically
+    const colors = [...new Set(items.map(([,w])=>w.color).filter(Boolean))];
+    const wColorSel = document.getElementById('wColorFilter');
+    if (wColorSel && wColorSel.options.length <= 1) {
+      colors.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; wColorSel.appendChild(o); });
+    }
+
+    items = items.filter(([,w]) => {
+      if (q && !w.name.toLowerCase().includes(q) && !(w.barcode||'').toLowerCase().includes(q)) return false;
+      if (colorF && w.color !== colorF) return false;
+      if (pageF && w.pageName !== pageF) return false;
+      const total = Object.values(w.sizes||{}).reduce((a,b)=>a+b,0);
+      if (stockF === 'low' && total >= 5) return false;
+      if (stockF === 'zero' && total > 0) return false;
+      if (stockF === 'ok' && total < 5) return false;
+      return true;
+    });
     this._renderItemCards(items);
   },
 
@@ -2442,8 +2894,7 @@ window.app = {
     if (!grid) return;
     if (items.length === 0) {
       grid.innerHTML = `<div class="col-12" style="text-align:center;padding:3rem;color:var(--ink-mid)">
-        <i class="fas fa-warehouse fa-3x" style="opacity:0.2;display:block;margin-bottom:1rem"></i>
-        المستودع فارغ
+        <i class="fas fa-warehouse fa-3x" style="opacity:0.2;display:block;margin-bottom:1rem"></i>المستودع فارغ
         <br><button class="btn-j btn-gold btn-sm-j mt-3" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> إضافة منتج جديد</button>
       </div>`;
       return;
@@ -2451,38 +2902,40 @@ window.app = {
     grid.innerHTML = items.map(([id,w])=>{
       const sizes = Object.entries(w.sizes||{});
       const total = sizes.reduce((s,[,q])=>s+q,0);
-      const maxQ = Math.max(...sizes.map(([,q])=>q), 1);
-      const pct = total === 0 ? 0 : Math.round((total / (maxQ * sizes.length)) * 100);
       const fillCls = total>10?'qty-high':total>3?'qty-med':'qty-low';
       const barcode = (w.barcode || id.slice(-8)).toUpperCase();
+      const colorBg = w.color && w.color.startsWith('#') ? w.color : 'transparent';
+      const colorBorder = w.color && w.color.startsWith('#') ? w.color : 'var(--gold)';
       return `<div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div class="item-card">
+        <div class="item-card" style="border-top:4px solid ${colorBorder}">
           <div class="item-card-header">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div>
                 <div class="item-card-name">${w.name}</div>
                 <div class="item-card-code"><i class="fas fa-barcode me-1"></i>${barcode}</div>
               </div>
-              ${total<=3?`<span style="background:rgba(192,37,86,0.2);color:#ffaaaa;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:20px">⚠ منخفض</span>`:''}
+              ${total<=3?`<span style="background:rgba(192,37,86,0.25);color:#ffaaaa;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:20px">⚠ منخفض</span>`:''}
             </div>
-            ${w.supplier?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:4px"><i class="fas fa-truck me-1"></i>${w.supplier}</div>`:''}
+            ${w.color?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+              <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${colorBg};border:2px solid rgba(255,255,255,0.4)"></span>
+              <span style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700">${w.color}</span>
+            </div>`:''}
+            ${w.pageName?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px"><i class="fas fa-file-alt me-1"></i>${w.pageName}</div>`:''}
           </div>
           <div class="item-card-body">
             <div class="item-qty-row">
               <span class="item-qty-label">إجمالي المخزون</span>
               <span class="item-qty-value">${total} <small style="font-size:0.8rem;font-weight:400;color:var(--ink-mid)">قطعة</small></span>
             </div>
-            <div class="item-qty-bar"><div class="item-qty-fill ${fillCls}" style="width:${Math.min(pct,100)}%"></div></div>
+            <div class="item-qty-bar"><div class="item-qty-fill ${fillCls}" style="width:${Math.min(total>0?Math.round(total/Math.max(total,20)*100):0,100)}%"></div></div>
             ${w.buyPrice?`<div style="font-size:0.75rem;color:var(--ink-mid);margin-bottom:0.5rem">شراء: <strong>${w.buyPrice} JOD</strong>${w.sellPrice?' | بيع: <strong>'+w.sellPrice+' JOD</strong>':''}</div>`:''}
             <div class="item-sizes mb-3">
-              ${sizes.length===0?`<span style="color:var(--ink-mid);font-size:0.8rem">لا توجد مقاسات</span>`:sizes.map(([s,q])=>`<span class="size-tag${q===0?' zero':''}" title="مقاس ${s}">
-                <span style="font-size:0.65rem;opacity:0.7">مقاس</span> ${s}: <strong>${q}</strong>
-              </span>`).join('')}
+              ${sizes.length===0?`<span style="color:var(--ink-mid);font-size:0.8rem">لا توجد مقاسات</span>`:sizes.map(([s,q])=>`<span class="size-tag${q===0?' zero':(q<=2?' qty-med-tag':'')}"><span style="font-size:0.62rem;opacity:0.7">مقاس</span> ${s}: <strong>${q}</strong></span>`).join('')}
             </div>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
               <button class="btn-j btn-ghost btn-xs-j" style="flex:1" onclick="app.showBarcode('${barcode}','${w.name}')"><i class="fas fa-barcode"></i> باركود</button>
               <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
-              <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف المنتج"><i class="fas fa-trash"></i></button>
+              <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         </div>
@@ -2659,7 +3112,8 @@ window.app = {
     const item = this.warehouse[id];
     document.getElementById('pBuyPrice').value = item.buyPrice || '';
     document.getElementById('pSellPrice').value = item.sellPrice || '';
-    document.getElementById('pSupplier').value = item.supplier || '';
+    document.getElementById('pColor').value = item.color || '';
+    document.getElementById('pPageName').value = item.pageName || '';
     // Load sizes
     this.pSizeRows = Object.keys(item.sizes||{});
     if (!this.pSizeRows.length) this.pSizeRows = ['S','M','L','XL','XXL'];
@@ -2672,7 +3126,10 @@ window.app = {
     const manualBarcode = document.getElementById('pBarcode').value.trim().toUpperCase();
     const buyPrice = parseFloat(document.getElementById('pBuyPrice').value) || 0;
     const sellPrice = parseFloat(document.getElementById('pSellPrice').value) || 0;
-    const supplier = document.getElementById('pSupplier').value.trim();
+    const colorText = document.getElementById('pColor').value.trim();
+    const colorPicker = document.getElementById('pColorPicker').value;
+    const color = colorText || colorPicker;
+    const pageName = document.getElementById('pPageName').value.trim();
     const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
     const notes = document.getElementById('pNotes').value.trim();
 
@@ -2695,38 +3152,25 @@ window.app = {
     if (!targetId) {
       // New item
       const barcode = manualBarcode || ('JW' + Date.now().toString().slice(-8));
-      const newRef = await push(warehouseRef, { name: newName, buyPrice, sellPrice, supplier, barcode, sizes: {}, createdAt: Date.now() });
+      const newRef = await push(warehouseRef, { name: newName, buyPrice, sellPrice, pageName, color, barcode, sizes: {}, createdAt: Date.now() });
       targetId = newRef.key;
     }
-
-    // Merge sizes (add to existing stock)
     const item = this.warehouse[targetId];
     const existingSizes = item?.sizes || {};
     const mergedSizes = {...existingSizes};
     Object.entries(sizes).forEach(([s,q]) => { mergedSizes[s] = (mergedSizes[s]||0) + q; });
-
-    const updateData = { buyPrice, sellPrice, supplier, sizes: mergedSizes };
+    const updateData = { buyPrice, sellPrice, pageName, color, sizes: mergedSizes };
     if (manualBarcode && !existingId) updateData.barcode = manualBarcode;
     await update(ref(db, `jawaher_warehouse/${targetId}`), updateData);
-
-    // Log purchase record
-    await push(purchasesRef, {
-      timestamp: Date.now(),
-      date: invoiceDate,
-      itemId: targetId,
-      itemName: item?.name || newName,
-      sizes, buyPrice, sellPrice, supplier, notes,
-      user: this.userName
-    });
-
-    this.log('purchase', targetId, `شراء: ${JSON.stringify(sizes)} - المورد: ${supplier||'غير محدد'} - سعر الشراء: ${buyPrice} JOD`);
+    await push(purchasesRef, { timestamp: Date.now(), date: invoiceDate, itemId: targetId, itemName: item?.name || newName, sizes, buyPrice, sellPrice, pageName, color, notes, user: this.userName });
+    this.log('purchase', targetId, `شراء: ${JSON.stringify(sizes)} - صفحة: ${pageName||'غير محدد'} - لون: ${color} - سعر: ${buyPrice} JOD`);
     this.toast('تم تسجيل الشراء وتحديث المستودع ✓', 'success');
     this.resetPurchase();
     this.renderPurchaseHistory();
   },
 
   resetPurchase() {
-    ['pItem','pBuyPrice','pSellPrice','pSupplier','pNotes','pBarcode','pInvoiceDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    ['pItem','pBuyPrice','pSellPrice','pColor','pNotes','pBarcode','pInvoiceDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.getElementById('pNewItem').value = '';
     const scanner = document.getElementById('pBarcodeScanner');
     const result = document.getElementById('pBarcodeResult');
@@ -3002,8 +3446,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') app.login(); });
   document.getElementById('eCustMob')?.addEventListener('input', e => {
     let v = e.target.value.replace(/\D/g,'');
-    if(v.length>2) v=v.slice(0,2)+' '+v.slice(2);
-    if(v.length>6) v=v.slice(0,6)+' '+v.slice(6);
+    if(v.startsWith('07')) v = v.slice(2); // remove 07 if user typed it
+    if(v.length>1) v=v.slice(0,1)+' '+v.slice(1);
+    if(v.length>5) v=v.slice(0,5)+' '+v.slice(5);
     e.target.value = v;
     app.checkDuplicate();
   });
