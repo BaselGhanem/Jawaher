@@ -1278,8 +1278,15 @@ body {
           <div class="col-6">
             <label class="form-label-j">لون المنتج</label>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="color" id="nimColorPicker" value="#C9A84C" style="width:44px;height:38px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
-              <input type="text" id="nimColor" class="form-control-j" placeholder="مثال: أسود، أبيض، #FF0000" style="flex:1">
+              <input type="text" id="nimColor" class="form-control-j" placeholder="اختر اللون..." readonly
+                style="cursor:pointer;flex:1;border-right:4px solid var(--border)"
+                onclick="app.openColorPicker('main','nim_color')">
+              <button id="nim_color_btn_main" class="btn-j btn-ghost btn-sm-j" onclick="app.openColorPicker('main','nim_color')" style="flex-shrink:0">
+                <i class="fas fa-palette" style="color:var(--gold)"></i>
+              </button>
+              <button class="btn-j btn-ghost btn-xs-j" onclick="document.getElementById('nimColor').value='';document.getElementById('nimColor').style.borderRight='4px solid var(--border)'" title="مسح">
+                <i class="fas fa-times" style="font-size:0.7rem"></i>
+              </button>
             </div>
           </div>
           <div class="col-6">
@@ -1362,8 +1369,15 @@ body {
               <div class="col-md-4">
                 <label class="form-label-j">لون المنتج</label>
                 <div style="display:flex;gap:6px;align-items:center">
-                  <input type="color" id="pColorPicker" value="#C9A84C" style="width:44px;height:38px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px" oninput="document.getElementById('pColor').value=this.value">
-                  <input type="text" id="pColor" class="form-control-j" placeholder="مثال: أسود، أبيض" style="flex:1">
+                  <input type="text" id="pColor" class="form-control-j" placeholder="اختر اللون..." readonly
+                    style="cursor:pointer;font-size:0.88rem;border-right:4px solid var(--border)"
+                    onclick="app.openColorPicker('main','p_color')">
+                  <button id="p_color_btn_main" class="btn-j btn-ghost btn-sm-j" onclick="app.openColorPicker('main','p_color')" style="flex-shrink:0">
+                    <i class="fas fa-palette" style="color:var(--gold)"></i>
+                  </button>
+                  <button class="btn-j btn-ghost btn-xs-j" onclick="document.getElementById('pColor').value='';document.getElementById('pColor').style.borderRight='4px solid var(--border)'" title="مسح">
+                    <i class="fas fa-times" style="font-size:0.7rem"></i>
+                  </button>
                 </div>
               </div>
               <div class="col-md-6">
@@ -1626,6 +1640,8 @@ window.app = {
   lastOrderId: null,
   isDark: localStorage.getItem('jwDark') === 'true',
   pSizeRows: [],
+  pSizeColors: [],
+  pSizeColorHex: [],
   retSelectedOrderId: null,
 
   // ============ LOGIN ============
@@ -1841,15 +1857,114 @@ window.app = {
     this.renderItemRows();
   },
 
+  COLORS_AR: [
+    { name: 'أبيض',      hex: '#FFFFFF', border: '#ddd' },
+    { name: 'أسود',      hex: '#1A1A1A', border: '#1A1A1A' },
+    { name: 'رمادي',     hex: '#808080', border: '#808080' },
+    { name: 'بيج',       hex: '#D4B896', border: '#c4a07a' },
+    { name: 'بني',       hex: '#8B5C2A', border: '#8B5C2A' },
+    { name: 'أحمر',      hex: '#D32F2F', border: '#D32F2F' },
+    { name: 'وردي',      hex: '#E91E8C', border: '#E91E8C' },
+    { name: 'برتقالي',   hex: '#FF6B00', border: '#FF6B00' },
+    { name: 'أصفر',      hex: '#FDD835', border: '#c8a800' },
+    { name: 'أخضر',      hex: '#2E7D32', border: '#2E7D32' },
+    { name: 'أخضر فاتح', hex: '#76C442', border: '#5aab25' },
+    { name: 'أزرق',      hex: '#1565C0', border: '#1565C0' },
+    { name: 'سماوي',     hex: '#29B6F6', border: '#0288d1' },
+    { name: 'نيلي',      hex: '#283593', border: '#283593' },
+    { name: 'بنفسجي',    hex: '#7B1FA2', border: '#7B1FA2' },
+    { name: 'ذهبي',      hex: '#C9A84C', border: '#9A7A2E' },
+    { name: 'فضي',       hex: '#B0BEC5', border: '#78909C' },
+    { name: 'كحلي',      hex: '#1A237E', border: '#1A237E' },
+  ],
+
+  _colorPickerOpen: null,
+
+  openColorPicker(idx, inputId) {
+    // close any open picker first
+    document.querySelectorAll('.color-picker-popup').forEach(p => p.remove());
+    this._colorPickerOpen = null;
+
+    // Support patterns:
+    // openColorPicker(idx, 'ir_color')   -> input id: ir_color_${idx}, btn: ir_color_btn_${idx}
+    // openColorPicker('main', 'p_color') -> input id: pColor, btn: p_color_btn_main
+    // openColorPicker('main', 'nim_color') -> input id: nimColor, btn: nim_color_btn_main
+    const isMain = idx === 'main';
+    let targetId, btnId;
+    if (isMain) {
+      const idMap = { 'p_color': 'pColor', 'nim_color': 'nimColor' };
+      targetId = idMap[inputId] || inputId;
+      btnId    = `${inputId}_btn_main`;
+    } else {
+      targetId = `${inputId}_${idx}`;
+      btnId    = `${inputId}_btn_${idx}`;
+    }
+    const btn = document.getElementById(btnId) || document.getElementById(targetId);
+    if (!btn) return;
+    this._colorPickerOpen = targetId;
+
+    const popup = document.createElement('div');
+    popup.className = 'color-picker-popup';
+    popup.style.cssText = `position:fixed;z-index:9999;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:0.75rem;box-shadow:0 12px 40px rgba(0,0,0,0.2);display:grid;grid-template-columns:repeat(6,1fr);gap:6px;width:220px`;
+
+    this.COLORS_AR.forEach(c => {
+      const el = document.createElement('div');
+      el.title = c.name;
+      el.style.cssText = `width:28px;height:28px;border-radius:8px;background:${c.hex};border:2px solid ${c.border};cursor:pointer;transition:transform 0.15s`;
+      el.onmouseover = () => el.style.transform = 'scale(1.15)';
+      el.onmouseout  = () => el.style.transform = 'scale(1)';
+      el.onclick = () => {
+        const target = document.getElementById(targetId);
+        if (target) { target.value = c.name; target.dataset.hex = c.hex; target.style.borderRight = `4px solid ${c.hex}`; }
+        popup.remove();
+        this._colorPickerOpen = null;
+      };
+      popup.appendChild(el);
+    });
+
+    document.body.appendChild(popup);
+
+    // position below button
+    const r = btn.getBoundingClientRect();
+    let top = r.bottom + 6;
+    let left = r.left;
+    if (left + 220 > window.innerWidth) left = window.innerWidth - 228;
+    if (top + 200 > window.innerHeight) top = r.top - 210;
+    popup.style.top = top + 'px';
+    popup.style.left = left + 'px';
+
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); }
+        document.removeEventListener('click', handler);
+      });
+    }, 0);
+  },
+
   addItemRow() {
+    this._saveItemRowsState();
     this.itemRows.push({ id: Date.now() });
     this.renderItemRows();
   },
 
   removeItemRow(idx) {
     if (this.itemRows.length <= 1) return;
+    this._saveItemRowsState();
     this.itemRows.splice(idx, 1);
     this.renderItemRows();
+  },
+
+  _saveItemRowsState() {
+    this.itemRows.forEach((row, idx) => {
+      const itemSel   = document.querySelector(`.ir-item[data-idx="${idx}"]`);
+      const sizeSel   = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+      const colorInp  = document.getElementById(`ir_color_${idx}`);
+      const qtyInp    = document.querySelector(`.ir-qty[data-idx="${idx}"]`);
+      if (itemSel)  row.savedItem  = itemSel.value;
+      if (sizeSel)  row.savedSize  = sizeSel.value;
+      if (colorInp) { row.savedColor = colorInp.value; row.savedColorHex = colorInp.dataset.hex || ''; }
+      if (qtyInp)   row.savedQty   = qtyInp.value;
+    });
   },
 
   renderItemRows() {
@@ -1860,18 +1975,26 @@ window.app = {
         <div class="row g-2 align-items-end">
           <div class="col-md-4">
             <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
-            <div style="display:flex;gap:4px">
-              <div class="select-wrapper" style="flex:1">
-                <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
-                  <option value="">اختر أو ابحث...</option>
-                  ${Object.entries(this.warehouse).map(([id,w])=>`<option value="${id}" data-color="${w.color||''}">${w.name}${w.color?' - '+w.color:''}</option>`).join('')}
-                </select>
-              </div>
+            <div class="select-wrapper">
+              <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
+                <option value="">اختر المنتج...</option>
+                ${Object.entries(this.warehouse).map(([id,w])=>`<option value="${id}" ${row.savedItem===id?'selected':''}>${w.name}</option>`).join('')}
+              </select>
             </div>
           </div>
           <div class="col-md-2">
             <label class="form-label-j">اللون</label>
-            <input type="text" class="form-control-j ir-color" data-idx="${idx}" placeholder="اللون" readonly style="background:rgba(201,168,76,0.05)">
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="text" id="ir_color_${idx}" class="form-control-j ir-color" data-idx="${idx}"
+                placeholder="اختر..." readonly
+                value="${row.savedColor||''}"
+                data-hex="${row.savedColorHex||''}"
+                style="border-right:4px solid ${row.savedColorHex||'var(--border)'};cursor:pointer;font-size:0.82rem"
+                onclick="app.openColorPicker(${idx},'ir_color')">
+              <button id="ir_color_btn_${idx}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${idx},'ir_color')" style="flex-shrink:0;padding:0.3rem 0.5rem">
+                <i class="fas fa-palette" style="color:var(--gold)"></i>
+              </button>
+            </div>
           </div>
           <div class="col-md-2">
             <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
@@ -1886,7 +2009,7 @@ window.app = {
             <label class="form-label-j">الكمية</label>
             <div class="qty-control">
               <button class="qty-btn" onclick="app.adjustRowQty(${idx},-1)">−</button>
-              <input type="number" class="form-control-j qty-input ir-qty" data-idx="${idx}" value="1" min="1">
+              <input type="number" class="form-control-j qty-input ir-qty" data-idx="${idx}" value="${row.savedQty||1}" min="1">
               <button class="qty-btn" onclick="app.adjustRowQty(${idx},1)">+</button>
             </div>
           </div>
@@ -1896,27 +2019,32 @@ window.app = {
         </div>
       </div>
     `).join('');
+
+    // Restore sizes for rows that had a saved item selected
+    this.itemRows.forEach((row, idx) => {
+      if (row.savedItem) this.loadRowSizes(idx, row.savedSize);
+    });
   },
 
-  loadRowSizes(idx) {
+  loadRowSizes(idx, preselectSize) {
     const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
     const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
-    const colorInput = document.querySelector(`.ir-color[data-idx="${idx}"]`);
     const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
     if (!sel || !sizeSel) return;
     const itemId = sel.value;
     const item = this.warehouse[itemId];
     sizeSel.innerHTML = '<option value="">المقاس</option>';
-    if (!item) { if(colorInput) colorInput.value=''; return; }
-    if (colorInput) colorInput.value = item.color || '';
+    if (!item) return;
     Object.entries(item.sizes||{}).forEach(([s,q])=>{
-      sizeSel.innerHTML += `<option value="${s}" data-qty="${q}">${s} (${q})</option>`;
+      sizeSel.innerHTML += `<option value="${s}" data-qty="${q}" ${preselectSize===s?'selected':''}>${s} (${q})</option>`;
     });
-    sizeSel.onchange = () => {
+    const showStock = () => {
       const opt = sizeSel.selectedOptions[0];
       const qty = opt?.dataset?.qty || 0;
       if(stockInfo) { stockInfo.textContent = qty > 0 ? `✓ متوفر: ${qty}` : '✗ نفد'; stockInfo.style.color = qty > 0 ? 'var(--emerald)' : 'var(--ruby-light)'; }
     };
+    sizeSel.onchange = showStock;
+    if (preselectSize) showStock();
   },
 
   adjustRowQty(idx, delta) {
@@ -1954,7 +2082,7 @@ window.app = {
       const itemId = itemSelectors[i].value;
       const size = document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
       const qty = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value)||1;
-      const color = document.querySelector(`.ir-color[data-idx="${i}"]`)?.value||'';
+      const color = document.getElementById(`ir_color_${i}`)?.value||'';
       if (!itemId || !size) { this.toast(`يرجى اختيار المنتج والمقاس للصف ${i+1}`, 'error'); return; }
       const item = this.warehouse[itemId];
       if (!item) { this.toast('منتج غير موجود في المستودع', 'error'); return; }
@@ -2840,9 +2968,7 @@ window.app = {
     const buyPrice = parseFloat(document.getElementById('nimBuyPrice').value) || 0;
     const sellPrice = parseFloat(document.getElementById('nimSellPrice').value) || 0;
     const pageName = document.getElementById('nimPage').value.trim();
-    const colorPicker = document.getElementById('nimColorPicker').value;
-    const colorText = document.getElementById('nimColor').value.trim();
-    const color = colorText || colorPicker;
+    const color = document.getElementById('nimColor').value.trim();
     const sizes = {};
     document.querySelectorAll('.nim-size-row').forEach(row => {
       const inputs = row.querySelectorAll('input');
@@ -3084,31 +3210,60 @@ window.app = {
   renderPurchasePage() {
     this.renderPurchaseHistory();
     this.pSizeRows = ['S','M','L','XL','XXL'];
+    this.pSizeColors = ['','','','',''];
+    this.pSizeColorHex = ['','','','',''];
     this.renderSizesGrid();
   },
 
   renderSizesGrid() {
     const grid = document.getElementById('pSizesGrid');
     if (!grid) return;
-    grid.innerHTML = this.pSizeRows.map((s,i)=>`
-      <div class="col-6 col-md-3 size-row-item" id="psr_${i}">
-        <div style="display:flex;gap:4px;align-items:center">
-          <input type="text" class="form-control-j" style="width:55px;text-align:center;font-weight:700" placeholder="مقاس" value="${s}">
-          <input type="number" class="form-control-j" placeholder="كمية" min="0" value="0" style="width:65px">
-          <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeSizeRow(${i})" style="flex-shrink:0;padding:0.25rem 0.5rem"><i class="fas fa-times" style="font-size:0.7rem"></i></button>
+    grid.innerHTML = this.pSizeRows.map((s,i)=>{
+      const colorVal = this.pSizeColors?.[i] || '';
+      const colorHex = this.pSizeColorHex?.[i] || '';
+      return `
+      <div class="col-12 size-row-item" id="psr_${i}">
+        <div style="display:flex;gap:6px;align-items:center;background:rgba(201,168,76,0.03);border:1px solid var(--border);border-radius:10px;padding:0.5rem 0.65rem">
+          <input type="text" class="form-control-j" style="width:58px;text-align:center;font-weight:700;flex-shrink:0" placeholder="مقاس" value="${s}">
+          <input type="number" class="form-control-j" placeholder="كمية" min="0" value="0" style="width:65px;flex-shrink:0">
+          <input type="text" id="psc_${i}" class="form-control-j" placeholder="اللون..." readonly
+            style="flex:1;cursor:pointer;font-size:0.82rem;border-right:4px solid ${colorHex||'var(--border)'}"
+            value="${colorVal}"
+            data-hex="${colorHex}"
+            onclick="app.openColorPicker(${i},'psc')">
+          <button id="psc_btn_${i}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${i},'psc')" style="flex-shrink:0;padding:0.3rem 0.5rem">
+            <i class="fas fa-palette" style="color:var(--gold)"></i>
+          </button>
+          <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeSizeRow(${i})" style="flex-shrink:0"><i class="fas fa-times" style="font-size:0.7rem"></i></button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   },
 
   addSizeRow() {
+    this._saveSizeColors();
     this.pSizeRows.push('');
+    this.pSizeColors.push('');
+    this.pSizeColorHex.push('');
     this.renderSizesGrid();
   },
 
   removeSizeRow(i) {
+    this._saveSizeColors();
     this.pSizeRows.splice(i,1);
+    this.pSizeColors.splice(i,1);
+    this.pSizeColorHex.splice(i,1);
     this.renderSizesGrid();
+  },
+
+  _saveSizeColors() {
+    this.pSizeRows.forEach((s, i) => {
+      const el = document.getElementById(`psc_${i}`);
+      if (el) {
+        this.pSizeColors[i]    = el.value;
+        this.pSizeColorHex[i]  = el.dataset.hex || '';
+      }
+    });
   },
 
   loadPurchaseItem() {
@@ -3117,11 +3272,14 @@ window.app = {
     const item = this.warehouse[id];
     document.getElementById('pBuyPrice').value = item.buyPrice || '';
     document.getElementById('pSellPrice').value = item.sellPrice || '';
-    document.getElementById('pColor').value = item.color || '';
+    const pColorEl = document.getElementById('pColor');
+    if (pColorEl) { pColorEl.value = item.color || ''; pColorEl.style.borderRight = item.color ? `4px solid ${this.COLORS_AR.find(c=>c.name===item.color)?.hex||'var(--gold)'}` : '4px solid var(--border)'; }
     document.getElementById('pPageName').value = item.pageName || '';
     // Load sizes
     this.pSizeRows = Object.keys(item.sizes||{});
     if (!this.pSizeRows.length) this.pSizeRows = ['S','M','L','XL','XXL'];
+    this.pSizeColors = this.pSizeRows.map(()=>'');
+    this.pSizeColorHex = this.pSizeRows.map(()=>'');
     this.renderSizesGrid();
   },
 
@@ -3131,23 +3289,24 @@ window.app = {
     const manualBarcode = document.getElementById('pBarcode').value.trim().toUpperCase();
     const buyPrice = parseFloat(document.getElementById('pBuyPrice').value) || 0;
     const sellPrice = parseFloat(document.getElementById('pSellPrice').value) || 0;
-    const colorText = document.getElementById('pColor').value.trim();
-    const colorPicker = document.getElementById('pColorPicker').value;
-    const color = colorText || colorPicker;
+    const color = document.getElementById('pColor').value.trim();
     const pageName = document.getElementById('pPageName').value.trim();
     const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
     const notes = document.getElementById('pNotes').value.trim();
 
     if (!existingId && !newName) { this.toast('يرجى اختيار أو إدخال اسم المنتج', 'error'); return; }
 
-    // Collect sizes from grid
+    // Collect sizes + colors from grid
     const sizeRows = document.getElementById('pSizesGrid').querySelectorAll('.size-row-item');
     const sizes = {};
-    sizeRows.forEach(row => {
-      const inputs = row.querySelectorAll('input');
-      const sz = inputs[0]?.value.trim();
+    const sizeColors = {};
+    sizeRows.forEach((row, i) => {
+      const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
+      // inputs[0]=size text, inputs[1]=qty number, inputs[2]=color text
+      const sz  = inputs[0]?.value.trim();
       const qty = parseInt(inputs[1]?.value) || 0;
-      if (sz && qty > 0) sizes[sz] = qty;
+      const sc  = inputs[2]?.value.trim() || '';
+      if (sz && qty > 0) { sizes[sz] = qty; if(sc) sizeColors[sz] = sc; }
     });
 
     if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية واحدة على الأقل', 'error'); return; }
@@ -3164,10 +3323,10 @@ window.app = {
     const existingSizes = item?.sizes || {};
     const mergedSizes = {...existingSizes};
     Object.entries(sizes).forEach(([s,q]) => { mergedSizes[s] = (mergedSizes[s]||0) + q; });
-    const updateData = { buyPrice, sellPrice, pageName, color, sizes: mergedSizes };
+    const updateData = { buyPrice, sellPrice, pageName, color, sizes: mergedSizes, sizeColors };
     if (manualBarcode && !existingId) updateData.barcode = manualBarcode;
     await update(ref(db, `jawaher_warehouse/${targetId}`), updateData);
-    await push(purchasesRef, { timestamp: Date.now(), date: invoiceDate, itemId: targetId, itemName: item?.name || newName, sizes, buyPrice, sellPrice, pageName, color, notes, user: this.userName });
+    await push(purchasesRef, { timestamp: Date.now(), date: invoiceDate, itemId: targetId, itemName: item?.name || newName, sizes, sizeColors, buyPrice, sellPrice, pageName, color, notes, user: this.userName });
     this.log('purchase', targetId, `شراء: ${JSON.stringify(sizes)} - صفحة: ${pageName||'غير محدد'} - لون: ${color} - سعر: ${buyPrice} JOD`);
     this.toast('تم تسجيل الشراء وتحديث المستودع ✓', 'success');
     this.resetPurchase();
@@ -3175,13 +3334,17 @@ window.app = {
   },
 
   resetPurchase() {
-    ['pItem','pBuyPrice','pSellPrice','pColor','pNotes','pBarcode','pInvoiceDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    ['pItem','pBuyPrice','pSellPrice','pNotes','pBarcode','pInvoiceDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    const pColorEl = document.getElementById('pColor');
+    if (pColorEl) { pColorEl.value=''; pColorEl.style.borderRight='4px solid var(--border)'; }
     document.getElementById('pNewItem').value = '';
     const scanner = document.getElementById('pBarcodeScanner');
     const result = document.getElementById('pBarcodeResult');
     if(scanner) scanner.value = '';
     if(result) result.style.display = 'none';
     this.pSizeRows = ['S','M','L','XL','XXL'];
+    this.pSizeColors = ['','','','',''];
+    this.pSizeColorHex = ['','','','',''];
     this.renderSizesGrid();
   },
 
