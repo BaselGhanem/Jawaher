@@ -64,14 +64,144 @@ body {
   min-height: 100vh;
 }
 
+/* ============ INTRO SCREEN ============ */
+#introScreen {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #0A0A18;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+}
+#introScreen.fade-out {
+  animation: introFadeOut 0.7s ease forwards;
+}
+@keyframes introFadeOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); pointer-events: none; }
+}
+
+/* Grid lines */
+.intro-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Particles */
+.intro-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particleDrift linear infinite;
+  opacity: 0;
+}
+@keyframes particleDrift {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+}
+
+/* Diamond logo */
+.intro-diamond-wrap {
+  position: relative;
+  margin-bottom: 2.5rem;
+  animation: introLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+}
+@keyframes introLogoIn {
+  from { opacity: 0; transform: scale(0.3) rotate(-20deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.intro-diamond {
+  width: 110px; height: 110px;
+  background: linear-gradient(135deg, #E8C97A 0%, #C9A84C 45%, #9A7A2E 100%);
+  clip-path: polygon(50% 0%, 85% 30%, 75% 75%, 50% 100%, 25% 75%, 15% 30%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.8rem;
+  box-shadow: 0 0 60px rgba(201,168,76,0.5), 0 0 120px rgba(201,168,76,0.2);
+  animation: diamondGlow 2s ease-in-out infinite alternate;
+}
+@keyframes diamondGlow {
+  from { box-shadow: 0 0 40px rgba(201,168,76,0.4), 0 0 80px rgba(201,168,76,0.15); }
+  to   { box-shadow: 0 0 80px rgba(201,168,76,0.7), 0 0 160px rgba(201,168,76,0.3); }
+}
+.intro-diamond-ring {
+  position: absolute; inset: -18px;
+  border: 1.5px solid rgba(201,168,76,0.25);
+  border-radius: 50%;
+  animation: ringRotate 8s linear infinite;
+}
+.intro-diamond-ring::before {
+  content: '';
+  position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(201,168,76,0.8);
+}
+@keyframes ringRotate { to { transform: rotate(360deg); } }
+
+/* Text */
+.intro-brand {
+  text-align: center;
+  animation: introTextIn 0.8s ease 0.7s both;
+}
+@keyframes introTextIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.intro-name {
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  margin-bottom: 0.4rem;
+}
+.intro-name span { color: #C9A84C; }
+.intro-sub {
+  font-size: clamp(0.75rem, 2vw, 0.95rem);
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+/* Progress bar */
+.intro-bar-wrap {
+  margin-top: 3rem;
+  width: min(320px, 80vw);
+  animation: introTextIn 0.8s ease 1s both;
+}
+.intro-bar-track {
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.intro-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9A7A2E, #E8C97A, #C9A84C);
+  border-radius: 2px;
+  animation: barLoad 2s cubic-bezier(0.4,0,0.2,1) 0.5s forwards;
+  width: 0%;
+}
+@keyframes barLoad {
+  0%   { width: 0%; }
+  60%  { width: 75%; }
+  100% { width: 100%; }
+}
+
 /* ============ AUTH ============ */
 #authScreen {
   position: fixed; inset: 0;
   background: linear-gradient(135deg, #1A1A2E 0%, #2D1B4E 50%, #1A3A2E 100%);
   z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
   padding: 1rem;
 }
+#authScreen.visible { display: flex; }
 .auth-orb {
   position: absolute;
   border-radius: 50%;
@@ -91,6 +221,11 @@ body {
   width: 100%; max-width: 420px;
   position: relative;
   overflow: hidden;
+  animation: authCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .auth-card::before {
   content: '';
@@ -110,21 +245,39 @@ body {
 @keyframes gemPulse { from { box-shadow: 0 0 30px rgba(201,168,76,0.3); } to { box-shadow: 0 0 60px rgba(201,168,76,0.6); } }
 .auth-card h2 { color: var(--gold); font-weight: 800; letter-spacing: 1px; }
 .auth-card p { color: rgba(255,255,255,0.5); }
+
+/* Clean auth fields — no Bootstrap input-group */
+.auth-field {
+  position: relative;
+  margin-bottom: 1.1rem;
+}
+.auth-field-icon {
+  position: absolute;
+  top: 50%; right: 1.1rem;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 0.9rem;
+  pointer-events: none;
+  z-index: 2;
+}
 .auth-input {
+  width: 100%;
   background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(201,168,76,0.2) !important;
+  border: 1px solid rgba(201,168,76,0.25) !important;
   border-radius: 14px !important;
   color: white !important;
-  padding: 0.9rem 1.2rem !important;
+  padding: 0.9rem 2.8rem 0.9rem 1.2rem !important;
   font-family: 'Almarai', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  display: block;
 }
 .auth-input::placeholder { color: rgba(255,255,255,0.3) !important; }
-.auth-input:focus { border-color: var(--gold) !important; box-shadow: 0 0 0 3px rgba(201,168,76,0.15) !important; background: rgba(255,255,255,0.08) !important; }
-.auth-input-group .input-group-text {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(201,168,76,0.2);
-  border-radius: 14px 0 0 14px;
-  color: var(--gold);
+.auth-input:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15) !important;
+  background: rgba(255,255,255,0.09) !important;
 }
 .btn-auth {
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
@@ -137,6 +290,9 @@ body {
   font-family: 'Almarai', sans-serif;
   transition: var(--transition);
   box-shadow: 0 8px 24px rgba(201,168,76,0.35);
+  width: 100%;
+  cursor: pointer;
+  margin-top: 0.5rem;
 }
 .btn-auth:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,168,76,0.5); color: #1A1A2E; }
 
@@ -819,6 +975,23 @@ body {
 </head>
 <body>
 
+<!-- INTRO SCREEN -->
+<div id="introScreen">
+  <div class="intro-grid"></div>
+  <div class="intro-diamond-wrap">
+    <div class="intro-diamond-ring"></div>
+    <div class="intro-diamond">◆</div>
+  </div>
+  <div class="intro-brand">
+    <div class="intro-name"><span>Ramada</span> Delivery</div>
+    <div class="intro-name" style="font-size:clamp(1.1rem,3vw,1.8rem);font-weight:600;color:rgba(255,255,255,0.75);letter-spacing:0.05em;">Warehousing System</div>
+    <div class="intro-sub" style="margin-top:0.6rem;">نظام إدارة المستودع والتوصيل</div>
+  </div>
+  <div class="intro-bar-wrap">
+    <div class="intro-bar-track"><div class="intro-bar-fill"></div></div>
+  </div>
+</div>
+
 <!-- AUTH -->
 <div id="authScreen">
   <div class="auth-orb auth-orb-1"></div>
@@ -827,22 +1000,18 @@ body {
     <div class="auth-gem">
       <i class="fas fa-gem" style="color:#1A1A2E; font-size:2rem;"></i>
     </div>
-    <h2 class="text-center mb-1">جواهر</h2>
-    <p class="text-center mb-4" style="font-size:0.85rem;">نظام إدارة المبيعات والمستودع</p>
+    <h2 class="text-center mb-1">Jawaher</h2>
+    <p class="text-center mb-4" style="font-size:0.85rem;">Warehousing System</p>
     <form onsubmit="event.preventDefault(); window.app.login();" autocomplete="on">
-    <div class="mb-3">
-      <div class="input-group auth-input-group">
-        <span class="input-group-text" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.2);border-left:none;border-radius:14px 0 0 14px;"><i class="fas fa-user" style="color:var(--gold)"></i></span>
-        <input type="text" id="loginUser" name="username" class="auth-input" placeholder="اسم المستخدم" style="border-radius:0 14px 14px 0; border-right:none;" autocomplete="username">
+      <div class="auth-field">
+        <i class="fas fa-user auth-field-icon"></i>
+        <input type="text" id="loginUser" name="username" class="auth-input" placeholder="اسم المستخدم" autocomplete="username">
       </div>
-    </div>
-    <div class="mb-4">
-      <div class="input-group auth-input-group">
-        <span class="input-group-text" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.2);border-left:none;border-radius:14px 0 0 14px;"><i class="fas fa-lock" style="color:var(--gold)"></i></span>
-        <input type="password" id="loginPass" name="password" class="auth-input" placeholder="كلمة المرور" style="border-radius:0 14px 14px 0; border-right:none;" autocomplete="current-password">
+      <div class="auth-field">
+        <i class="fas fa-lock auth-field-icon"></i>
+        <input type="password" id="loginPass" name="password" class="auth-input" placeholder="كلمة المرور" autocomplete="current-password">
       </div>
-    </div>
-    <button type="submit" class="btn-auth w-100">دخول <i class="fas fa-arrow-left ms-1"></i></button>
+      <button type="submit" class="btn-auth">دخول &nbsp;<i class="fas fa-arrow-left"></i></button>
     </form>
   </div>
 </div>
@@ -1183,10 +1352,6 @@ body {
           <p class="page-subtitle">إدارة المخزون والتتبع بالباركود</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-          <div class="search-bar" style="width:200px">
-            <i class="fas fa-search"></i>
-            <input type="text" id="wSearch" placeholder="بحث..." oninput="app.renderWarehouse()">
-          </div>
           <button class="btn-j btn-gold btn-sm-j" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> منتج جديد</button>
           <button class="btn-j btn-ghost btn-sm-j" onclick="app.gotoPage('purchase')"><i class="fas fa-shopping-cart"></i> تسجيل مشتريات</button>
         </div>
@@ -1651,7 +1816,7 @@ window.app = {
     const ud = USERS[u];
     if (!ud || ud.pass !== p) { this.toast('بيانات الدخول غير صحيحة', 'error'); return; }
     this.user = u; this.role = ud.role; this.userName = ud.name;
-    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('authScreen').classList.remove('visible');
     document.getElementById('appContainer').style.display = 'block';
     document.getElementById('userName').textContent = ud.name;
     document.getElementById('userRole').textContent = ud.role;
@@ -1668,7 +1833,7 @@ window.app = {
   logout() {
     this.user = null;
     document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('authScreen').classList.add('visible');
     document.getElementById('loginPass').value = '';
   },
 
@@ -1773,9 +1938,7 @@ window.app = {
     // Update reports page filter
     const rPage = document.getElementById('rPage');
     if (rPage) rPage.innerHTML = '<option value="">كل الصفحات</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
-    // Update warehouse page filter
-    const wPage = document.getElementById('wPageFilter');
-    if (wPage) wPage.innerHTML = '<option value="">كل الصفحات</option>' + this.pages.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+    // Note: wPageFilter is updated in renderWarehouse() from actual warehouse data
   },
   updateEntryUserSelect() {
     const sel = document.getElementById('eEntryUser');
@@ -1787,14 +1950,16 @@ window.app = {
   },
   updateItemSelects() {
     const items = Object.entries(this.warehouse);
-    const pSel = document.getElementById('eItem');
-    if (pSel) {
-      pSel.innerHTML = '<option value="">اختر المنتج</option>' + items.map(([id,w])=>`<option value="${id}">${w.name}</option>`).join('');
-    }
+    const opts = '<option value="">اختر المنتج...</option>' + items.map(([id,w])=>`<option value="${id}">${w.name}${w.color?' — '+w.color:''}</option>`).join('');
+    // Update pItem (purchase page) — preserve selection
     const pSel2 = document.getElementById('pItem');
-    if (pSel2) {
-      pSel2.innerHTML = '<option value="">اختر منتج موجود أو اسم جديد</option>' + items.map(([id,w])=>`<option value="${id}">${w.name}</option>`).join('');
-    }
+    if (pSel2) { const cur=pSel2.value; pSel2.innerHTML='<option value="">اختر منتجاً موجوداً</option>'+items.map(([id,w])=>`<option value="${id}">${w.name}</option>`).join(''); pSel2.value=cur; }
+    // Refresh all ir-item selects in entry rows (preserve current selection)
+    document.querySelectorAll('.ir-item').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = opts;
+      if (cur) sel.value = cur;
+    });
   },
   updateRItemFilter() {
     const sel = document.getElementById('rItem');
@@ -2113,72 +2278,6 @@ window.app = {
     this.lastOrderId = newRef.key;
     this.log('create', newRef.key, `إنشاء طلب للزبون: ${custName} | صفحة: ${pageName}`);
     this.toast('تم حفظ الطلب بنجاح ✓', 'success');
-    this.resetOrderForm();
-    document.getElementById('lastOrderPrintBtn').style.display = 'block';
-  },
-
-  onItemChange() {
-    const itemId = document.getElementById('eItem').value;
-    const sizeSel = document.getElementById('eSize');
-    const info = document.getElementById('eStockInfo');
-    sizeSel.innerHTML = '<option value="">المقاس</option>';
-    if (!itemId || !this.warehouse[itemId]) { info.textContent = ''; return; }
-    const item = this.warehouse[itemId];
-    const sizes = item.sizes || {};
-    Object.entries(sizes).forEach(([s, q]) => {
-      sizeSel.innerHTML += `<option value="${s}" data-qty="${q}">${s} (متوفر: ${q})</option>`;
-    });
-    sizeSel.onchange = () => {
-      const opt = sizeSel.selectedOptions[0];
-      const qty = opt?.dataset?.qty || 0;
-      info.textContent = qty > 0 ? `✓ متوفر: ${qty} قطعة` : '✗ غير متوفر';
-      info.style.color = qty > 0 ? 'var(--emerald)' : 'var(--ruby-light)';
-    };
-  },
-
-  // ============ SAVE ORDER ============
-  async saveOrder() {
-    const custName = document.getElementById('eCustName').value.trim();
-    const mob = document.getElementById('eCustMob').value.replace(/\s/g,'');
-    const prefix = document.getElementById('ePhonePrefix').textContent;
-    const gov = document.getElementById('eGovernorate').value;
-    const addr = document.getElementById('eAddr').value.trim();
-    const itemId = document.getElementById('eItem').value;
-    const size = document.getElementById('eSize').value;
-    const qty = parseInt(document.getElementById('eQty').value) || 1;
-    const price = parseFloat(document.getElementById('ePrice').value);
-    const pageName = document.getElementById('ePageName').value;
-    const tags = document.getElementById('eTags').value.trim();
-    const entryUser = document.getElementById('eEntryUser').value || this.userName;
-    const currency = document.getElementById('eCurrencyLabel').textContent;
-    const country = document.getElementById('eCountry').value;
-
-    if (!custName || !mob || !addr || !itemId || !size || !price) {
-      this.toast('يرجى تعبئة جميع الحقول الإلزامية', 'error'); return;
-    }
-    if (mob.length < 8) { this.toast('رقم الموبايل غير صحيح', 'error'); return; }
-    
-    // Check stock
-    const item = this.warehouse[itemId];
-    if (!item) { this.toast('المنتج غير موجود في المستودع', 'error'); return; }
-    const avail = item.sizes?.[size] || 0;
-    if (qty > avail) { this.toast(`الكمية المطلوبة (${qty}) أكبر من المتوفر (${avail})`, 'error'); return; }
-
-    const payload = {
-      timestamp: Date.now(),
-      date: document.getElementById('eDate').value,
-      custName, custMob: prefix + mob,
-      country, governorate: gov, custAddr: addr,
-      itemId, itemName: item.name,
-      size, qty,
-      price, currency, pageName, tags,
-      entryUser, status: 'new'
-    };
-
-    const newRef = await push(ordersRef, payload);
-    this.lastOrderId = newRef.key;
-    this.log('create', newRef.key, `إنشاء طلب للزبون: ${custName}`);
-    this.toast('تم حفظ الطلب بنجاح', 'success');
     this.resetOrderForm();
     document.getElementById('lastOrderPrintBtn').style.display = 'block';
   },
@@ -2821,8 +2920,9 @@ window.app = {
       return;
     }
     tbody.innerHTML = filtered.map(([id,o])=>{
-      const colorDot = o.itemColor ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${o.itemColor};border:1px solid #ccc;vertical-align:middle;margin-left:4px" title="${o.itemColor}"></span>` : '';
-      const colorText = o.itemColor ? `<span style="font-size:0.75rem;color:var(--ink-mid)">${o.itemColor}</span>` : '-';
+      const colorHex = this._colorHex(o.itemColor);
+      const colorDot = colorHex ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${colorHex};border:1px solid rgba(0,0,0,0.15);vertical-align:middle;margin-left:4px"></span>` : '';
+      const colorText = o.itemColor ? `<span style="font-size:0.78rem;color:var(--ink-mid)">${o.itemColor}</span>` : '-';
       return `<tr>
       <td><input type="checkbox" class="check-j r-check" value="${id}" onchange="app.updateRSel()" ${this.selectedR.has(id)?'checked':''}></td>
       <td style="font-size:0.8rem;font-weight:700;color:var(--gold)">${id.slice(-6)}</td>
@@ -2989,7 +3089,10 @@ window.app = {
 
   // ============ WAREHOUSE ============
   resetWarehouseFilters() {
-    ['wSearch','wColorFilter','wPageFilter','wStockFilter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['wSearch','wColorFilter','wPageFilter','wStockFilter'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value='';
+    });
     this.renderWarehouse();
   },
 
@@ -3000,11 +3103,20 @@ window.app = {
     const stockF = document.getElementById('wStockFilter')?.value || '';
     let items = Object.entries(this.warehouse);
 
-    // Update color filter options dynamically
-    const colors = [...new Set(items.map(([,w])=>w.color).filter(Boolean))];
+    // Refresh color filter from actual warehouse data (Arabic color names)
     const wColorSel = document.getElementById('wColorFilter');
-    if (wColorSel && wColorSel.options.length <= 1) {
-      colors.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; wColorSel.appendChild(o); });
+    if (wColorSel) {
+      const curColor = wColorSel.value;
+      const colors = [...new Set(items.map(([,w])=>w.color).filter(Boolean))].sort();
+      wColorSel.innerHTML = '<option value="">كل الألوان</option>' + colors.map(c=>`<option value="${c}" ${curColor===c?'selected':''}>${c}</option>`).join('');
+    }
+
+    // Refresh page filter from actual warehouse data (not just defPages)
+    const wPageSel = document.getElementById('wPageFilter');
+    if (wPageSel) {
+      const curPage = wPageSel.value;
+      const pages = [...new Set(items.map(([,w])=>w.pageName).filter(Boolean))].sort();
+      wPageSel.innerHTML = '<option value="">كل الصفحات</option>' + pages.map(p=>`<option value="${p}" ${curPage===p?'selected':''}>${p}</option>`).join('');
     }
 
     items = items.filter(([,w]) => {
@@ -3018,6 +3130,13 @@ window.app = {
       return true;
     });
     this._renderItemCards(items);
+  },
+
+  _colorHex(name) {
+    // Returns hex for a named color (Arabic name from COLORS_AR), or the value itself if it's already hex
+    if (!name) return null;
+    if (name.startsWith('#')) return name;
+    return this.COLORS_AR.find(c => c.name === name)?.hex || null;
   },
 
   _renderItemCards(items) {
@@ -3035,8 +3154,8 @@ window.app = {
       const total = sizes.reduce((s,[,q])=>s+q,0);
       const fillCls = total>10?'qty-high':total>3?'qty-med':'qty-low';
       const barcode = (w.barcode || id.slice(-8)).toUpperCase();
-      const colorBg = w.color && w.color.startsWith('#') ? w.color : 'transparent';
-      const colorBorder = w.color && w.color.startsWith('#') ? w.color : 'var(--gold)';
+      const colorHex = this._colorHex(w.color);
+      const colorBorder = colorHex || 'var(--gold)';
       return `<div class="col-12 col-sm-6 col-lg-4 col-xl-3">
         <div class="item-card" style="border-top:4px solid ${colorBorder}">
           <div class="item-card-header">
@@ -3048,7 +3167,7 @@ window.app = {
               ${total<=3?`<span style="background:rgba(192,37,86,0.25);color:#ffaaaa;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:20px">⚠ منخفض</span>`:''}
             </div>
             ${w.color?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-              <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${colorBg};border:2px solid rgba(255,255,255,0.4)"></span>
+              ${colorHex?`<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${colorHex};border:2px solid rgba(255,255,255,0.4)"></span>`:''}
               <span style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700">${w.color}</span>
             </div>`:''}
             ${w.pageName?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px"><i class="fas fa-file-alt me-1"></i>${w.pageName}</div>`:''}
@@ -3614,12 +3733,41 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') app.login(); });
   document.getElementById('eCustMob')?.addEventListener('input', e => {
     let v = e.target.value.replace(/\D/g,'');
-    if(v.startsWith('07')) v = v.slice(2); // remove 07 if user typed it
+    if(v.startsWith('07')) v = v.slice(2);
     if(v.length>1) v=v.slice(0,1)+' '+v.slice(1);
     if(v.length>5) v=v.slice(0,5)+' '+v.slice(5);
     e.target.value = v;
     app.checkDuplicate();
   });
+
+  // ── Intro screen ──────────────────────────────────────────
+  const intro = document.getElementById('introScreen');
+  const auth  = document.getElementById('authScreen');
+
+  // Spawn floating particles
+  const colors = ['rgba(201,168,76,0.6)','rgba(232,201,122,0.5)','rgba(154,122,46,0.5)','rgba(255,255,255,0.15)'];
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div');
+    p.className = 'intro-particle';
+    const size = 3 + Math.random() * 7;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${4 + Math.random()*6}s;
+      animation-delay:${Math.random()*3}s;
+    `;
+    intro.appendChild(p);
+  }
+
+  // After 2.4s → fade out intro, show auth
+  setTimeout(() => {
+    intro.classList.add('fade-out');
+    setTimeout(() => {
+      intro.style.display = 'none';
+      auth.classList.add('visible');
+    }, 680);
+  }, 2400);
 });
 </script>
 </body>
