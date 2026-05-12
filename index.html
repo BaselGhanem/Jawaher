@@ -829,7 +829,7 @@ body {
     </div>
     <h2 class="text-center mb-1">جواهر</h2>
     <p class="text-center mb-4" style="font-size:0.85rem;">نظام إدارة المبيعات والمستودع</p>
-    <form onsubmit="event.preventDefault(); app.login();" autocomplete="on">
+    <form onsubmit="event.preventDefault(); window.app.login();" autocomplete="on">
     <div class="mb-3">
       <div class="input-group auth-input-group">
         <span class="input-group-text" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.2);border-left:none;border-radius:14px 0 0 14px;"><i class="fas fa-user" style="color:var(--gold)"></i></span>
@@ -2543,6 +2543,8 @@ window.app = {
     setTimeout(() => { win.print(); update(ref(db), updates).then(()=>{ ids.forEach(id=>this.deductStock(id)); }); }, 800);
     this.toast('تمت الطباعة وتحويل الحالة إلى جاهزة', 'success');
   },
+
+  printOrderFull(o, id) {
     const win = window.open('', '_blank');
     const barSvg = `<svg id="barcodesvg_${id.slice(-8)}"></svg>`;
     win.document.write(`<!DOCTYPE html><html dir="rtl"><head>
