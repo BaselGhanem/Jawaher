@@ -971,6 +971,19 @@ body {
   width: 16px; height: 16px;
   cursor: pointer;
 }
+/* محاذاة أرقام الهواتف لليسار في كافة الشاشات */
+#eCustMob, #mo_mob { 
+  text-align: left !important; 
+  direction: ltr !important; 
+}
+/* تخصيص خيار تحديد الكل في البورد (سيتم استخدامه لاحقاً) */
+.kb-select-all { 
+  margin-right: auto; 
+  margin-left: 10px; 
+  width: 18px; 
+  height: 18px; 
+  cursor: pointer; 
+}
 </style>
 </head>
 <body>
@@ -1279,7 +1292,7 @@ body {
           </div>
           <div class="col-md-2">
             <div class="select-wrapper">
-              <select id="rPage" class="form-control-j select-j" onchange="app.renderTable()">
+<select id="rPage" class="form-control-j select-j" onchange="app.updateRItemFilter(); app.renderTable()">
                 <option value="">كل الصفحات</option>
               </select>
             </div>
@@ -1963,11 +1976,13 @@ window.app = {
   },
   updateRItemFilter() {
     const sel = document.getElementById('rItem');
+    const pageFilter = document.getElementById('rPage')?.value;
     if (!sel) return;
-    const items = [...new Set(Object.values(this.orders).map(o=>o.itemName).filter(Boolean))];
-    sel.innerHTML = '<option value="">كل المنتجات</option>' + items.map(n=>`<option value="${n}">${n}</option>`).join('');
+    let items = Object.values(this.orders);
+    if (pageFilter) items = items.filter(o => o.pageName === pageFilter);
+    const itemNames = [...new Set(items.map(o=>o.itemName).filter(Boolean))];
+    sel.innerHTML = '<option value="">كل المنتجات</option>' + itemNames.map(n=>`<option value="${n}">${n}</option>`).join('');
   },
-
   async addDef(type, inputId) {
     const name = document.getElementById(inputId).value.trim();
     if (!name) return this.toast('يرجى إدخال الاسم', 'error');
@@ -2139,34 +2154,24 @@ window.app = {
       <div class="card-j p-3 mb-2" style="border-right:3px solid var(--gold)" id="itemrow_${idx}">
         <div class="row g-2 align-items-end">
           <div class="col-md-4">
-            <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
-            <div class="select-wrapper">
-              <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
-                <option value="">اختر المنتج...</option>
-                ${Object.entries(this.warehouse).map(([id,w])=>`<option value="${id}" ${row.savedItem===id?'selected':''}>${w.name}</option>`).join('')}
-              </select>
-            </div>
+            <label class="form-label-j">المنتج (بحث إكمال تلقائي) <span style="color:var(--ruby-light)">*</span></label>
+            <input list="itemsDatalist_${idx}" class="form-control-j select-j ir-item-input" placeholder="ابحث عن المنتج..." value="${row.savedItemName || ''}" onchange="app.handleItemSelect(this, ${idx})">
+            <input type="hidden" class="ir-item" data-idx="${idx}" value="${row.savedItem || ''}">
+            <datalist id="itemsDatalist_${idx}">
+              ${Object.entries(this.warehouse).map(([id,w])=>`<option value="${w.name} ${w.color ? '- '+w.color : ''}" data-id="${id}"></option>`).join('')}
+            </datalist>
           </div>
           <div class="col-md-2">
             <label class="form-label-j">اللون</label>
             <div style="display:flex;gap:4px;align-items:center">
-              <input type="text" id="ir_color_${idx}" class="form-control-j ir-color" data-idx="${idx}"
-                placeholder="اختر..." readonly
-                value="${row.savedColor||''}"
-                data-hex="${row.savedColorHex||''}"
-                style="border-right:4px solid ${row.savedColorHex||'var(--border)'};cursor:pointer;font-size:0.82rem"
-                onclick="app.openColorPicker(${idx},'ir_color')">
-              <button id="ir_color_btn_${idx}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${idx},'ir_color')" style="flex-shrink:0;padding:0.3rem 0.5rem">
-                <i class="fas fa-palette" style="color:var(--gold)"></i>
-              </button>
+              <input type="text" id="ir_color_${idx}" class="form-control-j ir-color" data-idx="${idx}" placeholder="اختر..." readonly value="${row.savedColor||''}" data-hex="${row.savedColorHex||''}" style="border-right:4px solid ${row.savedColorHex||'var(--border)'};cursor:pointer;font-size:0.82rem" onclick="app.openColorPicker(${idx},'ir_color')">
+              <button id="ir_color_btn_${idx}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${idx},'ir_color')" style="flex-shrink:0;padding:0.3rem 0.5rem"><i class="fas fa-palette" style="color:var(--gold)"></i></button>
             </div>
           </div>
           <div class="col-md-2">
             <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
             <div class="select-wrapper">
-              <select class="form-control-j select-j ir-size" data-idx="${idx}">
-                <option value="">المقاس</option>
-              </select>
+              <select class="form-control-j select-j ir-size" data-idx="${idx}"><option value="">المقاس</option></select>
             </div>
             <div class="ir-stock" data-idx="${idx}" style="font-size:0.72rem;margin-top:2px;color:var(--emerald)"></div>
           </div>
@@ -2185,12 +2190,35 @@ window.app = {
       </div>
     `).join('');
 
-    // Restore sizes for rows that had a saved item selected
     this.itemRows.forEach((row, idx) => {
       if (row.savedItem) this.loadRowSizes(idx, row.savedSize);
     });
   },
-
+handleItemSelect(inputEl, idx) {
+    const val = inputEl.value;
+    const datalist = document.getElementById(`itemsDatalist_${idx}`);
+    const option = Array.from(datalist.options).find(opt => opt.value === val);
+    const hiddenInput = document.querySelector(`.ir-item[data-idx="${idx}"]`);
+    
+    if (option) {
+      const itemId = option.getAttribute('data-id');
+      hiddenInput.value = itemId;
+      this.itemRows[idx].savedItemName = val;
+      this.itemRows[idx].savedItem = itemId;
+      this.loadRowSizes(idx);
+      
+      // أتمتة حقل اسم الصفحة (Order Screen Automation)
+      const item = this.warehouse[itemId];
+      if (item && item.pageName) {
+        const pageSel = document.getElementById('ePageName');
+        const pageCus = document.getElementById('ePageNameCustom');
+        if(pageSel) { pageSel.value = item.pageName; pageSel.disabled = true; }
+        if(pageCus) { pageCus.value = ''; pageCus.disabled = true; }
+      }
+    } else {
+      hiddenInput.value = '';
+    }
+  },
   loadRowSizes(idx, preselectSize) {
     const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
     const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
@@ -2427,11 +2455,12 @@ window.app = {
     const boardEl = document.getElementById('boardContainer');
     boardEl.innerHTML = Object.entries(cols).map(([status, orders]) => `
       <div class="kanban-section${status==='new'?' open':''}" id="kb-${status}">
-        <div class="kanban-header" onclick="app.toggleKb('${status}')">
+<div class="kanban-header" onclick="app.toggleKb('${status}')">
           <div class="kanban-dot" style="background:${colors[status]}"></div>
           <div class="kanban-title">${STATUS_AR[status]}</div>
           <div class="kanban-count" style="background:${colors[status]}15;color:${colors[status]}">${orders.length}</div>
           <div class="kanban-sum">${sums[status].toFixed(2)} JOD</div>
+          <input type="checkbox" class="check-j kb-select-all" onclick="event.stopPropagation(); app.toggleKbStatusAll('${status}', this.checked)" title="تحديد كل طلبات هذه الحالة">
           <i class="fas fa-chevron-left kanban-chevron"></i>
         </div>
         <div class="kanban-body${status==='new'?' open':''}">
@@ -2474,6 +2503,19 @@ window.app = {
     else this.selectedKb.add(id);
     this.updateKbBulkPanel();
   },
+  // --- انسخ من هنا ---
+  toggleKbStatusAll(status, isChecked) {
+    Object.entries(this.orders).forEach(([id, o]) => {
+      if (o.status === status) {
+        if (isChecked) this.selectedKb.add(id);
+        else this.selectedKb.delete(id);
+      }
+    });
+    this.updateKbBulkPanel();
+    this.renderBoard();
+  },
+  // --- إلى هنا ---
+
   updateKbBulkPanel() {
     const panel = document.getElementById('kbBulkPanel');
     panel.classList.toggle('show', this.selectedKb.size > 0);
@@ -2634,7 +2676,7 @@ window.app = {
     </head><body>
       <div class="wrap">
         <div class="header">
-          <div class="logo">◆ ${pageLogo} ◆</div>
+          <div class=“logo”>${pageLogo ? ‘◆ ‘ + pageLogo + ‘ ◆’ : ‘<br>‘}</div>
           <div class="ref">#${id.slice(-8)} | ${o.date||''} | ${o.entryUser||''}</div>
         </div>
         <div class="body">
@@ -2735,7 +2777,7 @@ window.app = {
       const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
       html += `<div class="label"><div class="wrap">
         <div class="header">
-          <div class="logo">◆ ${pageLogo} ◆</div>
+          <div class=“logo”>${pageLogo ? ‘◆ ‘ + pageLogo + ‘ ◆’ : ‘<br>‘}</div>
           <div class="ref">#${id.slice(-8)} | ${o.date||''} | ${o.entryUser||''}</div>
         </div>
         <div class="body">
@@ -2772,6 +2814,9 @@ window.app = {
   },
 
   printOrderFull(o, id) {
+const showPageName = confirm("هل تريد طباعة اسم الصفحة (اللوجو) على البوليصة؟\nموافق = طباعة \nإلغاء = إخفاء");
+const pageLogo = showPageName ? (o.pageName || 'جواهر') : '';
+
     const win = window.open('', '_blank');
     const barSvg = `<svg id="barcodesvg_${id.slice(-8)}"></svg>`;
     win.document.write(`<!DOCTYPE html><html dir="rtl"><head>
@@ -2795,7 +2840,7 @@ window.app = {
     </head><body>
       <div class="box">
         <div class="header">
-          <div class="logo">◆ جواهر ◆</div>
+          <div class="logo"><div class=“logo”>${pageLogo ? ‘◆ ‘ + pageLogo + ‘ ◆’ : ‘<br><br>‘}</div></div>
           <div class="sub">نظام إدارة المبيعات</div>
         </div>
         <div class="barcode-area">${barSvg}</div>
@@ -2835,7 +2880,7 @@ window.app = {
         h2 { text-align:center; color:#C9A84C; }
         .barcode-area { text-align:center; margin:10px 0; }
       </style>
-    </head><body><h2>◆ جواهر ◆ (${ids.length} طلب)</h2>`;
+    </head><body><h2><div class=“logo”>${pageLogo ? ‘◆ ‘ + pageLogo + ‘ ◆’ : ‘<br><br>‘}</div> (${ids.length} طلب)</h2>`;
     
     const updates = {};
     ids.forEach(id => {
@@ -3183,7 +3228,7 @@ window.app = {
               ${sizes.length===0?`<span style="color:var(--ink-mid);font-size:0.8rem">لا توجد مقاسات</span>`:sizes.map(([s,q])=>`<span class="size-tag${q===0?' zero':(q<=2?' qty-med-tag':'')}"><span style="font-size:0.62rem;opacity:0.7">مقاس</span> ${s}: <strong>${q}</strong></span>`).join('')}
             </div>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
-              <button class="btn-j btn-ghost btn-xs-j" style="flex:1" onclick="app.showBarcode('${barcode}','${w.name}')"><i class="fas fa-barcode"></i> باركود</button>
+              <button class="btn-j btn-ghost btn-xs-j" style="flex:1" onclick="app.showProductBarcodes('${id}')"><i class="fas fa-barcode"></i> باركود</button>
               <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
               <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
             </div>
@@ -3271,22 +3316,45 @@ window.app = {
     this.log('delete_item', itemId, `حذف المنتج: ${item?.name}`);
     this.toast('تم حذف المنتج', 'success');
   },
+showProductBarcodes(itemId) {
+    const item = this.warehouse[itemId];
+    if (!item) return;
+    const baseCode = item.barcode || itemId.slice(-8);
+    const sizes = Object.keys(item.sizes || {});
+    
+    let barcodesHtml = '';
+    if (sizes.length === 0) {
+      barcodesHtml = `<div class="barcode-label mb-3"><svg id="bc_main"></svg></div><p>${baseCode}</p>`;
+    } else {
+      barcodesHtml = sizes.map((s, i) => `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;background:#fff;">
+          <div style="font-size:0.85rem;font-weight:800;color:#111;margin-bottom:5px;">${item.name} ${item.color ? '- '+item.color : ''}</div>
+          <div style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:5px;">المقاس: ${s}</div>
+          <svg id="bc_${i}"></svg>
+          <div style="font-size:0.75rem;color:#666;margin-top:2px;">${baseCode}-${s}</div>
+        </div>
+      `).join('');
+    }
 
-  showBarcode(code, name) {
     const modal = document.createElement('div');
     modal.className = 'modal-j open';
     modal.innerHTML = `<div class="modal-overlay" onclick="this.parentElement.remove()"></div>
-      <div class="modal-sheet" style="max-width:400px;text-align:center">
+      <div class="modal-sheet" style="max-width:400px;text-align:center;max-height:80vh;overflow-y:auto;">
         <div class="modal-handle"></div>
-        <div class="modal-title">${name}</div>
-        <div class="barcode-label mb-3"><svg id="barcodeModal"></svg></div>
-        <p style="font-size:0.85rem;color:var(--ink-mid)">${code}</p>
-        <button class="btn-j btn-gold w-100" onclick="window.print()"><i class="fas fa-print"></i> طباعة الباركود</button>
+        <div class="modal-title">باركودات المنتج ومقاساته</div>
+        ${barcodesHtml}
+        <button class="btn-j btn-gold w-100 mt-3" onclick="window.print()"><i class="fas fa-print"></i> طباعة الملصقات</button>
       </div>`;
     document.body.appendChild(modal);
-    JsBarcode('#barcodeModal', code, { format:'CODE128', width:2, height:70, displayValue:true, font:'Almarai' });
-  },
 
+    if (sizes.length === 0) {
+      JsBarcode('#bc_main', baseCode, { format:'CODE128', width:1.5, height:50, displayValue:false });
+    } else {
+      sizes.forEach((s, i) => {
+        JsBarcode(`#bc_${i}`, `${baseCode}-${s}`, { format:'CODE128', width:1.5, height:50, displayValue:false });
+      });
+    }
+  },
   openPurchaseModal() { this.gotoPage('purchase'); },
 
   // ============ PURCHASE BARCODE SCANNER ============
@@ -3412,7 +3480,7 @@ window.app = {
     const pageName = document.getElementById('pPageName').value.trim();
     const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
     const notes = document.getElementById('pNotes').value.trim();
-
+if (!pageName) { this.toast('يرجى اختيار أو كتابة اسم الصفحة (المصدر)', 'error'); return; }
     if (!existingId && !newName) { this.toast('يرجى اختيار أو إدخال اسم المنتج', 'error'); return; }
 
     // Collect sizes + colors from grid
@@ -3429,7 +3497,7 @@ window.app = {
     });
 
     if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية واحدة على الأقل', 'error'); return; }
-    if (buyPrice <= 0) { this.toast('يرجى إدخال سعر الشراء', 'error'); return; }
+    // if (buyPrice <= 0) { this.toast('يرجى إدخال سعر الشراء', 'error'); return; }
 
     let targetId = existingId;
     if (!targetId) {
