@@ -71,7 +71,7 @@ window.app = {
             if (isAdmin) {
                 if      (el.classList.contains('nav-btn'))    el.style.display = 'flex';
                 else if (el.classList.contains('dropdown-j')) el.style.display = 'inline-block';
-                else                                           el.style.display = '';
+                else                                          el.style.display = '';
             } else {
                 el.style.display = 'none';
             }
@@ -163,15 +163,13 @@ window.app = {
     },
 
     updateItemSelects() {
-        const items   = Object.entries(this.warehouse);
-        const opts    = '<option value="">اختر المنتج...</option>' +
-            items.map(([id, w]) => `<option value="${id}">${w.name}${w.color ? ' — ' + w.color : ''}</option>`).join('');
+        const items = Object.values(this.warehouse);
+        const uniqueItemNames = [...new Set(items.map(w => w.name))];
         const datalist = document.getElementById('productsList');
-        if (datalist) datalist.innerHTML = [...new Set(items.map(([, w]) => w.name))]
-            .map(name => `<option value="${name}"></option>`).join('');
-        const pSel = document.getElementById('pItem');
-        if (pSel) { const cur = pSel.value; pSel.innerHTML = '<option value="">اختر منتجاً موجوداً</option>' + items.map(([id, w]) => `<option value="${id}">${w.name}</option>`).join(''); pSel.value = cur; }
-        document.querySelectorAll('.ir-item').forEach(sel => { const cur = sel.value; sel.innerHTML = opts; if (cur) sel.value = cur; });
+        if (!datalist) {
+            document.body.insertAdjacentHTML('beforeend', '<datalist id="productsList"></datalist>');
+        }
+        document.getElementById('productsList').innerHTML = uniqueItemNames.map(name => `<option value="${name}"></option>`).join('');
     },
 
     updateRItemFilter() {
@@ -362,58 +360,105 @@ window.app = {
         });
     },
 
-    renderItemRows() {
-        const container = document.getElementById('eItemsList');
-        if (!container) return;
-        container.innerHTML = this.itemRows.map((row, idx) => `
-            <div class="card-j p-3 mb-2" style="border-right:3px solid var(--gold)" id="itemrow_${idx}">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
-                        <div class="select-wrapper">
-                            <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
-                                <option value="">اختر المنتج...</option>
-                                ${Object.entries(this.warehouse).map(([id, w]) => `<option value="${id}" ${row.savedItem === id ? 'selected' : ''}>${w.name}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label-j">اللون</label>
-                        <div style="display:flex;gap:4px;align-items:center">
-                            <input type="text" id="ir_color_${idx}" class="form-control-j ir-color" data-idx="${idx}"
-                                placeholder="اختر..." readonly value="${row.savedColor || ''}"
-                                data-hex="${row.savedColorHex || ''}"
-                                style="border-right:4px solid ${row.savedColorHex || 'var(--border)'};cursor:pointer;font-size:.82rem"
-                                onclick="app.openColorPicker(${idx},'ir_color')">
-                            <button id="ir_color_btn_${idx}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${idx},'ir_color')" style="flex-shrink:0;padding:.3rem .5rem">
-                                <i class="fas fa-palette" style="color:var(--gold)"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
-                        <div class="select-wrapper">
-                            <select class="form-control-j select-j ir-size" data-idx="${idx}">
-                                <option value="">المقاس</option>
-                            </select>
-                        </div>
-                        <div class="ir-stock" data-idx="${idx}" style="font-size:.72rem;margin-top:2px;color:var(--emerald)"></div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label-j">الكمية</label>
-                        <div class="qty-control">
-                            <button class="qty-btn" onclick="app.adjustRowQty(${idx},-1)">−</button>
-                            <input type="number" class="form-control-j qty-input ir-qty" data-idx="${idx}" value="${row.savedQty || 1}" min="1">
-                            <button class="qty-btn" onclick="app.adjustRowQty(${idx},1)">+</button>
-                        </div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        ${idx > 0 ? `<button class="btn-j btn-ruby btn-sm-j w-100" onclick="app.removeItemRow(${idx})"><i class="fas fa-times"></i> حذف</button>` : '<div></div>'}
-                    </div>
-                </div>
+    renderItemRow(idx, item = null) {
+        const row = document.createElement('div');
+        row.className = 'row g-2 align-items-end mb-3 item-entry-row';
+        row.dataset.idx = idx;
+        row.innerHTML = `
+            <div class="col-md-4">
+                <label class="form-label-j">المنتج <span class="text-danger">*</span></label>
+                <input list="productsList" class="form-control-j ir-item" data-idx="${idx}" placeholder="ابحث أو اختر المنتج..." onchange="app.onProductSelected(${idx})" required>
             </div>
-        `).join('');
-        this.itemRows.forEach((row, idx) => { if (row.savedItem) this.loadRowSizes(idx, row.savedSize); });
+            <div class="col-md-3">
+                <label class="form-label-j">اللون <span class="text-danger">*</span></label>
+                <select class="form-control-j select-j ir-color" data-idx="${idx}" onchange="app.onColorSelected(${idx})" disabled required>
+                    <option value="">أولاً اختر المنتج</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">المقاس <span class="text-danger">*</span></label>
+                <select class="form-control-j select-j ir-size" data-idx="${idx}" disabled required>
+                    <option value="">أولاً اختر اللون</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">الكمية <span class="text-danger">*</span></label>
+                <input type="number" class="form-control-j ir-qty" value="1" min="1" required>
+            </div>
+            <div class="col-md-1 d-flex">
+                <button type="button" class="btn-j btn-ruby w-100" onclick="this.closest('.item-entry-row').remove()"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        if (item) {
+            setTimeout(() => {
+                row.querySelector('.ir-item').value = item.itemName || item.name;
+                this.onProductSelected(idx, item.itemColor || item.color, item.size);
+            }, 100);
+        }
+        return row;
+    },
+
+    onProductSelected(idx, preselectColor = null, preselectSize = null) {
+        const itemInput = document.querySelector(`.ir-item[data-idx="${idx}"]`).value;
+        const colorSelect = document.querySelector(`.ir-color[data-idx="${idx}"]`);
+        const sizeSelect = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+        
+        colorSelect.innerHTML = '<option value="">اختر اللون</option>';
+        sizeSelect.innerHTML = '<option value="">أولاً اختر اللون</option>';
+        sizeSelect.disabled = true;
+
+        if(!itemInput) { colorSelect.disabled = true; return; }
+
+        const availableColors = new Set();
+        Object.values(this.warehouse).forEach(w => {
+            if(w.name === itemInput && w.color) availableColors.add(w.color);
+        });
+
+        if(availableColors.size > 0) {
+            colorSelect.disabled = false;
+            availableColors.forEach(c => {
+                colorSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+            if(preselectColor) {
+                colorSelect.value = preselectColor;
+                this.onColorSelected(idx, preselectSize);
+            }
+        } else {
+            colorSelect.innerHTML = '<option value="-">لا يوجد ألوان (افتراضي)</option>';
+            colorSelect.value = '-';
+            this.onColorSelected(idx, preselectSize);
+        }
+    },
+
+    onColorSelected(idx, preselectSize = null) {
+        const itemInput = document.querySelector(`.ir-item[data-idx="${idx}"]`).value;
+        const colorInput = document.querySelector(`.ir-color[data-idx="${idx}"]`).value;
+        const sizeSelect = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+        
+        sizeSelect.innerHTML = '<option value="">اختر المقاس</option>';
+        
+        if(!colorInput) { sizeSelect.disabled = true; return; }
+
+        let sizesFound = false;
+        Object.values(this.warehouse).forEach(w => {
+            if(w.name === itemInput && (w.color === colorInput || colorInput === '-')) {
+                if(w.sizes) {
+                    sizesFound = true;
+                    sizeSelect.disabled = false;
+                    Object.keys(w.sizes).forEach(size => {
+                        sizeSelect.innerHTML += `<option value="${size}">${size} (متاح: ${w.sizes[size]})</option>`;
+                    });
+                }
+            }
+        });
+
+        if(!sizesFound) {
+            sizeSelect.innerHTML = '<option value="-">مقاس موحد</option>';
+            sizeSelect.value = '-';
+            sizeSelect.disabled = false;
+        }
+
+        if(preselectSize) sizeSelect.value = preselectSize;
     },
 
     loadRowSizes(idx, preselectSize) {
@@ -539,7 +584,7 @@ window.app = {
         const totalStock = Object.values(this.warehouse).reduce((s, w) => s + Object.values(w.sizes || {}).reduce((a, b) => a + b, 0), 0);
 
         const kpis = [
-            { label: 'إجمالي الطلبات',    value: orders.length,             icon: 'fa-boxes',         cls: 'kpi-gold' },
+            { label: 'إجمالي الطلبات',    value: orders.length,             icon: 'fa-boxes',          cls: 'kpi-gold' },
             { label: 'جديدة',              value: counts.new,                icon: 'fa-star',           cls: 'kpi-sapphire' },
             { label: 'جاهزة للتسليم',      value: counts.done,               icon: 'fa-box',            cls: 'kpi-emerald' },
             { label: 'تم التسليم',          value: counts.delivered,          icon: 'fa-check-double',   cls: 'kpi-amethyst' },
@@ -614,34 +659,50 @@ window.app = {
 
     // ============ ORDERS BOARD ============
     renderBoard() {
-        const q    = (document.getElementById('ordersSearch')?.value || '').toLowerCase();
-        const cols = { new: [], process: [], done: [], delivered: [], postponed: [], canceled: [] };
-        const sums = {}; Object.keys(cols).forEach(s => sums[s] = 0);
-        Object.entries(this.orders).forEach(([id, o]) => {
-            if (q && !JSON.stringify(o).toLowerCase().includes(q)) return;
-            if (cols[o.status] !== undefined) { cols[o.status].push({ id, ...o }); sums[o.status] += parseFloat(o.price || 0); }
+        const boardHTML = Object.entries(STATUS_AR).map(([statusKey, statusName]) => {
+            const colOrders = Object.entries(this.orders).filter(([id, o]) => o.status === statusKey);
+            // زر اختيار الكل
+            const selectAllBtn = colOrders.length > 0 
+                ? `<button class="btn-j btn-ghost btn-xs-j w-100 mb-2" onclick="app.selectAllInStatus('${statusKey}')">تحديد الكل (${colOrders.length})</button>` 
+                : '';
+
+            return `
+            <div class="kanban-col" id="kb-${statusKey}">
+                <div class="kanban-header" onclick="app.toggleKb('${statusKey}')">
+                    <div class="kanban-dot" style="background:${STATUS_COLORS[statusKey]}"></div>
+                    <div class="kanban-title">${statusName}</div>
+                    <div class="kanban-count">${colOrders.length}</div>
+                </div>
+                <div class="kanban-body" id="col-${statusKey}">
+                    ${selectAllBtn}
+                    ${colOrders.map(([id, o]) => this.mkOrderCard({ id, ...o })).join('')}
+                </div>
+            </div>`;
+        }).join('');
+
+        const boardContainer = document.querySelector('.kanban-board');
+        if (boardContainer) boardContainer.innerHTML = boardHTML;
+    },
+
+    selectAllInStatus(statusKey) {
+        const colOrders = Object.entries(this.orders).filter(([id, o]) => o.status === statusKey);
+        colOrders.forEach(([id, o]) => {
+            const checkbox = document.querySelector(`.order-card-j[onclick*="${id}"] .check-j`) || 
+                             document.querySelector(`.check-j[onclick*="${id}"]`);
+            if (checkbox && !checkbox.checked) {
+                checkbox.checked = true;
+                this.selectedKb.add(id);
+            }
         });
-        document.getElementById('boardContainer').innerHTML = Object.entries(cols).map(([status, orders]) => `
-            <div class="kanban-section${status === 'new' ? ' open' : ''}" id="kb-${status}">
-                <div class="kanban-header" onclick="app.toggleKb('${status}')">
-                    <div class="kanban-dot" style="background:${STATUS_COLORS[status]}"></div>
-                    <div class="kanban-title">${STATUS_AR[status]}</div>
-                    <div class="kanban-count" style="background:${STATUS_COLORS[status]}15;color:${STATUS_COLORS[status]}">${orders.length}</div>
-                    <div class="kanban-sum">${sums[status].toFixed(2)} JOD</div>
-                    <i class="fas fa-chevron-left kanban-chevron"></i>
-                </div>
-                <div class="kanban-body${status === 'new' ? ' open' : ''}">
-                    ${orders.length === 0
-                        ? `<div style="color:var(--ink-mid);font-size:.85rem;padding:1rem;text-align:center;grid-column:1/-1"><i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>لا توجد طلبات</div>`
-                        : orders.map(o => this.mkOrderCard(o)).join('')}
-                </div>
-            </div>`).join('');
+        this.updateKbBulkPanel();
     },
 
     toggleKb(status) {
         const sec = document.getElementById('kb-' + status);
+        if(!sec) return;
         sec.classList.toggle('open');
-        sec.querySelector('.kanban-body').classList.toggle('open');
+        const body = sec.querySelector('.kanban-body');
+        if(body) body.classList.toggle('open');
     },
 
     mkOrderCard(o) {
@@ -670,8 +731,12 @@ window.app = {
         this.updateKbBulkPanel();
     },
     updateKbBulkPanel() {
-        document.getElementById('kbBulkPanel').classList.toggle('show', this.selectedKb.size > 0);
-        document.getElementById('kbBulkCount').textContent = this.selectedKb.size;
+        const panel = document.getElementById('kbBulkPanel');
+        if(panel) {
+            panel.classList.toggle('show', this.selectedKb.size > 0);
+            const count = document.getElementById('kbBulkCount');
+            if(count) count.textContent = this.selectedKb.size;
+        }
     },
     async kbBulkStatus(s) {
         const upd = {};
@@ -782,7 +847,6 @@ window.app = {
     // ============ PRINT ============
     printOrder(o, id) {
         const win       = window.open('', '_blank');
-        const pageLogo  = o.pageName || 'جواهر';
         const items     = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty, price: o.price }];
         win.document.write(this._buildLabelHTML([{ id, o }]));
         win.document.close();
@@ -806,54 +870,69 @@ window.app = {
     },
 
     _buildLabelHTML(labels, multi = false) {
-        const pageStyle = multi ? `@page { size: 10cm 10cm; margin: 0; }` : `@page { size: 10cm 10cm; margin: 0; }`;
+        const pageStyle = `@page { size: 10cm 10cm; margin: 0; }`;
         let barcodeScripts = '';
+        
         let labelsHtml = labels.map(({ id, o }) => {
-            const items   = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
-            const bcId    = `bc_${id.slice(-8)}`;
+            const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
+            const bcId = `bc_${id.slice(-8)}`;
             barcodeScripts += `JsBarcode("#${bcId}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });`;
-            return `<div style="width:10cm;height:10cm;padding:4mm;display:${multi ? 'flex' : 'block'};flex-direction:column;page-break-after:${multi ? 'always' : 'unset'};overflow:hidden">
-                <div style="width:100%;height:100%;display:flex;flex-direction:column;border:1.5px solid #222;border-radius:4px">
-                    <div style="text-align:center;padding:3px 6px;border-bottom:1.5px solid #222;background:#111;color:#C9A84C">
-                        <div style="font-size:1rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${o.pageName || 'جواهر'} ◆</div>
-                        <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''} | ${o.entryUser || ''}</div>
-                    </div>
-                    <div style="flex:1;display:flex;flex-direction:column;padding:3px">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;flex:1">
-                            <div style="display:flex;flex-direction:column;gap:2px">
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">اسم الزبون</div><div style="font-size:1rem;font-weight:800">${o.custName || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">العنوان</div><div style="font-size:.72rem;font-weight:700">${o.governorate || ''} - ${o.custAddr || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">الوزن</div><div style="font-size:.72rem;font-weight:700">${o.weight || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">ملاحظات</div><div style="font-size:.72rem;font-weight:700">${o.tags || '-'}</div></div>
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:2px">
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">رقم الهاتف</div><div style="font-size:.95rem;font-weight:800;direction:ltr;text-align:right">${o.custMob || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">الطول</div><div style="font-size:.72rem;font-weight:700">${o.height || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">النمرة / المقاس</div><div style="font-size:.72rem;font-weight:700">${items.map(it => it.size).join('، ') || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">السعر شامل التوصيل</div><div style="font-size:1.1rem;font-weight:800;color:#1A6B4A">${o.price || 0} ${o.currency || 'JOD'}</div></div>
-                            </div>
+            
+            let itemsHtml = items.map(it => `
+                <div style="border-bottom:1px dashed #ccc; padding-bottom:4px; margin-bottom:4px;">
+                    <strong style="color:var(--gold-dark)">المنتج:</strong> ${it.itemName} <br>
+                    <strong>اللون:</strong> ${it.itemColor || '-'} | <strong>المقاس:</strong> ${it.size || '-'} <br>
+                    <strong>الكمية:</strong> ${it.qty}
+                </div>
+            `).join('');
+
+            return `
+            <div style="width:10cm;height:10cm;padding:4mm;display:${multi ? 'flex' : 'block'};flex-direction:column;page-break-after:${multi ? 'always' : 'unset'};overflow:hidden;box-sizing:border-box;font-family:'Almarai', sans-serif;direction:rtl;">
+                <div style="width:100%;height:100%;display:flex;flex-direction:row;border:2px solid #111;border-radius:6px;overflow:hidden;">
+                    
+                    <div style="width:50%;border-left:2px solid #111;padding:8px;background:#FAFAFA;display:flex;flex-direction:column;gap:8px;">
+                        <div style="font-weight:900;font-size:1.05rem;text-align:center;border-bottom:2px solid #111;padding-bottom:5px;color:#111;">
+                            معلومات التوصيل
                         </div>
-                        <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:3px;padding:2px 5px;margin-top:2px">
-                            <div style="font-size:.52rem;color:#888">الموديل / المنتج</div>
-                            <div style="font-size:.7rem;font-weight:700">${items.map(it => `${it.itemName || ''}${it.itemColor ? ' (' + it.itemColor + ')' : ''} مقاس ${it.size || ''} ×${it.qty || 1}`).join(' | ')}</div>
+                        <div style="font-size:0.9rem;"><strong>العنوان:</strong><br> ${o.governorate} ${o.address ? '- ' + o.address : ''}</div>
+                        <div style="font-size:0.9rem; direction:ltr; text-align:right;"><strong>الموبايل:</strong><br> ${o.phone || o.custMob}</div>
+                        <div style="font-size:0.85rem;"><strong>الملاحظة:</strong><br> ${o.notes || o.tags || 'لا يوجد'}</div>
+                        <div style="margin-top:auto;background:#111;color:#fff;text-align:center;padding:6px;font-size:1.1rem;font-weight:bold;border-radius:4px;">
+                            الإجمالي: ${o.totalPrice || o.price} د.أ
                         </div>
                     </div>
-                    <div style="text-align:center;padding:2px;border-top:1px solid #eee"><svg id="${bcId}" style="max-width:100%;height:20px !important"></svg></div>
+
+                    <div style="width:50%;padding:8px;display:flex;flex-direction:column;">
+                        <div style="font-weight:900;font-size:1rem;text-align:center;border-bottom:2px solid #111;padding-bottom:5px;margin-bottom:8px;">
+                            طلب: #${id.slice(-5).toUpperCase()}
+                        </div>
+                        <div style="flex-grow:1;overflow:hidden;font-size:0.85rem;">
+                            ${itemsHtml}
+                        </div>
+                        <div style="text-align:center;margin-top:auto;padding-top:5px;">
+                            <svg id="${bcId}"></svg>
+                        </div>
+                    </div>
+
                 </div>
             </div>`;
         }).join('');
 
-        return `<!DOCTYPE html><html dir="rtl"><head>
-            <meta charset="UTF-8"><title>بوليصة طباعة</title>
-            <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"><\/script>
+        return `
+        <html lang="ar" dir="rtl">
+        <head>
+            <title>طباعة الطلبات</title>
             <style>
                 ${pageStyle}
-                * { box-sizing: border-box; }
-                body { font-family: 'Almarai',Arial; margin:0; padding:0; background:#fff; }
-                @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+                body { margin: 0; padding: 0; background: #fff; color: #000; }
             </style>
-        </head><body>${labelsHtml}<script>${barcodeScripts}<\/script></body></html>`;
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+        </head>
+        <body onload="eval(document.getElementById('bcs').textContent)">
+            ${labelsHtml}
+            <script id="bcs">${barcodeScripts}</script>
+        </body>
+        </html>`;
     },
 
     // ============ REPORTS ============
@@ -1087,8 +1166,8 @@ window.app = {
 
     renderWarehouse() {
         const q      = document.getElementById('wSearch')?.value.toLowerCase()    || '';
-        const colorF = document.getElementById('wColorFilter')?.value              || '';
-        const pageF  = document.getElementById('wPageFilter')?.value               || '';
+        const colorF = document.getElementById('wColorFilter')?.value             || '';
+        const pageF  = document.getElementById('wPageFilter')?.value                || '';
         const stockF = document.getElementById('wStockFilter')?.value              || '';
         let items    = Object.entries(this.warehouse);
 
@@ -1527,16 +1606,48 @@ window.app = {
         if (this.role !== 'Admin') return;
         push(logsRef, { timestamp: Date.now(), date: new Date().toLocaleString('en-GB'), user: this.userName, action, id, details });
     },
+    
     renderLogs() {
-        const el = document.getElementById('logsBody'); if (!el) return;
-        const entries = Object.values(this.logsData || {}).sort((a, b) => b.timestamp - a.timestamp);
-        el.innerHTML = entries.map(l => `<tr>
-            <td dir="ltr" style="font-size:.8rem">${new Date(l.timestamp).toLocaleString('en-GB')}</td>
-            <td style="font-weight:700">${l.user || ''}</td>
-            <td><span class="badge-j badge-new">${l.action || ''}</span></td>
-            <td style="font-size:.78rem;color:var(--gold)">${(l.id || '').slice(-8)}</td>
-            <td style="font-size:.85rem">${l.details || ''}</td>
-        </tr>`).join('');
+        if(this.role !== 'Admin') return;
+        const tbody = document.getElementById('logsTableBody');
+        if(!tbody) return;
+        
+        const searchTerm = (document.getElementById('logSearch')?.value || '').toLowerCase();
+        const actionFilter = document.getElementById('logActionFilter')?.value || '';
+
+        const logsArr = Object.entries(this.logsData).sort((a,b) => b[1].ts - a[1].ts);
+        
+        tbody.innerHTML = logsArr.filter(([id, lg]) => {
+            const matchesSearch = (lg.user + lg.action + lg.details).toLowerCase().includes(searchTerm);
+            const matchesAction = actionFilter ? lg.action === actionFilter : true;
+            return matchesSearch && matchesAction;
+        }).map(([id, lg]) => `
+            <tr>
+                <td><input type="checkbox" class="log-check check-j" data-id="${id}"></td>
+                <td style="direction:ltr;text-align:right;">${new Date(lg.ts || lg.timestamp).toLocaleString('en-GB')}</td>
+                <td>${lg.user}</td>
+                <td><span class="badge-j" style="background:var(--sapphire)">${lg.action}</span></td>
+                <td>${lg.orderId || lg.id || '-'}</td>
+                <td>${lg.details}</td>
+            </tr>
+        `).join('');
+    },
+
+    async deleteSelectedLogs() {
+        const selected = Array.from(document.querySelectorAll('.log-check:checked')).map(cb => cb.dataset.id);
+        if(selected.length === 0) return this.toast('حدد حركات للحذف أولاً', 'error');
+        if(!confirm(`هل أنت متأكد من حذف ${selected.length} حركة سجل؟`)) return;
+
+        const updates = {};
+        selected.forEach(id => updates[`jawaher_logs/${id}`] = null);
+        await update(ref(db), updates);
+        this.toast('تم حذف الحركات', 'success');
+    },
+
+    exportLogsToExcel() {
+        const table = document.querySelector('#page-logs table');
+        const wb = XLSX.utils.table_to_book(table, {sheet:"Logs"});
+        XLSX.writeFile(wb, `Jawaher_Logs_${new Date().toISOString().slice(0,10)}.xlsx`);
     },
 
     // ============ HELPERS ============
