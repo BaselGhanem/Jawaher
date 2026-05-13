@@ -372,7 +372,7 @@ window.app = {
            oninput="app.loadRowSizes(${idx})" 
            value="${row.savedItem || ''}">
 </div>
-                    </div>
+                  
                     <div class="col-md-2">
                         <label class="form-label-j">اللون</label>
                         <div style="display:flex;gap:4px;align-items:center">
@@ -629,9 +629,14 @@ if (!itemId) {
             if (q && !JSON.stringify(o).toLowerCase().includes(q)) return;
             if (cols[o.status] !== undefined) { cols[o.status].push({ id, ...o }); sums[o.status] += parseFloat(o.price || 0); }
         });
-        document.getElementById('boardContainer').innerHTML = Object.entries(cols).map(([status, orders]) => `
+        document.getElementById('boardContainer').innerHTML = Object.entries(cols).map(([status, orders]) => {
+            const allSelected = orders.length > 0 && orders.every(o => this.selectedKb.has(o.id));
+            return `
             <div class="kanban-section${status === 'new' ? ' open' : ''}" id="kb-${status}">
                 <div class="kanban-header" onclick="app.toggleKb('${status}')">
+                    <input type="checkbox" class="check-j me-2" 
+                        onclick="event.stopPropagation(); app.toggleKbGroup('${status}', this.checked)" 
+                        ${allSelected ? 'checked' : ''} title="تحديد الكل في هذه الحالة">
                     <div class="kanban-dot" style="background:${STATUS_COLORS[status]}"></div>
                     <div class="kanban-title">${STATUS_AR[status]}</div>
                     <div class="kanban-count" style="background:${STATUS_COLORS[status]}15;color:${STATUS_COLORS[status]}">${orders.length}</div>
@@ -643,7 +648,8 @@ if (!itemId) {
                         ? `<div style="color:var(--ink-mid);font-size:.85rem;padding:1rem;text-align:center;grid-column:1/-1"><i class="fas fa-inbox" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>لا توجد طلبات</div>`
                         : orders.map(o => this.mkOrderCard(o)).join('')}
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     },
 
     toggleKb(status) {
@@ -651,7 +657,16 @@ if (!itemId) {
         sec.classList.toggle('open');
         sec.querySelector('.kanban-body').classList.toggle('open');
     },
-
+toggleKbGroup(status, isChecked) {
+        Object.entries(this.orders).forEach(([id, o]) => {
+            if (o.status === status) {
+                if (isChecked) this.selectedKb.add(id);
+                else this.selectedKb.delete(id);
+            }
+        });
+        this.renderBoard();
+        this.updateKbBulkPanel();
+    },
     mkOrderCard(o) {
     const isChecked = this.selectedKb.has(o.id) ? 'checked' : '';
     // إنشاء قائمة الأصناف الصغيرة داخل الكرت
@@ -849,60 +864,46 @@ if (!itemId) {
         this.toast('تمت الطباعة وتحويل الحالة إلى جاهزة', 'success');
     },
 
-   _buildLabelHTML(labels, multi = false) {
-        const pageStyle = multi ? `@page { size: 10cm 10cm; margin: 0; }` : `@page { size: 10cm 10cm; margin: 0; }`;
+ _buildLabelHTML(labels, multi = false) {
+        const pageStyle = `@page { size: 10cm 10cm; margin: 0; }`;
         let barcodeScripts = '';
         
         let labelsHtml = labels.map(({ id, o }) => {
-            // 1. منطق تجميع أسماء الصفحات
             let pageNamesSet = new Set();
-            
-            // إضافة اسم الصفحة الرئيسي المخزن في الطلب
             if (o.pageName) pageNamesSet.add(o.pageName);
             
-            // تجميع أسماء الصفحات من المنتجات داخل الطلبية (من المستودع)
             const orderItems = o.items || [{ itemId: o.itemId }];
             orderItems.forEach(it => {
                 const warehouseItem = this.warehouse[it.itemId];
-                if (warehouseItem && warehouseItem.pageName) {
-                    pageNamesSet.add(warehouseItem.pageName);
-                }
+                if (warehouseItem && warehouseItem.pageName) pageNamesSet.add(warehouseItem.pageName);
             });
 
-            // تحويل الـ Set إلى نص مدمج بفاصلة أو علامة &
-            const finalPageHeader = pageNamesSet.size > 0 
-                ? Array.from(pageNamesSet).join(' & ') 
-                : 'جواهر';
-
-            const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
+            const finalPageHeader = pageNamesSet.size > 0 ? Array.from(pageNamesSet).join(' & ') : 'جواهر';
+            const items = o.items || [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
             const bcId = `bc_${id.slice(-8)}`;
             barcodeScripts += `JsBarcode("#${bcId}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });`;
             
-            return `<div style="width:10cm;height:10cm;padding:4mm;display:${multi ? 'flex' : 'block'};flex-direction:column;page-break-after:${multi ? 'always' : 'unset'};overflow:hidden">
+            return `
+            <div style="width:10cm;height:10cm;padding:4mm;display:block;page-break-after:always;overflow:hidden">
                 <div style="width:100%;height:100%;display:flex;flex-direction:column;border:1.5px solid #222;border-radius:4px">
                     <div style="text-align:center;padding:3px 6px;border-bottom:1.5px solid #222;background:#111;color:#C9A84C">
-                        <!-- عرض الأسماء المدمجة هنا -->
                         <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${finalPageHeader} ◆</div>
-                        <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''} | ${o.entryUser || ''}</div>
+                        <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''}</div>
                     </div>
                     <div style="flex:1;display:flex;flex-direction:column;padding:3px">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;flex:1">
                             <div style="display:flex;flex-direction:column;gap:2px">
                                 <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">اسم الزبون</div><div style="font-size:1rem;font-weight:800">${o.custName || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">العنوان</div><div style="font-size:.72rem;font-weight:700">${o.governorate || ''} - ${o.custAddr || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">الوزن</div><div style="font-size:.72rem;font-weight:700">${o.weight || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">ملاحظات</div><div style="font-size:.72rem;font-weight:700">${o.tags || '-'}</div></div>
+                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">المقاسات</div><div style="font-size:.72rem;font-weight:700">${items.map(it => it.size).join('، ') || '-'}</div></div>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:2px">
                                 <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">رقم الهاتف</div><div style="font-size:.95rem;font-weight:800;direction:ltr;text-align:right">${o.custMob || ''}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">الطول</div><div style="font-size:.72rem;font-weight:700">${o.height || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">النمرة / المقاس</div><div style="font-size:.72rem;font-weight:700">${items.map(it => it.size).join('، ') || '-'}</div></div>
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">السعر شامل التوصيل</div><div style="font-size:1.1rem;font-weight:800;color:#1A6B4A">${o.price || 0} ${o.currency || 'JOD'}</div></div>
+                                <div style="background:#eef7f2;border-radius:3px;padding:2px 5px;border:1.5px solid #1A6B4A"><div style="font-size:.52rem;color:#1A6B4A">السعر</div><div style="font-size:1.1rem;font-weight:800;color:#1A6B4A">${o.price || 0} JOD</div></div>
                             </div>
                         </div>
                         <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:3px;padding:2px 5px;margin-top:2px">
-                            <div style="font-size:.52rem;color:#888">الموديل / المنتج</div>
-                            <div style="font-size:.7rem;font-weight:700">${items.map(it => `${it.itemName || ''}${it.itemColor ? ' (' + it.itemColor + ')' : ''} مقاس ${it.size || ''} ×${it.qty || 1}`).join(' | ')}</div>
+                            <div style="font-size:.52rem;color:#888">المنتجات</div>
+                            <div style="font-size:.7rem;font-weight:700">${items.map(it => `${it.itemName || ''} (${it.itemColor || ''}) ×${it.qty || 1}`).join(' | ')}</div>
                         </div>
                     </div>
                     <div style="text-align:center;padding:2px;border-top:1px solid #eee"><svg id="${bcId}" style="max-width:100%;height:20px !important"></svg></div>
@@ -931,7 +932,7 @@ if (!itemId) {
         const fr = document.getElementById('rFrom')?.value || '';
         const to = document.getElementById('rTo')?.value || '';
         return Object.entries(this.orders).filter(([, o]) => {
-            if (q  && !JSON.stringify(o).toLowerCase().includes(q)) return false;
+if (q && !(o.custName.toLowerCase().includes(q) || o.custMob.includes(q) || id.includes(q))) return false;
             if (st && o.status   !== st) return false;
             if (it && o.itemName !== it) return false;
             if (pg && o.pageName !== pg) return false;
