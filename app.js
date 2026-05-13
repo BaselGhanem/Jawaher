@@ -475,29 +475,40 @@ const item = foundEntry ? foundEntry[1] : null;
 
         const items = [];
         const itemSelectors = document.querySelectorAll('.ir-item');
-        for (let i = 0; i < itemSelectors.length; i++) {
-            const itemNameInput = itemSelectors[i].value;
-const foundEntry = Object.entries(this.warehouse).find(([id, w]) => w.name === itemNameInput);
-const itemId = foundEntry ? foundEntry[0] : null;
+    for (let i = 0; i < itemSelectors.length; i++) {
+    const itemNameInput = itemSelectors[i].value;
+    const foundEntry = Object.entries(this.warehouse).find(([id, w]) => w.name === itemNameInput);
+    const itemId = foundEntry ? foundEntry[0] : null;
+    const item = foundEntry ? foundEntry[1] : null;
 
-if (!itemId) { 
-    this.toast(`المنتج "${itemNameInput}" غير موجود في المستودع بنفس الاسم`, 'error'); 
-    return; 
+    // تعريف المتغيرات مرة واحدة فقط
+    const sizeCombo = document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
+    const color = document.getElementById(`ir_color_${i}`)?.value || '';
+    const qty = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value) || 1;
+
+    // التحقق الصارم من وجود الثلاثي المرح
+    if (!itemId || !sizeCombo || !color) { 
+        this.toast(`يرجى اختيار (المنتج + اللون + المقاس) للصف ${i + 1}`, 'error'); 
+        return; 
+    }
+
+    // التحقق من الكمية المتوفرة
+    const avail = item.sizes?.[sizeCombo] || 0;
+    if (qty > avail) { 
+        this.toast(`الكمية المطلوبة (${qty}) غير متوفرة لـ ${item.name}! المتوفر (${avail})`, 'error'); 
+        return; 
+    }
+
+    // بناء بيانات الصنف
+    let finalSize = sizeCombo;
+    let finalColor = color; 
+    if (sizeCombo.includes(' - ')) {
+        finalSize = sizeCombo.split(' - ')[0];
+        finalColor = sizeCombo.split(' - ')[1];
+    }
+
+    items.push({ itemId, itemName: item.name, itemColor: finalColor, size: finalSize, exactKey: sizeCombo, qty });
 }
-            const sizeCombo= document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
-            const qty      = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value) || 1;
-            const color    = document.getElementById(`ir_color_${i}`)?.value || '';
-            if (!itemId || !sizeCombo) { this.toast(`يرجى اختيار المنتج والمقاس للصف ${i + 1}`, 'error'); return; }
-            const item = this.warehouse[itemId];
-            if (!item) { this.toast('منتج غير موجود في المستودع', 'error'); return; }
-            const avail = item.sizes?.[sizeCombo] || 0;
-            if (qty > avail) { this.toast(`الكمية المطلوبة (${qty}) غير متوفرة! المتوفر (${avail})`, 'error'); return; }
-            let finalSize  = sizeCombo;
-            let finalColor = color || item.color || '';
-            if      (item.variations && item.variations[sizeCombo]) { finalSize = item.variations[sizeCombo].size; finalColor = item.variations[sizeCombo].color || finalColor; }
-            else if (sizeCombo.includes(' - '))                      { finalSize = sizeCombo.split(' - ')[0]; finalColor = sizeCombo.split(' - ')[1]; }
-            items.push({ itemId, itemName: item.name, itemColor: finalColor, size: finalSize, exactKey: sizeCombo, qty });
-        }
 
         const payload = {
             timestamp: Date.now(), date: document.getElementById('eDate').value,
@@ -1147,6 +1158,10 @@ if (q && !(o.custName.toLowerCase().includes(q) || o.custMob.includes(q) || id.i
             const hex  = row.querySelector('.nim-c-val')?.dataset?.hex || '';
             let   b    = row.querySelector('.nim-b-val')?.value.trim().toUpperCase() || '';
             const qty  = parseInt(row.querySelector('.nim-q-val')?.value) || 0;
+            if (sz && !c) {
+        this.toast(`المقاس ${sz} يحتاج لتحديد لون!`, 'error');
+        return;
+    }
             if (!sz) continue;
             if (!b) b = 'JW' + Math.random().toString(36).substr(2, 6).toUpperCase();
             const existing = Object.values(this.warehouse).find(w => w.barcode === b || (w.variations && Object.values(w.variations).some(v => v.barcode === b)));
@@ -1338,6 +1353,10 @@ async confirmAddStock(itemId) {
         const reason = document.getElementById('asReason')?.value || 'تصحيح جرد';
 
         // التحقق من الحقول الإجبارية
+        if (!color || !size) {
+        this.toast('خطأ: يجب تحديد اللون والمقاس معاً لتحديث المخزون', 'error');
+        return;
+    }
         if (!color) { this.toast('يرجى تحديد اللون أولاً', 'error'); return; }
         if (!size) { this.toast('يرجى تحديد المقاس', 'error'); return; }
         if (qty === 0) { this.toast('يرجى إدخال كمية صحيحة', 'error'); return; }
