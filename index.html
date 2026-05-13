@@ -2055,9 +2055,19 @@ window.app = {
       el.style.cssText = `width:28px;height:28px;border-radius:8px;background:${c.hex};border:2px solid ${c.border};cursor:pointer;transition:transform 0.15s`;
       el.onmouseover = () => el.style.transform = 'scale(1.15)';
       el.onmouseout  = () => el.style.transform = 'scale(1)';
-      el.onclick = () => {
+     el.onclick = () => {
         const target = document.getElementById(targetId);
-        if (target) { target.value = c.name; target.dataset.hex = c.hex; target.style.borderRight = `4px solid ${c.hex}`; }
+        if (target) { 
+          target.value = c.name; 
+          target.dataset.hex = c.hex; 
+          target.style.borderRight = `4px solid ${c.hex}`; 
+          
+          // تفعيل الفلترة والتحقق عند اختيار لون في شاشة إدخال الطلب
+          if (targetId.startsWith('ir_color_')) {
+              const rowIdx = target.dataset.idx;
+              app.filterSizesByColor(rowIdx, c.name);
+          }
+        }
         popup.remove();
         this._colorPickerOpen = null;
       };
@@ -2082,7 +2092,54 @@ window.app = {
       });
     }, 0);
   },
+filterSizesByColor(idx, colorName) {
+    const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
+    const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+    const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
+    if (!sel || !sizeSel) return;
+    
+    const itemId = sel.value;
+    const item = this.warehouse[itemId];
+    if (!item) return;
 
+    let colorHasStock = false;
+    let availableSizesHtml = '<option value="">المقاس</option>';
+    
+    Object.entries(item.sizes||{}).forEach(([s, q]) => {
+      let vColor = '';
+      if (item.variations && item.variations[s]) {
+        vColor = item.variations[s].color;
+      } else if (s.includes(' - ')) {
+        vColor = s.split(' - ')[1];
+      } else {
+        vColor = item.color || '';
+      }
+
+      // عرض المقاسات الخاصة بهذا اللون فقط
+      if (vColor === colorName) {
+        availableSizesHtml += `<option value="${s}" data-qty="${q}">${s} (${q})</option>`;
+        if (q > 0) colorHasStock = true;
+      }
+    });
+
+    // إذا كان اللون لا يمتلك أي رصيد
+    if (!colorHasStock) {
+      this.toast(`اللون "${colorName}" غير متوفر (ليس له رصيد)`, 'error');
+      const cInp = document.getElementById(`ir_color_${idx}`);
+      if (cInp) { cInp.value = ''; cInp.style.borderRight = '4px solid var(--border)'; cInp.dataset.hex = ''; }
+      this.loadRowSizes(idx); // إعادة تحميل كل المقاسات
+      return;
+    }
+
+    sizeSel.innerHTML = availableSizesHtml;
+    if(stockInfo) stockInfo.textContent = '';
+    
+    // إذا كان هناك مقاس واحد فقط لهذا اللون، اختاره تلقائياً
+    if (sizeSel.options.length === 2) {
+      sizeSel.selectedIndex = 1;
+      sizeSel.onchange(); 
+    }
+  },
   addItemRow() {
     this._saveItemRowsState();
     this.itemRows.push({ id: Date.now() });
@@ -2189,20 +2246,39 @@ loadRowSizes(idx, preselectSize) {
     Object.entries(item.sizes||{}).forEach(([s,q])=>{
       sizeSel.innerHTML += `<option value="${s}" data-qty="${q}" ${preselectSize===s?'selected':''}>${s} (${q})</option>`;
     });
+    
     const showStock = () => {
       const opt = sizeSel.selectedOptions[0];
       const qty = opt?.dataset?.qty || 0;
-      if(stockInfo) { stockInfo.textContent = qty > 0 ? `✓ متوفر: ${qty}` : '✗ نفد'; stockInfo.style.color = qty > 0 ? 'var(--emerald)' : 'var(--ruby-light)'; }
+      if(stockInfo) { 
+          stockInfo.textContent = qty > 0 ? `✓ متوفر: ${qty}` : '✗ نفد'; 
+          stockInfo.style.color = qty > 0 ? 'var(--emerald)' : 'var(--ruby-light)'; 
+      }
+      
+      // التعبئة التلقائية لحقل اللون بناءً على المقاس المختار
+      const val = sizeSel.value;
+      if (val && item) {
+        let vColor = '';
+        let vHex = '';
+        if (item.variations && item.variations[val]) {
+          vColor = item.variations[val].color;
+          vHex = item.variations[val].hex;
+        } else if (val.includes(' - ')) {
+          vColor = val.split(' - ')[1];
+          vHex = this._colorHex(vColor);
+        }
+        const cInp = document.getElementById(`ir_color_${idx}`);
+        if (cInp && vColor) {
+          cInp.value = vColor;
+          cInp.dataset.hex = vHex || '';
+          cInp.style.borderRight = `4px solid ${vHex || 'var(--border)'}`;
+        }
+      }
     };
+    
     sizeSel.onchange = showStock;
     if (preselectSize) showStock();
   },
-  adjustRowQty(idx, delta) {
-    const inp = document.querySelector(`.ir-qty[data-idx="${idx}"]`);
-    if (!inp) return;
-    inp.value = Math.max(1, (parseInt(inp.value)||1) + delta);
-  },
-
   // ============ SAVE ORDER ============
   async saveOrder() {
     const custName = document.getElementById('eCustName').value.trim();
@@ -2227,19 +2303,45 @@ const pageCustom = pageCustomEl ? pageCustomEl.value.trim() : '';
     if (!price || price <= 0) { this.toast('يرجى إدخال السعر', 'error'); return; }
 
     // Collect items from rows
+   // Collect items from rows
     const items = [];
     const itemSelectors = document.querySelectorAll('.ir-item');
     for (let i=0; i<itemSelectors.length; i++) {
       const itemId = itemSelectors[i].value;
-      const size = document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
+      const sizeCombo = document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
       const qty = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value)||1;
       const color = document.getElementById(`ir_color_${i}`)?.value||'';
-      if (!itemId || !size) { this.toast(`يرجى اختيار المنتج والمقاس للصف ${i+1}`, 'error'); return; }
+      
+      if (!itemId || !sizeCombo) { this.toast(`يرجى اختيار المنتج والمقاس للصف ${i+1}`, 'error'); return; }
       const item = this.warehouse[itemId];
       if (!item) { this.toast('منتج غير موجود في المستودع', 'error'); return; }
-      const avail = item.sizes?.[size] || 0;
-      if (qty > avail) { this.toast(`الكمية المطلوبة (${qty}) للمنتج "${item.name}" أكبر من المتوفر (${avail})`, 'error'); return; }
-      items.push({ itemId, itemName: item.name, itemColor: color || item.color || '', size, qty });
+      
+      // التدقيق الصارم على الرصيد بناءً على اللون والمقاس المدموج
+      const avail = item.sizes?.[sizeCombo] || 0;
+      if (qty > avail) { 
+          this.toast(`الكمية المطلوبة (${qty}) غير متوفرة! المتوفر من اللون والمقاس المحدد هو (${avail})`, 'error'); 
+          return; 
+      }
+
+      let finalSize = sizeCombo;
+      let finalColor = color || item.color || '';
+      
+      if (item.variations && item.variations[sizeCombo]) {
+          finalSize = item.variations[sizeCombo].size;
+          finalColor = item.variations[sizeCombo].color || finalColor;
+      } else if (sizeCombo.includes(' - ')) {
+          finalSize = sizeCombo.split(' - ')[0];
+          finalColor = sizeCombo.split(' - ')[1];
+      }
+
+      items.push({ 
+          itemId, 
+          itemName: item.name, 
+          itemColor: finalColor, 
+          size: finalSize, 
+          exactKey: sizeCombo, // للاستخدام الدقيق في خصم الرصيد
+          qty 
+      });
     }
 
     const payload = {
@@ -2247,13 +2349,13 @@ const pageCustom = pageCustomEl ? pageCustomEl.value.trim() : '';
       date: document.getElementById('eDate').value,
       custName, custMob: '07' + mob,
       country: 'الأردن', governorate: gov, custAddr: addr,
-      // keep first item at root for backward compat
       itemId: items[0].itemId,
       itemName: items[0].itemName,
       itemColor: items[0].itemColor,
       size: items[0].size,
+      exactKey: items[0].exactKey,
       qty: items[0].qty,
-      items, // full list
+      items, 
       price, currency: 'JOD',
       weight, height,
       pageName, entryUser, tags,
@@ -2564,14 +2666,37 @@ const pageCustom = pageCustomEl ? pageCustomEl.value.trim() : '';
   // ============ STOCK DEDUCTION ============
   async deductStock(orderId) {
     const o = this.orders[orderId];
-    if (!o || !o.itemId || !o.size) return;
-    const item = this.warehouse[o.itemId];
-    if (!item) return;
-    const current = item.sizes?.[o.size] || 0;
-    const qty = parseInt(o.qty) || 1;
-    const newQty = Math.max(0, current - qty);
-    await update(ref(db, `jawaher_warehouse/${o.itemId}/sizes`), { [o.size]: newQty });
-    this.log('stock', orderId, `خصم ${qty} قطعة من ${item.name} مقاس ${o.size}`);
+    if (!o) return;
+    
+    // دعم الطلبات متعددة المنتجات والاعتماد على exactKey
+    const itemsToDeduct = o.items || [{ itemId: o.itemId, size: o.exactKey || o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+    const updates = {};
+    
+    for (const it of itemsToDeduct) {
+      if (!it.itemId) continue;
+      const item = this.warehouse[it.itemId];
+      if (!item) continue;
+      
+      let keyToDeduct = it.exactKey || it.size; 
+      
+      // التوافق مع الطلبات القديمة أو المدخلة يدوياً
+      if (item.sizes && item.sizes[keyToDeduct] === undefined && it.itemColor) {
+        if (item.sizes[`${it.size} - ${it.itemColor}`] !== undefined) {
+          keyToDeduct = `${it.size} - ${it.itemColor}`;
+        }
+      }
+
+      const current = item.sizes?.[keyToDeduct] || 0;
+      const qty = parseInt(it.qty) || 1;
+      const newQty = Math.max(0, current - qty);
+      
+      updates[`jawaher_warehouse/${it.itemId}/sizes/${keyToDeduct}`] = newQty;
+      this.log('stock', orderId, `خصم ${qty} قطعة من ${item.name} مقاس/لون ${keyToDeduct}`);
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      await update(ref(db), updates);
+    }
   },
 
   // ============ PRINT ============
