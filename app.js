@@ -1238,7 +1238,7 @@ if (!itemId) {
         }).join('');
     },
 
-    openAddStockModal(itemId) {
+   openAddStockModal(itemId) {
         const item = this.warehouse[itemId]; if (!item) return;
         const sizes = Object.keys(item.sizes || {});
         const modal = document.createElement('div');
@@ -1246,29 +1246,46 @@ if (!itemId) {
         modal.innerHTML = `<div class="modal-overlay" onclick="this.parentElement.remove()"></div>
             <div class="modal-sheet" style="max-width:400px">
                 <div class="modal-handle"></div>
-                <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--gold)"></i> إضافة كمية — ${item.name}</div>
+                <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--gold)"></i> تعديل كمية — ${item.name}</div>
                 <div class="row g-3">
+                    <!-- بند اللون - أصبح إجبارياً وقبل المقاس -->
+                    <div class="col-12">
+                        <label class="form-label-j">اللون <span style="color:var(--ruby-light)">*</span></label>
+                        <div style="display:flex;gap:4px;align-items:center">
+                            <input type="text" id="asColor" class="form-control-j" placeholder="اختر اللون..." readonly
+                                style="cursor:pointer;font-size:.82rem;border-right:4px solid var(--border)"
+                                onclick="app.openColorPicker('as','asColor')">
+                            <button class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker('as','asColor')">
+                                <i class="fas fa-palette" style="color:var(--gold)"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="col-12">
                         <label class="form-label-j">المقاس <span style="color:var(--ruby-light)">*</span></label>
                         <div style="display:flex;gap:6px">
                             <div class="select-wrapper" style="flex:1">
-                                <select id="asSize" class="form-control-j select-j">
-                                    ${sizes.map(s => `<option value="${s}">${s} (${item.sizes[s]})</option>`).join('')}
+                                <select id="asSize" class="form-control-j select-j" onchange="app.updateLiveBalance('${itemId}')">
+                                    <option value="">اختر المقاس...</option>
+                                    ${sizes.map(s => `<option value="${s}">${s}</option>`).join('')}
                                 </select>
                             </div>
-                            <input type="text" id="asNewSize" class="form-control-j" placeholder="أو مقاس جديد" style="flex:1">
+                            <input type="text" id="asNewSize" class="form-control-j" placeholder="أو جديد" style="width:80px">
                         </div>
                     </div>
+                    <!-- عرض الرصيد المباشر -->
+                    <div id="asLiveBalance" style="font-size: .8rem; font-weight: 700; color: var(--gold); text-align: center; padding: 5px; background: var(--paper-warm); border-radius: 8px; display: none;">
+                        الرصيد الحالي: 0
+                    </div>
                     <div class="col-12">
-                        <label class="form-label-j">الكمية <span style="color:var(--ruby-light)">*</span></label>
+                        <label class="form-label-j">الكمية (موجب للإضافة / سالب للخصم) <span style="color:var(--ruby-light)">*</span></label>
                         <div class="qty-control">
                             <button class="qty-btn" onclick="app.adjustQty('asQty',-1)">−</button>
-                            <input type="number" id="asQty" class="form-control-j qty-input" value="1" min="1">
+                            <input type="number" id="asQty" class="form-control-j qty-input" value="1">
                             <button class="qty-btn" onclick="app.adjustQty('asQty',1)">+</button>
                         </div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label-j">سبب الإضافة</label>
+                        <label class="form-label-j">سبب التعديل</label>
                         <div class="select-wrapper">
                             <select id="asReason" class="form-control-j select-j">
                                 <option value="مشتريات جديدة">مشتريات جديدة</option>
@@ -1285,20 +1302,64 @@ if (!itemId) {
                 </div>
             </div>`;
         document.body.appendChild(modal);
+        
+        // ربط تغيير اللون بتحديث الرصيد أيضاً
+        const colorInput = document.getElementById('asColor');
+        const observer = new MutationObserver(() => app.updateLiveBalance(itemId));
+        observer.observe(colorInput, { attributes: true });
     },
-
-    async confirmAddStock(itemId) {
-        const item    = this.warehouse[itemId]; if (!item) return;
+updateLiveBalance(itemId) {
+        const item = this.warehouse[itemId];
+        const color = document.getElementById('asColor').value;
+        const size = document.getElementById('asSize').value;
+        const liveEl = document.getElementById('asLiveBalance');
+        
+        if (item && color && size) {
+            const key = `${size} - ${color}`;
+            const current = item.sizes?.[key] || item.sizes?.[size] || 0;
+            liveEl.textContent = `الرصيد الحالي لهذا اللون والمقاس: ${current}`;
+            liveEl.style.display = 'block';
+        } else {
+            liveEl.style.display = 'none';
+        }
+    },
+async confirmAddStock(itemId) {
+        const item = this.warehouse[itemId]; if (!item) return;
+        const color = document.getElementById('asColor').value.trim();
         const newSize = document.getElementById('asNewSize').value.trim();
-        const exSize  = document.getElementById('asSize').value;
-        const size    = newSize || exSize;
-        const qty     = parseInt(document.getElementById('asQty').value) || 1;
-        const reason  = document.getElementById('asReason')?.value || 'مشتريات جديدة';
+        const exSize = document.getElementById('asSize').value;
+        const size = newSize || exSize;
+        const qty = parseInt(document.getElementById('asQty').value) || 0;
+        const reason = document.getElementById('asReason')?.value || 'تصحيح جرد';
+
+        // التحقق من الحقول الإجبارية
+        if (!color) { this.toast('يرجى تحديد اللون أولاً', 'error'); return; }
         if (!size) { this.toast('يرجى تحديد المقاس', 'error'); return; }
-        const current = item.sizes?.[size] || 0;
-        await update(ref(db, `jawaher_warehouse/${itemId}/sizes`), { [size]: current + qty });
-        this.log('stock_add', itemId, `إضافة ${qty} قطعة مقاس ${size} لـ ${item.name} - السبب: ${reason}`);
-        this.toast(`تمت إضافة ${qty} قطعة مقاس ${size} ✓`, 'success');
+        if (qty === 0) { this.toast('يرجى إدخال كمية صحيحة', 'error'); return; }
+
+        // بناء المفتاح الموحد (المقاس - اللون)
+        const key = `${size} - ${color}`;
+        const current = item.sizes?.[key] || 0;
+        const finalQty = current + qty;
+
+        if (finalQty < 0) {
+            if (!confirm('الكمية الناتجة ستكون بالسالب، هل أنت متأكد من صحة الجرد؟')) return;
+        }
+
+        const updates = {};
+        updates[`jawaher_warehouse/${itemId}/sizes/${key}`] = finalQty;
+        
+        // تحديث معلومات الـ variations لضمان ظهور اللون والباركود مستقبلاً لهذا الصنف الجديد
+        if (!item.sizes?.[key]) {
+            const vHex = document.getElementById('asColor').dataset.hex || '';
+            const vBarcode = 'JW' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            updates[`jawaher_warehouse/${itemId}/variations/${key}`] = { size, color, hex: vHex, barcode: vBarcode };
+        }
+
+        await update(ref(db), updates);
+        
+        this.log('stock_adjust', itemId, `تعديل مخزون: ${qty} قطعة (اللون: ${color} | المقاس: ${size}) - السبب: ${reason}`);
+        this.toast(`تم تحديث المخزون بنجاح ✓`, 'success');
         document.getElementById('addStockModal')?.remove();
     },
 
