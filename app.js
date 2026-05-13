@@ -661,9 +661,11 @@ if (!itemId) {
     mkOrderCard(o) {
     const isChecked = this.selectedKb.has(o.id) ? 'checked' : '';
     // إنشاء قائمة الأصناف الصغيرة داخل الكرت
-    const itemsSummary = (o.items || []).map(it => `
+  // جلب الأصناف سواء كانت قائمة جديدة أو صنف واحد قديم لضمان العرض دائماً
+    const displayItems = o.items || [{itemName: o.itemName, size: o.size, itemColor: o.itemColor, qty: o.qty}];
+    const itemsSummary = displayItems.map(it => `
         <div style="font-size:.7rem; color:var(--ink-mid); border-bottom:1px dashed var(--border); padding:2px 0;">
-            • ${it.itemName} <span style="color:var(--gold-dark)">(${it.size})</span>
+            • ${it.itemName || 'صنف'} <span style="color:var(--gold-dark)">(${it.size || '-'})</span> ${it.qty > 1 ? `x${it.qty}` : ''}
         </div>
     `).join('');
 
@@ -675,9 +677,9 @@ if (!itemId) {
         <div class="order-card-customer">${o.custName}</div>
         <div class="order-card-meta"><i class="fas fa-phone-alt" style="color:var(--gold);margin-left:4px"></i>${o.custMob}</div>
         
-        <!-- عرض قائمة الأصناف -->
-        <div style="margin: 8px 0; max-height: 60px; overflow-y: auto; background: rgba(0,0,0,0.02); padding: 4px; border-radius: 5px;">
-            ${itemsSummary || `<div style="font-size:.7rem;color:var(--ruby)">${o.itemName || 'صنف غير محدد'}</div>`}
+        <!-- عرض قائمة الأصناف الموحد -->
+        <div style="margin: 8px 0; max-height: 80px; overflow-y: auto; background: rgba(0,0,0,0.02); padding: 6px; border-radius: 8px; border: 1px solid var(--border);">
+            ${itemsSummary}
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
@@ -727,17 +729,20 @@ if (!itemId) {
               <!-- قسم عرض الأصناف المتعددة -->
 <div class="col-12">
     <label class="form-label-j"><i class="fas fa-shopping-basket"></i> الأصناف المطلوبة</label>
-    <div class="items-display-list">
-        ${(o.items || []).map(item => `
-            <div class="item-row-view">
-                <span class="item-n">${item.itemName}</span>
-                <span class="item-s">مقاس: ${item.size}</span>
-                <span class="item-c" style="border-right: 3px solid ${this._colorHex(item.itemColor)}">اللون: ${item.itemColor || 'غير محدد'}</span>
-                <span class="item-q">الكمية: ${item.qty}</span>
+  <div class="items-display-list" style="background: var(--paper-warm); border-radius: 10px; padding: 10px; border: 1px solid var(--border);">
+        ${(o.items || [{itemName: o.itemName, size: o.size, itemColor: o.itemColor, qty: o.qty}]).map(item => `
+            <div class="item-row-view" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 800; font-size: 0.9rem;">${item.itemName || 'صنف غير معروف'}</span>
+                    <span style="font-size: 0.75rem; color: var(--gold-dark);">مقاس: ${item.size || '-'}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 0.8rem; border-right: 4px solid ${this._colorHex(item.itemColor)}; padding-right: 6px;">${item.itemColor || 'بدون لون'}</span>
+                    <span style="font-weight: 700; color: var(--emerald); background: rgba(26,107,74,0.1); padding: 2px 8px; border-radius: 5px;">x${item.qty || 1}</span>
+                </div>
             </div>
         `).join('')}
     </div>
-</div>
 <!-- السعر الإجمالي يبقى كما هو -->
 <div class="col-12 mt-2">
     <label class="form-label-j">إجمالي السعر</label>
