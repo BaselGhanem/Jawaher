@@ -659,25 +659,33 @@ if (!itemId) {
     },
 
     mkOrderCard(o) {
-        const isChecked = this.selectedKb.has(o.id) ? 'checked' : '';
-        return `<div class="order-card-j status-${o.status}" onclick="app.openOrderModal('${o.id}')">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.6rem">
-                <input type="checkbox" class="check-j" onclick="event.stopPropagation();app.toggleKbSelect('${o.id}')" ${isChecked}>
-                <span style="font-size:.72rem;color:var(--ink-mid)">${o.pageName || ''}</span>
-            </div>
-            <div class="order-card-customer">${o.custName}</div>
-            <div class="order-card-meta"><i class="fas fa-phone-alt" style="color:var(--gold);margin-left:4px"></i>${o.custMob}</div>
-            <div class="order-card-grid">
-                <div class="order-card-grid-item"><label>المنتج</label><span style="font-size:.78rem">${o.itemName || '-'}</span></div>
-                <div class="order-card-grid-item"><label>المقاس</label><span>${o.size || '-'}</span></div>
-                <div class="order-card-grid-item price"><label>السعر</label><span>${o.price || 0}</span></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
-                <span style="font-size:.72rem;color:var(--ink-mid)"><i class="fas fa-user-edit" style="margin-left:3px"></i>${o.entryUser || ''}</span>
-                <span style="font-size:.72rem;color:var(--ink-mid)">${o.date || ''}</span>
-            </div>
-        </div>`;
-    },
+    const isChecked = this.selectedKb.has(o.id) ? 'checked' : '';
+    // إنشاء قائمة الأصناف الصغيرة داخل الكرت
+    const itemsSummary = (o.items || []).map(it => `
+        <div style="font-size:.7rem; color:var(--ink-mid); border-bottom:1px dashed var(--border); padding:2px 0;">
+            • ${it.itemName} <span style="color:var(--gold-dark)">(${it.size})</span>
+        </div>
+    `).join('');
+
+    return `<div class="order-card-j status-${o.status}" onclick="app.openOrderModal('${o.id}')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.6rem">
+            <input type="checkbox" class="check-j" onclick="event.stopPropagation();app.toggleKbSelect('${o.id}')" ${isChecked}>
+            <span style="font-size:.72rem;color:var(--ink-mid)">${o.pageName || ''}</span>
+        </div>
+        <div class="order-card-customer">${o.custName}</div>
+        <div class="order-card-meta"><i class="fas fa-phone-alt" style="color:var(--gold);margin-left:4px"></i>${o.custMob}</div>
+        
+        <!-- عرض قائمة الأصناف -->
+        <div style="margin: 8px 0; max-height: 60px; overflow-y: auto; background: rgba(0,0,0,0.02); padding: 4px; border-radius: 5px;">
+            ${itemsSummary || `<div style="font-size:.7rem;color:var(--ruby)">${o.itemName || 'صنف غير محدد'}</div>`}
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+            <span style="font-weight:800; color:var(--emerald)">${o.price || 0} JOD</span>
+            <span style="font-size:.72rem;color:var(--ink-mid)">${o.date || ''}</span>
+        </div>
+    </div>`;
+},
 
     toggleKbSelect(id) {
         if (this.selectedKb.has(id)) this.selectedKb.delete(id); else this.selectedKb.add(id);
@@ -716,9 +724,25 @@ if (!itemId) {
                     </div>
                 </div>
                 <div class="col-12"><label class="form-label-j">العنوان</label><input id="mo_addr" class="form-control-j" value="${o.custAddr || ''}" ${dis}></div>
-                <div class="col-4"><label class="form-label-j">المنتج</label><input id="mo_item" class="form-control-j" value="${o.itemName || ''}" ${dis}></div>
-                <div class="col-4"><label class="form-label-j">المقاس</label><input id="mo_size" class="form-control-j" value="${o.size || ''}" ${dis}></div>
-                <div class="col-4"><label class="form-label-j">السعر</label><input type="number" id="mo_price" class="form-control-j" value="${o.price || ''}" ${dis}></div>
+              <!-- قسم عرض الأصناف المتعددة -->
+<div class="col-12">
+    <label class="form-label-j"><i class="fas fa-shopping-basket"></i> الأصناف المطلوبة</label>
+    <div class="items-display-list">
+        ${(o.items || []).map(item => `
+            <div class="item-row-view">
+                <span class="item-n">${item.itemName}</span>
+                <span class="item-s">مقاس: ${item.size}</span>
+                <span class="item-c" style="border-right: 3px solid ${this._colorHex(item.itemColor)}">اللون: ${item.itemColor || 'غير محدد'}</span>
+                <span class="item-q">الكمية: ${item.qty}</span>
+            </div>
+        `).join('')}
+    </div>
+</div>
+<!-- السعر الإجمالي يبقى كما هو -->
+<div class="col-12 mt-2">
+    <label class="form-label-j">إجمالي السعر</label>
+    <input type="number" id="mo_price" class="form-control-j" value="${o.price || ''}" ${dis}>
+</div>
                 <div class="col-6"><label class="form-label-j">الكمية</label><input type="number" id="mo_qty" class="form-control-j" value="${o.qty || 1}" ${dis}></div>
                 <div class="col-6"><label class="form-label-j">الملاحظات</label><input id="mo_tags" class="form-control-j" value="${o.tags || ''}" ${dis}></div>
                 <div class="col-12">
@@ -749,8 +773,8 @@ if (!itemId) {
             custName: document.getElementById('mo_name').value,
             custMob:  document.getElementById('mo_mob').value,
             custAddr: document.getElementById('mo_addr').value,
-            itemName: document.getElementById('mo_item').value,
-            size:     document.getElementById('mo_size').value,
+           // itemName: document.getElementById('mo_item').value,
+           // size:     document.getElementById('mo_size').value,
             price:    parseFloat(document.getElementById('mo_price').value),
             qty:      parseInt(document.getElementById('mo_qty').value),
             tags:     document.getElementById('mo_tags').value,
@@ -927,10 +951,28 @@ if (!itemId) {
                 <td style="font-size:.8rem;font-weight:700;color:var(--gold)">${id.slice(-6)}</td>
                 <td style="font-weight:700">${o.custName}</td>
                 <td dir="ltr" style="text-align:right;font-size:.85rem">${o.custMob}</td>
-                <td>${o.itemName || '-'}</td>
-                <td>${colorDot}${colorText}</td>
-                <td>${o.size || '-'}</td>
-                <td style="text-align:center">${o.qty || 1}</td>
+               <!-- عمود المنتجات -->
+<td style="font-size:.75rem; line-height:1.4; min-width:120px">
+    ${(o.items || [{itemName: o.itemName}]).map(it => `<div>• ${it.itemName || '-'}</div>`).join('')}
+</td>
+
+<!-- عمود الألوان مع النقطة الملونة لكل صنف -->
+<td style="font-size:.75rem; line-height:1.4">
+    ${(o.items || [{itemColor: o.itemColor}]).map(it => {
+        const hex = this._colorHex(it.itemColor);
+        return `<div>${hex ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${hex};border:1px solid rgba(0,0,0,0.1);vertical-align:middle;margin-left:4px"></span>` : ''}${it.itemColor || '-'}</div>`;
+    }).join('')}
+</td>
+
+<!-- عمود المقاسات -->
+<td style="font-size:.75rem; line-height:1.4">
+    ${(o.items || [{size: o.size}]).map(it => `<div>${it.size || '-'}</div>`).join('')}
+</td>
+
+<!-- عمود إجمالي الكمية -->
+<td style="text-align:center; font-weight:700">
+    ${(o.items || [{qty: o.qty}]).reduce((sum, it) => sum + (parseInt(it.qty) || 1), 0)}
+</td>
                 <td style="font-weight:700;color:var(--emerald)">${o.price || 0} ${o.currency || 'JOD'}</td>
                 <td style="font-size:.8rem;color:var(--ink-mid)">${o.pageName || '-'}</td>
                 <td>${sBadge(o.status)}</td>
