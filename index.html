@@ -1209,11 +1209,10 @@ body {
             <label class="form-label-j">اسم الصفحة (المصدر) <span style="color:var(--ruby-light)">*</span></label>
             <div style="display:flex;gap:6px">
               <div class="select-wrapper" style="flex:1">
-                <select id="ePageName" class="form-control-j select-j">
+            <select id="ePageName" class="form-control-j select-j" disabled>
                   <option value="">اختر الصفحة</option>
                 </select>
               </div>
-              <input type="text" id="ePageNameCustom" class="form-control-j" placeholder="أو اكتب مباشرة" style="flex:1">
             </div>
           </div>
           <div class="col-md-3">
@@ -2110,9 +2109,11 @@ window.app = {
     });
   },
 
-  renderItemRows() {
+ renderItemRows() {
     const container = document.getElementById('eItemsList');
     if (!container) return;
+
+    // 1. أولاً: نقوم برسم وبناء عناصر الـ HTML
     container.innerHTML = this.itemRows.map((row, idx) => `
       <div class="card-j p-3 mb-2" style="border-right:3px solid var(--gold)" id="itemrow_${idx}">
         <div class="row g-2 align-items-end">
@@ -2168,14 +2169,21 @@ window.app = {
       if (row.savedItem) this.loadRowSizes(idx, row.savedSize);
     });
   },
-
-  loadRowSizes(idx, preselectSize) {
+loadRowSizes(idx, preselectSize) {
     const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
     const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
     const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
     if (!sel || !sizeSel) return;
+    
     const itemId = sel.value;
     const item = this.warehouse[itemId];
+    
+    const pageSel = document.getElementById('ePageName');
+    if (item && item.pageName && pageSel) {
+        pageSel.innerHTML = `<option value="${item.pageName}">${item.pageName}</option>`;
+        pageSel.value = item.pageName;
+    }
+
     sizeSel.innerHTML = '<option value="">المقاس</option>';
     if (!item) return;
     Object.entries(item.sizes||{}).forEach(([s,q])=>{
@@ -2189,7 +2197,6 @@ window.app = {
     sizeSel.onchange = showStock;
     if (preselectSize) showStock();
   },
-
   adjustRowQty(idx, delta) {
     const inp = document.querySelector(`.ir-qty[data-idx="${idx}"]`);
     if (!inp) return;
@@ -2204,7 +2211,8 @@ window.app = {
     const addr = document.getElementById('eAddr').value.trim();
     const price = parseFloat(document.getElementById('ePrice').value);
     const pageSel = document.getElementById('ePageName').value;
-    const pageCustom = document.getElementById('ePageNameCustom').value.trim();
+  const pageCustomEl = document.getElementById('ePageNameCustom');
+const pageCustom = pageCustomEl ? pageCustomEl.value.trim() : '';
     const pageName = pageCustom || pageSel;
     const entryUser = document.getElementById('eEntryUser').value;
     const tags = document.getElementById('eTags').value.trim();
@@ -2569,7 +2577,8 @@ window.app = {
   // ============ PRINT ============
   printOrder(o, id) {
     const win = window.open('', '_blank');
-    const pageLogo = o.pageName || 'جواهر';
+   const hidePage = document.getElementById('printHidePageName')?.checked;
+const pageLogo = hidePage ? 'جواهر' : (o.pageName || 'جواهر');
     const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty, price: o.price }];
     const itemsRows = items.map(it => `
       <tr>
@@ -3467,7 +3476,7 @@ async saveNewItem() {
     const pageName = document.getElementById('pPageName').value.trim();
     const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
     const notes = document.getElementById('pNotes').value.trim();
-
+    if (!pageName) { this.toast('اسم الصفحة إجباري لتسجيل المشتريات', 'error'); return; }
     if (!existingId && !newName) { this.toast('يرجى اختيار أو إدخال اسم المنتج', 'error'); return; }
 
     // Collect sizes + colors from grid
@@ -3541,54 +3550,7 @@ async saveNewItem() {
   },
 
   // ============ RETURNS BARCODE ============
-scanWarehouseBarcode() {
-    const code = document.getElementById('wBarcodeScanner').value.trim().toUpperCase();
-    if (!code) { this.renderWarehouse(); return; }
-    const grid = document.getElementById('warehouseGrid');
-    const items = Object.entries(this.warehouse).filter(([,w]) => {
-      if (w.name.toLowerCase().includes(code.toLowerCase())) return true;
-      if (w.barcode && w.barcode.toUpperCase().includes(code)) return true; // للمنتجات القديمة
-      if (w.variations) {
-         return Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase().includes(code));
-      }
-      return false;
-    });
-    if (items.length === 0) {
-      grid.innerHTML = `<div class="col-12" style="text-align:center;padding:2rem;color:var(--ink-mid)">
-        <i class="fas fa-search fa-2x" style="opacity:0.2;display:block;margin-bottom:1rem"></i>
-        لم يتم العثور على منتج بهذا الباركود
-        <br><button class="btn-j btn-gold btn-sm-j mt-3" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> إضافة كمنتج جديد</button>
-      </div>`;
-      return;
-    }
-    this._renderItemCards(items);
-  },
 
-  scanPurchaseBarcode() {
-    const code = document.getElementById('pBarcodeScanner').value.trim().toUpperCase();
-    if (!code) return;
-    const found = Object.entries(this.warehouse).find(([,w]) => {
-       if (w.barcode && w.barcode.toUpperCase() === code) return true;
-       if (w.variations && Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase() === code)) return true;
-       return false;
-    });
-    const resultEl = document.getElementById('pBarcodeResult');
-    if (found) {
-      const [id, w] = found;
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `<div style="background:rgba(26,107,74,0.08);border:1px solid rgba(26,107,74,0.2);border-radius:10px;padding:0.75rem;display:flex;align-items:center;gap:0.75rem">
-        <i class="fas fa-check-circle" style="color:var(--emerald);font-size:1.3rem"></i>
-        <div><div style="font-weight:800">${w.name}</div><div style="font-size:0.78rem;color:var(--ink-mid)">مخزون حالي: ${Object.values(w.sizes||{}).reduce((a,b)=>a+b,0)} قطعة</div></div>
-        <button class="btn-j btn-gold btn-sm-j" style="margin-right:auto" onclick="app.selectPurchaseItem('${id}')">اختيار</button>
-      </div>`;
-    } else {
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:0.75rem;font-size:0.85rem;color:var(--gold-dark)">
-        <i class="fas fa-info-circle me-2"></i>الباركود غير موجود — سيتم إنشاء منتج جديد بهذا الباركود
-      </div>`;
-      document.getElementById('pBarcode').value = code;
-    }
-  },
 
   scanReturnBarcode() {
     const code = document.getElementById('retBarcodeScanner').value.trim().toUpperCase();
