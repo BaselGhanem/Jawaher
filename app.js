@@ -767,22 +767,29 @@ if (!itemId) {
         this.openModal('orderModal');
     },
 
-    async updateOrder() {
-        const id = this.modalOrderId; if (!id) return;
-        await update(ref(db, `jawaher_orders/${id}`), {
-            custName: document.getElementById('mo_name').value,
-            custMob:  document.getElementById('mo_mob').value,
-            custAddr: document.getElementById('mo_addr').value,
-           // itemName: document.getElementById('mo_item').value,
-           // size:     document.getElementById('mo_size').value,
-            price:    parseFloat(document.getElementById('mo_price').value),
-            qty:      parseInt(document.getElementById('mo_qty').value),
-            tags:     document.getElementById('mo_tags').value,
-        });
-        this.log('edit', id, 'تعديل بيانات الطلب');
-        this.toast('تم الحفظ', 'success'); this.closeModal('orderModal');
-    },
+   async updateOrder() {
+    const id = this.modalOrderId; 
+    if (!id) return;
 
+    try {
+        // تحديث البيانات الأساسية فقط لتجنب الأخطاء مع قائمة الأصناف المتعددة
+        await update(ref(db, `jawaher_orders/${id}`), {
+            custName: document.getElementById('mo_name').value.trim(),
+            custMob:  document.getElementById('mo_mob').value.trim(),
+            custAddr: document.getElementById('mo_addr').value.trim(),
+            price:    parseFloat(document.getElementById('mo_price').value) || 0,
+            qty:      parseInt(document.getElementById('mo_qty').value) || 1,
+            tags:     document.getElementById('mo_tags').value.trim(),
+        });
+
+        this.log('edit', id, 'تعديل بيانات الطلب الأساسية');
+        this.toast('تم حفظ التعديلات بنجاح ✓', 'success'); 
+        this.closeModal('orderModal');
+    } catch (error) {
+        console.error("Update Error:", error);
+        this.toast('حدث خطأ أثناء التحديث', 'error');
+    }
+},
     async moveOrder(id, status) {
         await update(ref(db, `jawaher_orders/${id}`), { status });
         if (status === 'delivered') await this.deductStock(id);
