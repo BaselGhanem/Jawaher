@@ -171,7 +171,7 @@ window.app = {
             .map(name => `<option value="${name}"></option>`).join('');
         const pSel = document.getElementById('pItem');
         if (pSel) { const cur = pSel.value; pSel.innerHTML = '<option value="">اختر منتجاً موجوداً</option>' + items.map(([id, w]) => `<option value="${id}">${w.name}</option>`).join(''); pSel.value = cur; }
-        document.querySelectorAll('.ir-item').forEach(sel => { const cur = sel.value; sel.innerHTML = opts; if (cur) sel.value = cur; });
+        //document.querySelectorAll('.ir-item').forEach(sel => { const cur = sel.value; sel.innerHTML = opts; if (cur) sel.value = cur; });
     },
 
     updateRItemFilter() {
@@ -368,14 +368,16 @@ window.app = {
         container.innerHTML = this.itemRows.map((row, idx) => `
             <div class="card-j p-3 mb-2" style="border-right:3px solid var(--gold)" id="itemrow_${idx}">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
-                        <div class="select-wrapper">
-                            <select class="form-control-j select-j ir-item" data-idx="${idx}" onchange="app.loadRowSizes(${idx})">
-                                <option value="">اختر المنتج...</option>
-                                ${Object.entries(this.warehouse).map(([id, w]) => `<option value="${id}" ${row.savedItem === id ? 'selected' : ''}>${w.name}</option>`).join('')}
-                            </select>
-                        </div>
+                <div class="col-md-4">
+    <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
+    <input type="text" 
+           class="form-control-j ir-item" 
+           data-idx="${idx}" 
+           list="productsList" 
+           placeholder="ابحث عن منتج..." 
+           oninput="app.loadRowSizes(${idx})" 
+           value="${row.savedItem || ''}">
+</div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label-j">اللون</label>
@@ -421,10 +423,15 @@ window.app = {
         const sizeSel   = document.querySelector(`.ir-size[data-idx="${idx}"]`);
         const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
         if (!sel || !sizeSel) return;
-        const itemId = sel.value;
-        const item   = this.warehouse[itemId];
+       const itemName = sel.value.trim();
+// البحث عن المعرّف (ID) باستخدام الاسم المكتوب في حقل الإدخال
+const foundEntry = Object.entries(this.warehouse).find(([id, w]) => w.name === itemName);
+const itemId = foundEntry ? foundEntry[0] : null;
+const item = foundEntry ? foundEntry[1] : null;
         const pageSel = document.getElementById('ePageName');
-        if (item && item.pageName && pageSel) { pageSel.innerHTML = `<option value="${item.pageName}">${item.pageName}</option>`; pageSel.value = item.pageName; }
+       if (item && item.pageName && pageSel) { 
+    pageSel.value = item.pageName; // يختار الصفحة إذا كانت موجودة في القائمة الأصلية
+}
         sizeSel.innerHTML = '<option value="">المقاس</option>';
         if (!item) return;
         Object.entries(item.sizes || {}).forEach(([s, q]) => {
@@ -475,7 +482,14 @@ window.app = {
         const items = [];
         const itemSelectors = document.querySelectorAll('.ir-item');
         for (let i = 0; i < itemSelectors.length; i++) {
-            const itemId   = itemSelectors[i].value;
+            const itemNameInput = itemSelectors[i].value;
+const foundEntry = Object.entries(this.warehouse).find(([id, w]) => w.name === itemNameInput);
+const itemId = foundEntry ? foundEntry[0] : null;
+
+if (!itemId) { 
+    this.toast(`المنتج "${itemNameInput}" غير موجود في المستودع بنفس الاسم`, 'error'); 
+    return; 
+}
             const sizeCombo= document.querySelector(`.ir-size[data-idx="${i}"]`)?.value;
             const qty      = parseInt(document.querySelector(`.ir-qty[data-idx="${i}"]`)?.value) || 1;
             const color    = document.getElementById(`ir_color_${i}`)?.value || '';
