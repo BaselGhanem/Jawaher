@@ -220,39 +220,42 @@
                         <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
                     </div>
                  div class="row g-3 mb-3" dir="rtl">
+<div class="row g-3 mb-3" dir="rtl">
     <div class="col-8">
         <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
         <div class="input-prefix" style="display: flex; direction: rtl;">
+            <!-- إضافة الـ 07 كبادئة ثابتة مع تنسيق الحواف -->
+            <span class="prefix-label" id="ePhonePrefix" style="min-width:45px; background:#f0f0f0; padding:0 8px; border:1px solid var(--border); border-radius:0 8px 8px 0; display: inline-flex; align-items: center; border-left:none;">07</span>
             <input type="text" id="eCustMob" class="form-control-j"
                 placeholder="9 123 4567" dir="ltr" maxlength="12"
-                style="text-align: right; flex: 1;">
-            <span class="prefix-label" id="ePhonePrefix" style="min-width:36px; background:#f0f0f0; padding:0 8px; border-radius:0 8px 8px 0; display: inline-flex; align-items: center;">07</span>
+                style="text-align: right; flex: 1; border-radius: 8px 0 0 8px;">
         </div>
         <div id="eDupWarn" class="mt-2"
             style="display:none;font-size:.8rem;color:var(--gold-dark);background:rgba(201,168,76,.1);padding:.5rem .75rem;border-radius:10px;border-right:3px solid var(--gold)">
             <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
         </div>
     </div>
-                        <div class="col-4">
-                            <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
-                            <div class="select-wrapper">
-                                <select id="eGovernorate" class="form-control-j select-j">
-                                    <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
-                                    <option value="إربد">إربد</option>
-                                    <option value="الزرقاء">الزرقاء</option>
-                                    <option value="المفرق">المفرق</option>
-                                    <option value="البلقاء">البلقاء</option>
-                                    <option value="الكرك">الكرك</option>
-                                    <option value="الطفيلة">الطفيلة</option>
-                                    <option value="معان">معان</option>
-                                    <option value="العقبة">العقبة</option>
-                                    <option value="جرش">جرش</option>
-                                    <option value="عجلون">عجلون</option>
-                                    <option value="مادبا">مادبا</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+    
+    <div class="col-4">
+        <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
+        <div class="select-wrapper">
+            <select id="eGovernorate" class="form-control-j select-j">
+                <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
+                <option value="إربد">إربد</option>
+                <option value="الزرقاء">الزرقاء</option>
+                <option value="المفرق">المفرق</option>
+                <option value="البلقاء">البلقاء</option>
+                <option value="الكرك">الكرك</option>
+                <option value="الطفيلة">الطفيلة</option>
+                <option value="معان">معان</option>
+                <option value="العقبة">العقبة</option>
+                <option value="جرش">جرش</option>
+                <option value="عجلون">عجلون</option>
+                <option value="مادبا">مادبا</option>
+            </select>
+        </div>
+    </div>
+</div>
                     <div class="row g-3 mb-3">
                         <div class="col-12">
                             <label class="form-label-j">العنوان التفصيلي <span style="color:var(--ruby-light)">*</span></label>
