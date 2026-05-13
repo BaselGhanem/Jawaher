@@ -219,20 +219,27 @@
                         <label class="form-label-j">اسم الزبون <span style="color:var(--ruby-light)">*</span></label>
                         <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
                     </div>
-                <div class="row g-3 mb-3">
+   <div class="row g-3 mb-3">
     <div class="col-8">
         <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
-        <!-- تصميم الـ Pill المطابق للصورة -->
-        <div style="display: flex; align-items: center; background: #FDF5E6; border: 1px solid #E9DCC0; border-radius: 15px; overflow: hidden; height: 50px;">
-            <span style="width: 55px; display: flex; align-items: center; justify-content: center; color: #C9A84C; font-weight: bold; border-left: 1px solid #E9DCC0; font-size: 1.1rem; height: 100%;">07</span>
+        
+        <!-- تمت إضافة direction: ltr لضمان بقاء 07 على اليسار دائماً -->
+        <div style="display: flex; align-items: center; background: #FDF5E6; border: 1px solid #E9DCC0; border-radius: 15px; overflow: hidden; height: 50px; direction: ltr;">
+            
+            <!-- تم تغيير border-left إلى border-right ليفصل بين 07 والمدخل -->
+            <span style="width: 55px; display: flex; align-items: center; justify-content: center; color: #C9A84C; font-weight: bold; border-right: 1px solid #E9DCC0; font-size: 1.1rem; height: 100%;">07</span>
+            
             <input type="text" id="eCustMob" placeholder="9 123 4567" dir="ltr" maxlength="12"
                 style="flex: 1; border: none; background: transparent; padding: 0 15px; outline: none; color: #666; font-size: 1.1rem; text-align: left;">
         </div>
         
+        <!-- رسالة التنبيه (تتبع اتجاه الصفحة الطبيعي) -->
         <div id="eDupWarn" class="mt-2" style="display:none;font-size:.8rem;color:var(--gold-dark);background:rgba(201,168,76,.1);padding:.5rem .75rem;border-radius:10px;border-right:3px solid var(--gold)">
             <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
         </div>
     </div>
+</div>
+
     
     <div class="col-4">
         <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
@@ -860,6 +867,7 @@
 
     <!-- ── App Entry Point ─────────────────────────────────── -->
     <script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=1.0.1"></script>
 
 </body>
 </html>
