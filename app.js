@@ -227,14 +227,14 @@ window.app = {
     // ============ COLOR PICKER ============
     _colorPickerOpen: null,
 
-    openColorPicker(idx, inputId) {
+   openColorPicker(idx, inputId) {
         document.querySelectorAll('.color-picker-popup').forEach(p => p.remove());
         this._colorPickerOpen = null;
 
         const isMain = idx === 'main';
         let targetId, btnId;
         if (isMain) {
-            const idMap = { 'p_color': 'pColor', 'nim_color': 'nimColor' };
+            const idMap = { 'p_color': 'pColor', 'nim_color': 'nimColor', 'asColor': 'asColor' };
             targetId = idMap[inputId] || inputId;
             btnId    = `${inputId}_btn_main`;
         } else {
@@ -252,16 +252,21 @@ window.app = {
             const el = document.createElement('div');
             el.title      = c.name;
             el.style.cssText = `width:28px;height:28px;border-radius:8px;background:${c.hex};border:2px solid ${c.border};cursor:pointer;transition:transform .15s`;
-            el.onmouseover = () => el.style.transform = 'scale(1.15)';
-            el.onmouseout  = () => el.style.transform = 'scale(1)';
             el.onclick     = () => {
                 const target = document.getElementById(targetId);
                 if (target) {
                     target.value           = c.name;
                     target.dataset.hex     = c.hex;
                     target.style.borderRight = `4px solid ${c.hex}`;
+                    
+                    // تحديثات إضافية بناءً على الحقل
                     if (targetId.startsWith('ir_color_')) {
                         app.filterSizesByColor(target.dataset.idx, c.name);
+                    }
+                    // سطر جديد: لتحديث رصيد المستودع فور اختيار اللون
+                    if (targetId === 'asColor') {
+                        const itemId = document.querySelector('[onclick*="confirmAddStock"]')?.getAttribute('onclick').match(/'([^']+)'/)[1];
+                        app.updateLiveBalance(itemId);
                     }
                 }
                 popup.remove();
@@ -269,22 +274,11 @@ window.app = {
             };
             popup.appendChild(el);
         });
-
+        // ... بقية كود عرض الـ popup كما هو
         document.body.appendChild(popup);
-        const r    = btn.getBoundingClientRect();
-        let top  = r.bottom + 6;
-        let left = r.left;
-        if (left + 220 > window.innerWidth) left = window.innerWidth - 228;
-        if (top  + 200 > window.innerHeight) top  = r.top - 210;
-        popup.style.top  = top  + 'px';
-        popup.style.left = left + 'px';
-
-        setTimeout(() => {
-            document.addEventListener('click', function handler(e) {
-                if (!popup.contains(e.target) && e.target !== btn) popup.remove();
-                document.removeEventListener('click', handler);
-            });
-        }, 0);
+        const r = btn.getBoundingClientRect();
+        popup.style.top = (r.bottom + 6) + 'px';
+        popup.style.left = r.left + 'px';
     },
 
     _colorHex(name) {
@@ -1238,7 +1232,7 @@ if (!itemId) {
         }).join('');
     },
 
-   openAddStockModal(itemId) {
+ openAddStockModal(itemId) {
         const item = this.warehouse[itemId]; if (!item) return;
         const sizes = Object.keys(item.sizes || {});
         const modal = document.createElement('div');
@@ -1248,14 +1242,13 @@ if (!itemId) {
                 <div class="modal-handle"></div>
                 <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--gold)"></i> تعديل كمية — ${item.name}</div>
                 <div class="row g-3">
-                    <!-- بند اللون - أصبح إجبارياً وقبل المقاس -->
                     <div class="col-12">
                         <label class="form-label-j">اللون <span style="color:var(--ruby-light)">*</span></label>
                         <div style="display:flex;gap:4px;align-items:center">
                             <input type="text" id="asColor" class="form-control-j" placeholder="اختر اللون..." readonly
                                 style="cursor:pointer;font-size:.82rem;border-right:4px solid var(--border)"
-                                onclick="app.openColorPicker('as','asColor')">
-                            <button class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker('as','asColor')">
+                                onclick="app.openColorPicker('main','asColor')">
+                            <button class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker('main','asColor')">
                                 <i class="fas fa-palette" style="color:var(--gold)"></i>
                             </button>
                         </div>
@@ -1272,12 +1265,9 @@ if (!itemId) {
                             <input type="text" id="asNewSize" class="form-control-j" placeholder="أو جديد" style="width:80px">
                         </div>
                     </div>
-                    <!-- عرض الرصيد المباشر -->
-                    <div id="asLiveBalance" style="font-size: .8rem; font-weight: 700; color: var(--gold); text-align: center; padding: 5px; background: var(--paper-warm); border-radius: 8px; display: none;">
-                        الرصيد الحالي: 0
-                    </div>
+                    <div id="asLiveBalance" style="font-size: .8rem; font-weight: 700; color: var(--gold); text-align: center; padding: 8px; background: var(--paper-warm); border-radius: 8px; display: none; border: 1px dashed var(--gold)"></div>
                     <div class="col-12">
-                        <label class="form-label-j">الكمية (موجب للإضافة / سالب للخصم) <span style="color:var(--ruby-light)">*</span></label>
+                        <label class="form-label-j">الكمية (موجب للاضافة / سالب للخصم)</label>
                         <div class="qty-control">
                             <button class="qty-btn" onclick="app.adjustQty('asQty',-1)">−</button>
                             <input type="number" id="asQty" class="form-control-j qty-input" value="1">
@@ -1286,27 +1276,19 @@ if (!itemId) {
                     </div>
                     <div class="col-12">
                         <label class="form-label-j">سبب التعديل</label>
-                        <div class="select-wrapper">
-                            <select id="asReason" class="form-control-j select-j">
-                                <option value="مشتريات جديدة">مشتريات جديدة</option>
-                                <option value="تصحيح جرد">تصحيح جرد</option>
-                                <option value="مرتجع من زبون">مرتجع من زبون</option>
-                                <option value="أخرى">أخرى</option>
-                            </select>
-                        </div>
+                        <select id="asReason" class="form-control-j select-j">
+                            <option value="مشتريات جديدة">مشتريات جديدة</option>
+                            <option value="تصحيح جرد">تصحيح جرد</option>
+                            <option value="مرتجع من زبون">مرتجع من زبون</option>
+                        </select>
                     </div>
                 </div>
                 <div class="d-flex gap-3 mt-4">
-                    <button class="btn-j btn-gold flex-fill" onclick="app.confirmAddStock('${itemId}')"><i class="fas fa-save"></i> حفظ</button>
+                    <button class="btn-j btn-gold flex-fill" onclick="app.confirmAddStock('${itemId}')"><i class="fas fa-save"></i> حفظ التعديل</button>
                     <button class="btn-j btn-ghost" onclick="document.getElementById('addStockModal').remove()">إلغاء</button>
                 </div>
             </div>`;
         document.body.appendChild(modal);
-        
-        // ربط تغيير اللون بتحديث الرصيد أيضاً
-        const colorInput = document.getElementById('asColor');
-        const observer = new MutationObserver(() => app.updateLiveBalance(itemId));
-        observer.observe(colorInput, { attributes: true });
     },
 updateLiveBalance(itemId) {
         const item = this.warehouse[itemId];
