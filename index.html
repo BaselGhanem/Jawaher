@@ -1055,8 +1055,8 @@ body {
   </div>
 
   <!-- MAIN -->
+<datalist id="productsList"></datalist>
   <div class="main-content">
-
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
       <div class="page-header">
@@ -1144,8 +1144,7 @@ body {
             <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
             <div class="input-prefix">
               <span class="prefix-label" id="ePhonePrefix" style="min-width:36px">07</span>
-              <input type="text" id="eCustMob" class="form-control-j" placeholder="9 123 4567" dir="ltr" maxlength="12">
-            </div>
+<input type="text" id="eCustMob" class="form-control-j" placeholder="9 123 4567" dir="ltr" maxlength="12" style="text-align: left;">            </div>
             <div id="eDupWarn" class="mt-2" style="display:none;font-size:0.8rem;color:var(--gold-dark);background:rgba(201,168,76,0.1);padding:0.5rem 0.75rem;border-radius:10px;border-right:3px solid var(--gold)">
               <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
             </div>
@@ -1422,16 +1421,8 @@ body {
         <div class="row g-3">
           <div class="col-12">
             <label class="form-label-j">اسم المنتج <span style="color:var(--ruby-light)">*</span></label>
-            <input type="text" id="nimName" class="form-control-j" placeholder="مثال: بنطلون جينز، بلوزة صيفية...">
-          </div>
-          <div class="col-6">
-            <label class="form-label-j">باركود المنتج</label>
-            <div style="display:flex;gap:6px">
-              <input type="text" id="nimBarcode" class="form-control-j" placeholder="JW12345" dir="ltr" style="font-family:monospace;letter-spacing:1px">
-              <button class="btn-j btn-ghost btn-sm-j" onclick="app.generateBarcode()" title="توليد باركود تلقائي"><i class="fas fa-magic"></i></button>
-            </div>
-            <div style="font-size:0.72rem;color:var(--ink-mid);margin-top:3px">اضغط <i class="fas fa-magic"></i> للتوليد التلقائي</div>
-          </div>
+<input type="text" id="nimName" class="form-control-j" placeholder="مثال: بنطلون جينز، بلوزة صيفية..." list="productsList">          </div>
+       
           <div class="col-6">
             <label class="form-label-j">اسم الصفحة / المصدر</label>
             <div class="select-wrapper">
@@ -1440,20 +1431,7 @@ body {
               </select>
             </div>
           </div>
-          <div class="col-6">
-            <label class="form-label-j">لون المنتج</label>
-            <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="nimColor" class="form-control-j" placeholder="اختر اللون..." readonly
-                style="cursor:pointer;flex:1;border-right:4px solid var(--border)"
-                onclick="app.openColorPicker('main','nim_color')">
-              <button id="nim_color_btn_main" class="btn-j btn-ghost btn-sm-j" onclick="app.openColorPicker('main','nim_color')" style="flex-shrink:0">
-                <i class="fas fa-palette" style="color:var(--gold)"></i>
-              </button>
-              <button class="btn-j btn-ghost btn-xs-j" onclick="document.getElementById('nimColor').value='';document.getElementById('nimColor').style.borderRight='4px solid var(--border)'" title="مسح">
-                <i class="fas fa-times" style="font-size:0.7rem"></i>
-              </button>
-            </div>
-          </div>
+        
           <div class="col-6">
             <label class="form-label-j">سعر الشراء (JOD)</label>
             <input type="number" id="nimBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
@@ -1516,15 +1494,14 @@ body {
               <div style="display:flex;align-items:center;justify-content:center;padding-top:1.5rem;font-weight:800;color:var(--ink-mid)">أو</div>
               <div class="col-md-5">
                 <label class="form-label-j">اسم منتج جديد <span style="color:var(--ruby-light)">*</span></label>
-                <input type="text" id="pNewItem" class="form-control-j" placeholder="اسم المنتج الجديد">
-              </div>
+<input type="text" id="pNewItem" class="form-control-j" placeholder="اسم المنتج الجديد" list="productsList">              </div>
               <div class="col-md-4">
                 <label class="form-label-j">باركود المنتج</label>
                 <input type="text" id="pBarcode" class="form-control-j" placeholder="JW12345 أو اتركه فارغاً" dir="ltr" style="font-family:monospace;letter-spacing:1px">
                 <div style="font-size:0.72rem;color:var(--ink-mid);margin-top:3px">سيُولَّد تلقائياً إن تُرك فارغاً</div>
               </div>
-              <div class="col-md-4">
-                <label class="form-label-j">سعر الشراء (JOD) <span style="color:var(--ruby-light)">*</span></label>
+             <div class="col-md-4">
+                <label class="form-label-j">سعر الشراء (JOD)</label>
                 <input type="number" id="pBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
               </div>
               <div class="col-md-4">
@@ -1949,9 +1926,10 @@ window.app = {
     }
   },
   updateItemSelects() {
-    const items = Object.entries(this.warehouse);
+   const items = Object.entries(this.warehouse);
     const opts = '<option value="">اختر المنتج...</option>' + items.map(([id,w])=>`<option value="${id}">${w.name}${w.color?' — '+w.color:''}</option>`).join('');
-    // Update pItem (purchase page) — preserve selection
+    const datalist = document.getElementById('productsList');
+    if(datalist) datalist.innerHTML = [...new Set(items.map(([,w])=>w.name))].map(name => `<option value="${name}"></option>`).join('');
     const pSel2 = document.getElementById('pItem');
     if (pSel2) { const cur=pSel2.value; pSel2.innerHTML='<option value="">اختر منتجاً موجوداً</option>'+items.map(([id,w])=>`<option value="${id}">${w.name}</option>`).join(''); pSel2.value=cur; }
     // Refresh all ir-item selects in entry rows (preserve current selection)
@@ -2509,7 +2487,7 @@ window.app = {
         <div class="col-6"><label class="form-label-j">الزبون</label><input id="mo_name" class="form-control-j" value="${o.custName}" ${dis}></div>
         <div class="col-6"><label class="form-label-j">الموبايل</label>
           <div style="display:flex;gap:4px">
-            <input id="mo_mob" class="form-control-j" value="${o.custMob}" dir="ltr" ${dis}>
+            <input id="mo_mob" class="form-control-j" value="${o.custMob}" dir="ltr" style="text-align: left;" ${dis}>
             <a href="${wLink}" target="_blank" class="btn-j btn-emerald btn-sm-j"><i class="fab fa-whatsapp"></i></a>
           </div>
         </div>
@@ -2996,14 +2974,18 @@ window.app = {
   },
 
   // ============ WAREHOUSE BARCODE SCAN ============
-  scanWarehouseBarcode() {
+ scanWarehouseBarcode() {
     const code = document.getElementById('wBarcodeScanner').value.trim().toUpperCase();
     if (!code) { this.renderWarehouse(); return; }
     const grid = document.getElementById('warehouseGrid');
-    const items = Object.entries(this.warehouse).filter(([,w]) =>
-      (w.barcode||'').toUpperCase().includes(code) ||
-      w.name.toLowerCase().includes(code.toLowerCase())
-    );
+    const items = Object.entries(this.warehouse).filter(([,w]) => {
+      if (w.name.toLowerCase().includes(code.toLowerCase())) return true;
+      if (w.barcode && w.barcode.toUpperCase().includes(code)) return true; // للمنتجات القديمة
+      if (w.variations) {
+         return Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase().includes(code));
+      }
+      return false;
+    });
     if (items.length === 0) {
       grid.innerHTML = `<div class="col-12" style="text-align:center;padding:2rem;color:var(--ink-mid)">
         <i class="fas fa-search fa-2x" style="opacity:0.2;display:block;margin-bottom:1rem"></i>
@@ -3012,81 +2994,137 @@ window.app = {
       </div>`;
       return;
     }
-    // reuse renderWarehouse with filtered items
     this._renderItemCards(items);
   },
 
   // ============ NEW ITEM MODAL ============
-  openNewItemModal() {
-    this.nimSizeRows = ['S','M','L','XL','XXL'];
+openNewItemModal() {
+    this.nimSizeRows = [{size:'S'},{size:'M'},{size:'L'},{size:'XL'},{size:'XXL'}];
     this.renderNimSizesGrid();
     document.getElementById('nimName').value = '';
-    document.getElementById('nimBarcode').value = '';
-    document.getElementById('nimSupplier').value = '';
+    document.getElementById('nimPage').value = '';
     document.getElementById('nimBuyPrice').value = '';
     document.getElementById('nimSellPrice').value = '';
     this.openModal('newItemModal');
   },
-
+  _saveNimSizeRows() {
+    if(!this.nimSizeRows) return;
+    this.nimSizeRows.forEach((row, i) => {
+      const sInp = document.querySelector(`#nimsr_${i} .nim-s-val`);
+      const cInp = document.getElementById(`nim_color_${i}`);
+      const bInp = document.querySelector(`#nimsr_${i} .nim-b-val`);
+      if(sInp) row.size = sInp.value;
+      if(cInp) { row.color = cInp.value; row.hex = cInp.dataset.hex; }
+      if(bInp) row.barcode = bInp.value;
+    });
+  },
   generateBarcode() {
     const code = 'JW' + Date.now().toString().slice(-8);
     document.getElementById('nimBarcode').value = code;
   },
 
-  renderNimSizesGrid() {
+ renderNimSizesGrid() {
     const grid = document.getElementById('nimSizesGrid');
     if (!grid) return;
-    grid.innerHTML = (this.nimSizeRows||[]).map((s,i)=>`
-      <div class="col-6 col-md-4 nim-size-row" id="nimsr_${i}">
-        <div style="display:flex;gap:4px;align-items:center">
-          <input type="text" class="form-control-j" style="width:55px;text-align:center;font-weight:700" placeholder="مقاس" value="${s}">
-          <input type="number" class="form-control-j" placeholder="كمية" min="0" value="0" style="width:65px">
-          <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeNimSizeRow(${i})" style="flex-shrink:0;padding:0.25rem 0.5rem"><i class="fas fa-times" style="font-size:0.7rem"></i></button>
+    grid.innerHTML = (this.nimSizeRows||[]).map((row,i)=>{
+      const s = typeof row === 'string' ? row : (row.size || '');
+      const c = row.color || '';
+      const hex = row.hex || '';
+      const b = row.barcode || '';
+      return `
+      <div class="col-12 nim-size-row" id="nimsr_${i}">
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;background:var(--paper);padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:4px;">
+          <input type="text" class="form-control-j nim-s-val" style="width:60px;text-align:center;font-weight:700" placeholder="مقاس" value="${s}">
+          
+          <input type="text" id="nim_color_${i}" class="form-control-j nim-c-val" placeholder="اللون" readonly 
+            style="width:80px;cursor:pointer;font-size:0.8rem;border-right:4px solid ${hex||'var(--border)'}" 
+            value="${c}" data-hex="${hex}"
+            onclick="app.openColorPicker(${i},'nim_color')">
+            
+          <input type="text" class="form-control-j nim-b-val" placeholder="باركود (اختياري)" value="${b}" style="flex:1;min-width:100px;font-size:0.85rem;font-family:monospace" dir="ltr" title="اتركه فارغاً للتوليد التلقائي">
+          
+          <input type="number" class="form-control-j nim-q-val" placeholder="كمية" min="0" value="0" style="width:65px">
+          
+          <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeNimSizeRow(${i})" style="flex-shrink:0;padding:0.3rem 0.5rem"><i class="fas fa-times"></i></button>
         </div>
       </div>
-    `).join('');
+    `}).join('');
   },
 
-  addNimSizeRow() {
+addNimSizeRow() {
     if (!this.nimSizeRows) this.nimSizeRows = [];
-    this.nimSizeRows.push('');
+    this._saveNimSizeRows();
+    this.nimSizeRows.push({size:''});
     this.renderNimSizesGrid();
   },
-
-  removeNimSizeRow(i) {
+removeNimSizeRow(i) {
+    this._saveNimSizeRows();
     this.nimSizeRows.splice(i,1);
     this.renderNimSizesGrid();
   },
-
-  async saveNewItem() {
+async saveNewItem() {
     const name = document.getElementById('nimName').value.trim();
     if (!name) { this.toast('يرجى إدخال اسم المنتج', 'error'); return; }
-    let barcode = document.getElementById('nimBarcode').value.trim().toUpperCase();
-    if (!barcode) barcode = 'JW' + Date.now().toString().slice(-8);
-    const existing = Object.values(this.warehouse).find(w => (w.barcode||'').toUpperCase() === barcode);
-    if (existing) { this.toast(`الباركود مستخدم مسبقاً للمنتج: ${existing.name}`, 'error'); return; }
+    
     const buyPrice = parseFloat(document.getElementById('nimBuyPrice').value) || 0;
     const sellPrice = parseFloat(document.getElementById('nimSellPrice').value) || 0;
     const pageName = document.getElementById('nimPage').value.trim();
-    const color = document.getElementById('nimColor').value.trim();
+    
     const sizes = {};
-    document.querySelectorAll('.nim-size-row').forEach(row => {
-      const inputs = row.querySelectorAll('input');
-      const sz = inputs[0]?.value.trim();
-      const qty = parseInt(inputs[1]?.value) || 0;
-      if (sz) sizes[sz] = qty;
+    const variations = {}; // لتخزين الباركود واللون لكل مقاس
+    
+    const rows = document.querySelectorAll('.nim-size-row');
+    for (let row of rows) {
+      const sInp = row.querySelector('.nim-s-val');
+      const cInp = row.querySelector('.nim-c-val');
+      const bInp = row.querySelector('.nim-b-val');
+      const qInp = row.querySelector('.nim-q-val');
+      
+      const sz = sInp?.value.trim() || '';
+      const c = cInp?.value.trim() || '';
+      const hex = cInp?.dataset?.hex || '';
+      let b = bInp?.value.trim().toUpperCase() || '';
+      const qty = parseInt(qInp?.value) || 0;
+      
+      if (sz) {
+        // توليد باركود تلقائي إذا تم تركه فارغاً
+        if (!b) b = 'JW' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        
+        // التحقق من عدم تكرار الباركود
+        const existing = Object.values(this.warehouse).find(w => {
+           if(w.barcode === b) return true;
+           if(w.variations) return Object.values(w.variations).some(v=>v.barcode===b);
+           return false;
+        });
+        if (existing) { this.toast(`الباركود ${b} مستخدم مسبقاً للمنتج: ${existing.name}`, 'error'); return; }
+        
+        // دمج المقاس مع اللون ليكون مميزاً (مثال: S - أحمر)
+        const key = c ? `${sz} - ${c}` : sz;
+        sizes[key] = (sizes[key] || 0) + qty;
+        variations[key] = { size: sz, color: c, hex: hex, barcode: b };
+      }
+    }
+    
+    if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس واحد على الأقل', 'error'); return; }
+    
+    const newRef = await push(warehouseRef, { 
+      name, buyPrice, sellPrice, pageName, 
+      sizes, variations, 
+      createdAt: Date.now() 
     });
-    const newRef = await push(warehouseRef, { name, barcode, buyPrice, sellPrice, pageName, color, sizes, createdAt: Date.now() });
+    
     const totalQty = Object.values(sizes).reduce((a,b)=>a+b,0);
     if (totalQty > 0) {
-      await push(purchasesRef, { timestamp: Date.now(), date: new Date().toLocaleDateString('en-GB'), itemId: newRef.key, itemName: name, sizes, buyPrice, pageName, notes: 'إدخال أولي', user: this.userName });
+      await push(purchasesRef, { 
+        timestamp: Date.now(), date: new Date().toLocaleDateString('en-GB'), 
+        itemId: newRef.key, itemName: name, sizes, buyPrice, pageName, notes: 'إدخال أولي', user: this.userName 
+      });
     }
-    this.log('create_item', newRef.key, `إضافة منتج: ${name} | باركود: ${barcode} | لون: ${color}`);
-    this.toast(`تم إضافة "${name}" بباركود ${barcode} ✓`, 'success');
+    
+    this.log('create_item', newRef.key, `إضافة منتج: ${name}`);
+    this.toast(`تم إضافة "${name}" للمستودع ✓`, 'success');
     this.closeModal('newItemModal');
-    setTimeout(() => this.showBarcode(barcode, name), 400);
   },
-
   // ============ WAREHOUSE ============
   resetWarehouseFilters() {
     ['wSearch','wColorFilter','wPageFilter','wStockFilter'].forEach(id=>{
@@ -3139,7 +3177,7 @@ window.app = {
     return this.COLORS_AR.find(c => c.name === name)?.hex || null;
   },
 
-  _renderItemCards(items) {
+ _renderItemCards(items) {
     const grid = document.getElementById('warehouseGrid');
     if (!grid) return;
     if (items.length === 0) {
@@ -3153,24 +3191,21 @@ window.app = {
       const sizes = Object.entries(w.sizes||{});
       const total = sizes.reduce((s,[,q])=>s+q,0);
       const fillCls = total>10?'qty-high':total>3?'qty-med':'qty-low';
-      const barcode = (w.barcode || id.slice(-8)).toUpperCase();
-      const colorHex = this._colorHex(w.color);
-      const colorBorder = colorHex || 'var(--gold)';
+      
+      const mainColorHex = this._colorHex(w.color);
+      const colorBorder = mainColorHex || 'var(--gold)';
+      
       return `<div class="col-12 col-sm-6 col-lg-4 col-xl-3">
         <div class="item-card" style="border-top:4px solid ${colorBorder}">
           <div class="item-card-header">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div>
                 <div class="item-card-name">${w.name}</div>
-                <div class="item-card-code"><i class="fas fa-barcode me-1"></i>${barcode}</div>
+                <div class="item-card-code" style="opacity:0.7;font-size:0.7rem">المعرف: ${id.slice(-8).toUpperCase()}</div>
               </div>
               ${total<=3?`<span style="background:rgba(192,37,86,0.25);color:#ffaaaa;font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:20px">⚠ منخفض</span>`:''}
             </div>
-            ${w.color?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-              ${colorHex?`<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${colorHex};border:2px solid rgba(255,255,255,0.4)"></span>`:''}
-              <span style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700">${w.color}</span>
-            </div>`:''}
-            ${w.pageName?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px"><i class="fas fa-file-alt me-1"></i>${w.pageName}</div>`:''}
+            ${w.pageName?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:4px"><i class="fas fa-file-alt me-1"></i>${w.pageName}</div>`:''}
           </div>
           <div class="item-card-body">
             <div class="item-qty-row">
@@ -3179,11 +3214,27 @@ window.app = {
             </div>
             <div class="item-qty-bar"><div class="item-qty-fill ${fillCls}" style="width:${Math.min(total>0?Math.round(total/Math.max(total,20)*100):0,100)}%"></div></div>
             ${w.buyPrice?`<div style="font-size:0.75rem;color:var(--ink-mid);margin-bottom:0.5rem">شراء: <strong>${w.buyPrice} JOD</strong>${w.sellPrice?' | بيع: <strong>'+w.sellPrice+' JOD</strong>':''}</div>`:''}
+            
             <div class="item-sizes mb-3">
-              ${sizes.length===0?`<span style="color:var(--ink-mid);font-size:0.8rem">لا توجد مقاسات</span>`:sizes.map(([s,q])=>`<span class="size-tag${q===0?' zero':(q<=2?' qty-med-tag':'')}"><span style="font-size:0.62rem;opacity:0.7">مقاس</span> ${s}: <strong>${q}</strong></span>`).join('')}
+              ${sizes.length===0?`<span style="color:var(--ink-mid);font-size:0.8rem">لا توجد مقاسات</span>` : sizes.map(([s,q])=>{
+                const v = w.variations ? w.variations[s] : null;
+                const vCode = v && v.barcode ? v.barcode : (w.barcode || id.slice(-8)).toUpperCase();
+                const vHex = v && v.hex ? v.hex : null;
+                const vColor = v && v.color ? v.color : '';
+                return `
+                <div style="background:rgba(0,0,0,0.02); border:1px solid var(--border); padding:6px; border-radius:8px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                  <div>
+                    <span style="font-weight:700;font-size:0.85rem">${s}</span>: <strong style="${q===0?'color:var(--ruby)':''}">${q}</strong> قطعة
+                    ${vColor ? `<div style="font-size:0.7rem; color:var(--ink-mid);"><span style="display:inline-block;width:8px;height:8px;background:${vHex};border-radius:50%;vertical-align:middle;margin-left:4px;border:1px solid #ccc"></span>${vColor}</div>` : ''}
+                  </div>
+                  <div style="font-size:0.7rem; font-family:monospace; background:var(--paper); padding:4px 6px; border-radius:4px; border:1px solid var(--border); cursor:pointer;" onclick="app.showBarcode('${vCode}','${w.name} - ${s}')" title="طباعة الباركود">
+                    <i class="fas fa-barcode" style="color:var(--gold)"></i> ${vCode}
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
+            
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
-              <button class="btn-j btn-ghost btn-xs-j" style="flex:1" onclick="app.showBarcode('${barcode}','${w.name}')"><i class="fas fa-barcode"></i> باركود</button>
               <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
               <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
             </div>
@@ -3290,10 +3341,14 @@ window.app = {
   openPurchaseModal() { this.gotoPage('purchase'); },
 
   // ============ PURCHASE BARCODE SCANNER ============
-  scanPurchaseBarcode() {
+ scanPurchaseBarcode() {
     const code = document.getElementById('pBarcodeScanner').value.trim().toUpperCase();
     if (!code) return;
-    const found = Object.entries(this.warehouse).find(([,w]) => (w.barcode||'').toUpperCase() === code);
+    const found = Object.entries(this.warehouse).find(([,w]) => {
+       if (w.barcode && w.barcode.toUpperCase() === code) return true;
+       if (w.variations && Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase() === code)) return true;
+       return false;
+    });
     const resultEl = document.getElementById('pBarcodeResult');
     if (found) {
       const [id, w] = found;
@@ -3429,7 +3484,7 @@ window.app = {
     });
 
     if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية واحدة على الأقل', 'error'); return; }
-    if (buyPrice <= 0) { this.toast('يرجى إدخال سعر الشراء', 'error'); return; }
+    //if (buyPrice <= 0) { this.toast('يرجى إدخال سعر الشراء', 'error'); return; }
 
     let targetId = existingId;
     if (!targetId) {
@@ -3486,18 +3541,69 @@ window.app = {
   },
 
   // ============ RETURNS BARCODE ============
+scanWarehouseBarcode() {
+    const code = document.getElementById('wBarcodeScanner').value.trim().toUpperCase();
+    if (!code) { this.renderWarehouse(); return; }
+    const grid = document.getElementById('warehouseGrid');
+    const items = Object.entries(this.warehouse).filter(([,w]) => {
+      if (w.name.toLowerCase().includes(code.toLowerCase())) return true;
+      if (w.barcode && w.barcode.toUpperCase().includes(code)) return true; // للمنتجات القديمة
+      if (w.variations) {
+         return Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase().includes(code));
+      }
+      return false;
+    });
+    if (items.length === 0) {
+      grid.innerHTML = `<div class="col-12" style="text-align:center;padding:2rem;color:var(--ink-mid)">
+        <i class="fas fa-search fa-2x" style="opacity:0.2;display:block;margin-bottom:1rem"></i>
+        لم يتم العثور على منتج بهذا الباركود
+        <br><button class="btn-j btn-gold btn-sm-j mt-3" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> إضافة كمنتج جديد</button>
+      </div>`;
+      return;
+    }
+    this._renderItemCards(items);
+  },
+
+  scanPurchaseBarcode() {
+    const code = document.getElementById('pBarcodeScanner').value.trim().toUpperCase();
+    if (!code) return;
+    const found = Object.entries(this.warehouse).find(([,w]) => {
+       if (w.barcode && w.barcode.toUpperCase() === code) return true;
+       if (w.variations && Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase() === code)) return true;
+       return false;
+    });
+    const resultEl = document.getElementById('pBarcodeResult');
+    if (found) {
+      const [id, w] = found;
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div style="background:rgba(26,107,74,0.08);border:1px solid rgba(26,107,74,0.2);border-radius:10px;padding:0.75rem;display:flex;align-items:center;gap:0.75rem">
+        <i class="fas fa-check-circle" style="color:var(--emerald);font-size:1.3rem"></i>
+        <div><div style="font-weight:800">${w.name}</div><div style="font-size:0.78rem;color:var(--ink-mid)">مخزون حالي: ${Object.values(w.sizes||{}).reduce((a,b)=>a+b,0)} قطعة</div></div>
+        <button class="btn-j btn-gold btn-sm-j" style="margin-right:auto" onclick="app.selectPurchaseItem('${id}')">اختيار</button>
+      </div>`;
+    } else {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:0.75rem;font-size:0.85rem;color:var(--gold-dark)">
+        <i class="fas fa-info-circle me-2"></i>الباركود غير موجود — سيتم إنشاء منتج جديد بهذا الباركود
+      </div>`;
+      document.getElementById('pBarcode').value = code;
+    }
+  },
+
   scanReturnBarcode() {
     const code = document.getElementById('retBarcodeScanner').value.trim().toUpperCase();
     if (!code) return;
-    // Search by order barcode (last 12 of order ID) or item barcode
     const found = Object.entries(this.orders).find(([id]) => id.slice(-12).toUpperCase().includes(code) || id.slice(-8).toUpperCase() === code);
     if (found) {
       this.selectReturnOrder(found[0], found[1]);
       document.getElementById('retBarcodeScanner').value = '';
       this.toast('تم العثور على الطلب', 'success');
     } else {
-      // Try by item barcode
-      const itemFound = Object.entries(this.warehouse).find(([,w]) => (w.barcode||'').toUpperCase() === code);
+      const itemFound = Object.entries(this.warehouse).find(([,w]) => {
+         if (w.barcode && w.barcode.toUpperCase() === code) return true;
+         if (w.variations && Object.values(w.variations).some(v => v.barcode && v.barcode.toUpperCase() === code)) return true;
+         return false;
+      });
       if (itemFound) {
         const itemId = itemFound[0];
         const ordersByItem = Object.entries(this.orders).filter(([,o]) => o.itemId === itemId && o.status !== 'canceled');
