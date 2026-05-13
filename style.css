@@ -1,5 +1,5 @@
 /* ============================================================
-   style.css — جواهر | نظام إدارة المبيعات والمستودع الاحترافي
+   style.css — جواهر | نظام إدارة المبيعات والمستودع
    ============================================================ */
 
 * { box-sizing: border-box; }
@@ -307,14 +307,6 @@ body {
 .main-content { padding: 1.5rem; padding-bottom: 90px; min-height: calc(100vh - 70px); }
 .page         { display: none; }
 .page.active  { display: block; }
-
-/* تحسين السجل: إزالة الأنيميشن لزيادة السرعة والوضوح */
-#page-logs.active .table-j tbody tr,
-#page-records.active .table-j tbody tr {
-    animation: none !important;
-    transition: none !important;
-}
-
 .page-header  { margin-bottom: 1.5rem; }
 .page-title   { font-size: 1.6rem; font-weight: 800; color: var(--ink); margin: 0; }
 .page-subtitle{ color: var(--ink-mid); font-size: .85rem; margin: 0; }
@@ -362,15 +354,6 @@ body {
     color: var(--ink); font-family: 'Almarai', sans-serif;
     transition: var(--transition); font-size: .95rem; width: 100%;
 }
-
-/* محاذاة رقم الهاتف لليسار (طلب المستخدم) */
-input[type="tel"], 
-input#eCustMob,
-input#mo_mob {
-    text-align: left !important;
-    direction: ltr !important;
-}
-
 [data-theme="dark"] .form-control-j,
 [data-theme="dark"] .form-select-j { background: rgba(255,255,255,.04); color: var(--ink); }
 .form-control-j:focus, .form-select-j:focus {
@@ -413,16 +396,6 @@ input#mo_mob {
 .btn-ghost:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,.05); }
 .btn-sm-j    { padding: .4rem .9rem; font-size: .82rem; border-radius: 10px; }
 .btn-xs-j    { padding: .25rem .6rem; font-size: .75rem; border-radius: 8px; }
-
-/* زر "تحديد الكل" الجديد */
-.btn-select-all {
-    margin-bottom: 10px;
-    background: rgba(201, 168, 76, 0.1) !important;
-    color: var(--gold-dark) !important;
-    border: 1px dashed var(--gold) !important;
-    width: 100%;
-    justify-content: center;
-}
 
 /* ============ TABLE ============ */
 .table-wrap {
@@ -728,120 +701,3 @@ input#mo_mob {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(201,168,76,.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
-
-/* ============================================================
-   التحسينات الإضافية الجديدة (الطباعة الاحترافية والمنطق المتقدم)
-   ============================================================ */
-
-/* تنسيق الطباعة بعمودين ومنع أسماء الصفحات */
-@media print {
-    /* إخفاء كل العناصر غير الضرورية */
-    .topbar, .bottom-nav, .desktop-nav-wrapper, .btn-j, .search-bar, 
-    .filter-chips, .bulk-panel, .page-header, #toastContainer {
-        display: none !important;
-    }
-
-    body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; }
-    .main-content { padding: 0 !important; margin: 0 !important; }
-    .card-j { border: none !important; box-shadow: none !important; }
-
-    /* الهيكل المخصص للملصق (2-Column Layout) */
-    .print-label-j {
-        display: flex !important;
-        flex-direction: row !important;
-        width: 100%;
-        max-width: 10cm; /* حجم ملصق الشحن القياسي */
-        border: 2px solid black;
-        margin: 10px auto;
-        page-break-inside: avoid;
-        direction: rtl;
-    }
-
-    /* العمود الأول: معلومات شركة التوصيل والعميل */
-    .print-col-1 {
-        width: 55%;
-        border-left: 1.5px solid #000;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        text-align: right;
-    }
-
-    /* العمود الثاني: معلومات الطلبية والمنتج */
-    .print-col-2 {
-        width: 45%;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        background: #f9f9f9;
-    }
-
-    .print-title-j { font-weight: 900; font-size: 1.2rem; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 5px; }
-    .print-item-j { font-size: 0.9rem; margin-bottom: 2px; }
-    .print-price-j { font-size: 1.4rem; font-weight: 900; margin-top: auto; color: black !important; }
-    
-    /* منع طباعة اسم الموقع في أعلى الصفحة من إعدادات المتصفح */
-    @page { margin: 0; size: auto; }
-}
-
-/* تنسيق Searchable Dropdown (Auto-Fill) */
-.search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 999;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 0 0 12px 12px;
-    max-height: 200px;
-    overflow-y: auto;
-    box-shadow: var(--shadow);
-}
-.search-item-j {
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background 0.2s;
-    border-bottom: 1px solid var(--border);
-}
-.search-item-j:hover { background: rgba(201, 168, 76, 0.1); color: var(--gold); }
-
-/* تنسيق خطوات إدخال الطلب (Workflow Steps) */
-.step-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    position: relative;
-}
-.step-container::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 10%;
-    right: 10%;
-    height: 2px;
-    background: var(--border);
-    z-index: 1;
-}
-.step-j {
-    width: 30px;
-    height: 30px;
-    background: var(--paper-warm);
-    border: 2px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 800;
-    z-index: 2;
-    transition: all 0.3s ease;
-}
-.step-j.active {
-    background: var(--gold);
-    border-color: var(--gold-dark);
-    color: white;
-    transform: scale(1.2);
-}

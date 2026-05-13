@@ -3,896 +3,861 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <meta name="description" content="نظام جواهر - الإدارة المتكاملة للمستودعات والمبيعات">
-    <meta name="author" content="Jawaher System">
-    <title>جواهر | نظام إدارة المبيعات والمستودع الاحترافي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>جواهر - نظام إدارة المبيعات والمستودع</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A1A2E'/><polygon points='50,15 70,35 65,60 50,75 35,60 30,35' fill='%23C9A84C'/><polygon points='50,15 70,35 50,35' fill='%23E8C97A'/><polygon points='50,75 35,60 65,60' fill='%239A7A2E'/></svg>"
+        type="image/svg+xml">
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A1A2E'/><polygon points='50,15 70,35 65,60 50,75 35,60 30,35' fill='%23C9A84C'/><polygon points='50,15 70,35 50,35' fill='%23E8C97A'/><polygon points='50,75 35,60 65,60' fill='%239A7A2E'/></svg>" type="image/svg+xml">
-
+    <!-- ── Fonts & Icons ──────────────────────────────────── -->
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+    <!-- ── Bootstrap RTL ──────────────────────────────────── -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- ── Third-party libs ───────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 
+    <!-- ── App Styles ─────────────────────────────────────── -->
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        /* إضافة سريعة لضمان ظهور شاشة التحميل بشكل صحيح */
-        #loading-overlay {
-            position: fixed; inset: 0; background: #0A0A18; z-index: 999999;
-            display: flex; align-items: center; justify-content: center; transition: opacity 0.5s;
-        }
-    </style>
 </head>
 
 <body>
 
+    <!-- ══════════════════════════════════════════════════════
+         INTRO SCREEN
+    ══════════════════════════════════════════════════════ -->
     <div id="introScreen">
         <div class="intro-grid"></div>
-        <div class="particles-container" id="particles"></div>
-        
         <div class="intro-diamond-wrap">
             <div class="intro-diamond-ring"></div>
             <div class="intro-diamond">◆</div>
         </div>
-
         <div class="intro-brand">
-            <div class="intro-name"><span>JAWAHER</span> SYSTEM</div>
-            <div class="intro-sub">نظام إدارة المستودع والعمليات الاحترافي</div>
-            <div class="version-tag">Version 4.0 Pro</div>
+            <div class="intro-name"><span>Ramada</span> Delivery</div>
+            <div class="intro-name" style="font-size:clamp(1.1rem,3vw,1.8rem);font-weight:600;color:rgba(255,255,255,.75);letter-spacing:.05em;">
+                Warehousing System
+            </div>
+            <div class="intro-sub" style="margin-top:.6rem;">نظام إدارة المستودع والتوصيل</div>
         </div>
-
         <div class="intro-bar-wrap">
             <div class="intro-bar-track">
                 <div class="intro-bar-fill"></div>
             </div>
-            <div class="loading-text">جاري مزامنة قاعدة البيانات...</div>
         </div>
     </div>
 
-
+    <!-- ══════════════════════════════════════════════════════
+         AUTH SCREEN
+    ══════════════════════════════════════════════════════ -->
     <div id="authScreen">
         <div class="auth-orb auth-orb-1"></div>
         <div class="auth-orb auth-orb-2"></div>
-        <div class="auth-orb auth-orb-3"></div>
-
         <div class="auth-card">
             <div class="auth-gem">
-                <i class="fas fa-gem"></i>
+                <i class="fas fa-gem" style="color:#1A1A2E; font-size:2rem;"></i>
             </div>
-            <h2 class="auth-title">مرحباً بك في جواهر</h2>
-            <p class="auth-subtitle">يرجى إدخال بيانات الاعتماد للوصول للنظام</p>
-
-            <form id="loginForm" onsubmit="event.preventDefault(); window.app.login();">
+            <h2 class="text-center mb-1">Jawaher</h2>
+            <p class="text-center mb-4" style="font-size:.85rem;">Warehousing System</p>
+            <form onsubmit="event.preventDefault(); window.app.login();" autocomplete="on">
                 <div class="auth-field">
-                    <label class="form-label-j">اسم المستخدم</label>
-                    <div class="input-group-j">
-                        <i class="fas fa-user auth-field-icon"></i>
-                        <input type="text" id="loginUser" class="auth-input" placeholder="User ID" required autocomplete="username">
-                    </div>
+                    <i class="fas fa-user auth-field-icon"></i>
+                    <input type="text" id="loginUser" name="username" class="auth-input"
+                        placeholder="اسم المستخدم" autocomplete="username">
                 </div>
-
                 <div class="auth-field">
-                    <label class="form-label-j">كلمة المرور</label>
-                    <div class="input-group-j">
-                        <i class="fas fa-lock auth-field-icon"></i>
-                        <input type="password" id="loginPass" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
-                        <button type="button" class="pass-toggle" onclick="app.togglePass('loginPass')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                    <i class="fas fa-lock auth-field-icon"></i>
+                    <input type="password" id="loginPass" name="password" class="auth-input"
+                        placeholder="كلمة المرور" autocomplete="current-password">
                 </div>
-
-                <div class="auth-options">
-                    <label class="check-container">
-                        <input type="checkbox" id="rememberMe">
-                        <span class="checkmark"></span>
-                        تذكرني على هذا الجهاز
-                    </label>
-                </div>
-
-                <button type="submit" class="btn-auth">
-                    <span>تسجيل الدخول</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+                <button type="submit" class="btn-auth">دخول &nbsp;<i class="fas fa-arrow-left"></i></button>
             </form>
-
-            <div class="auth-footer">
-                <p>&copy; 2026 Jawaher CRM. جميع الحقوق محفوظة</p>
-            </div>
         </div>
     </div>
 
-
+    <!-- ══════════════════════════════════════════════════════
+         APP CONTAINER
+    ══════════════════════════════════════════════════════ -->
     <div id="appContainer" style="display:none;">
 
-        <header class="topbar">
-            <div class="topbar-left">
-                <div class="brand-logo" onclick="app.gotoPage('dashboard')">
-                    <div class="brand-gem"><i class="fas fa-gem"></i></div>
-                    <div class="brand-text">
-                        <div class="brand-name">جواهر</div>
-                        <div class="brand-sub">JAWAHER PRO</div>
+        <!-- ── Top Bar ──────────────────────────────────────── -->
+        <div class="topbar">
+            <div class="brand-logo">
+                <div class="brand-gem"><i class="fas fa-gem"></i></div>
+                <div>
+                    <div class="brand-name">جواهر</div>
+                    <div class="brand-sub">إدارة المبيعات والمستودع</div>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn-icon" onclick="app.toggleDark()" id="darkBtn" title="تغيير المظهر">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-pill">
+                    <div class="user-avatar" id="userAvatar">م</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">المستخدم</div>
+                        <div class="user-role" id="userRole">مستخدم</div>
                     </div>
                 </div>
-            </div>
-
-            <div class="topbar-right">
-                <div class="global-search d-none d-md-flex">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="globalSearchInput" placeholder="بحث سريع عن طلب أو باركود..." oninput="app.globalSearch()">
-                </div>
-
-                <div class="topbar-actions">
-                    <button class="btn-icon" onclick="app.toggleDark()" title="تغيير السمة">
-                        <i class="fas fa-moon" id="themeIcon"></i>
-                    </button>
-                    
-                    <button class="btn-icon notification-btn" onclick="app.showNotifications()">
-                        <i class="fas fa-bell"></i>
-                        <span class="notify-badge" id="alertBadge" style="display:none;"></span>
-                    </button>
-
-                    <div class="user-pill dropdown">
-                        <div class="user-trigger" id="userMenuBtn" data-bs-toggle="dropdown">
-                            <div class="user-avatar" id="userAvatar">M</div>
-                            <div class="user-info d-none d-sm-block">
-                                <div class="user-name" id="userName">المسؤول</div>
-                                <div class="user-role" id="userRole">مدير النظام</div>
-                            </div>
-                            <i class="fas fa-chevron-down ms-2"></i>
-                        </div>
-                        <ul class="dropdown-menu dropdown-menu-end card-j shadow">
-                            <li><button class="dropdown-item" onclick="app.openProfile()"><i class="fas fa-user-circle me-2"></i> ملفي الشخصي</button></li>
-                            <li><button class="dropdown-item" onclick="app.gotoPage('definitions')"><i class="fas fa-cog me-2"></i> الإعدادات</button></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><button class="dropdown-item text-danger" onclick="app.logout()"><i class="fas fa-power-off me-2"></i> تسجيل الخروج</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <nav class="desktop-nav-wrapper" id="mainNav">
-            <div class="nav-container">
-                <button class="nav-btn active" data-page="dashboard" onclick="app.gotoPage('dashboard')">
-                    <i class="fas fa-th-large"></i> <span>الرئيسية</span>
-                </button>
-                <button class="nav-btn" data-page="orders" onclick="app.gotoPage('orders')">
-                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
-                </button>
-                <button class="nav-btn" data-page="entry" onclick="app.gotoPage('entry')">
-                    <i class="fas fa-plus-square"></i> <span>إدخال طلب</span>
-                </button>
-                <button class="nav-btn" data-page="reports" onclick="app.gotoPage('reports')">
-                    <i class="fas fa-chart-line"></i> <span>التقارير</span>
-                </button>
-                <button class="nav-btn admin-only" data-page="warehouse" onclick="app.gotoPage('warehouse')">
-                    <i class="fas fa-warehouse"></i> <span>المستودع</span>
-                </button>
-                <button class="nav-btn admin-only" data-page="purchases" onclick="app.gotoPage('purchases')">
-                    <i class="fas fa-truck-loading"></i> <span>المشتريات</span>
-                </button>
-                <button class="nav-btn admin-only" data-page="returns" onclick="app.gotoPage('returns')">
-                    <i class="fas fa-undo"></i> <span>المرتجعات</span>
-                </button>
-                <button class="nav-btn admin-only" data-page="logs" onclick="app.gotoPage('logs')">
-                    <i class="fas fa-history"></i> <span>السجل</span>
+                <button class="btn-icon" onclick="app.logout()" title="خروج" style="color:var(--ruby-light)">
+                    <i class="fas fa-power-off"></i>
                 </button>
             </div>
-        </nav>
+        </div>
 
-        <main class="main-content">
+        <!-- ── Desktop Navigation ───────────────────────────── -->
+        <div class="desktop-nav-wrapper" id="desktopNav">
+            <button class="nav-btn active" data-page="dashboard"   onclick="app.gotoPage('dashboard')"  ><i class="fas fa-chart-pie"></i>    لوحة القيادة</button>
+            <button class="nav-btn"        data-page="orders"      onclick="app.gotoPage('orders')"     ><i class="fas fa-list-alt"></i>     الطلبات</button>
+            <button class="nav-btn"        data-page="entry"       onclick="app.gotoPage('entry')"      ><i class="fas fa-plus-circle"></i>  طلب جديد</button>
+            <button class="nav-btn"        data-page="reports"     onclick="app.gotoPage('reports')"    ><i class="fas fa-table"></i>        التقارير</button>
+            <button class="nav-btn admin-only" data-page="warehouse"   onclick="app.gotoPage('warehouse')"  ><i class="fas fa-warehouse"></i>    المستودع</button>
+            <button class="nav-btn admin-only" data-page="purchase"    onclick="app.gotoPage('purchase')"   ><i class="fas fa-shopping-cart"></i> المشتريات</button>
+            <button class="nav-btn admin-only" data-page="returns"     onclick="app.gotoPage('returns')"    ><i class="fas fa-undo-alt"></i>     المرتجعات</button>
+            <button class="nav-btn admin-only" data-page="definitions" onclick="app.gotoPage('definitions')"><i class="fas fa-cog"></i>          التعريفات</button>
+            <button class="nav-btn admin-only" data-page="logs"        onclick="app.gotoPage('logs')"       ><i class="fas fa-history"></i>      السجل</button>
+        </div>
 
-            <section id="page-dashboard" class="page active">
+        <!-- ── Main Content ─────────────────────────────────── -->
+        <datalist id="productsList"></datalist>
+        <div class="main-content">
+
+            <!-- ════ DASHBOARD ════ -->
+            <div id="page-dashboard" class="page active">
                 <div class="page-header">
-                    <div class="page-title-box">
-                        <h1 class="page-title">لوحة القيادة</h1>
-                        <p class="page-subtitle" id="dashWelcome">مرحباً بك مجدداً، إليك ملخص العمليات اليوم</p>
-                    </div>
-                    <div class="page-actions">
-                        <button class="btn-j btn-ghost" onclick="app.refreshDashboard()">
-                            <i class="fas fa-sync-alt"></i> تحديث
-                        </button>
-                    </div>
+                    <h1 class="page-title">لوحة القيادة</h1>
+                    <p class="page-subtitle" id="dashDate">اليوم</p>
                 </div>
-
-                <div class="kpi-grid" id="kpiGrid">
-                    <div class="skeleton-card" style="height:120px"></div>
-                    <div class="skeleton-card" style="height:120px"></div>
-                    <div class="skeleton-card" style="height:120px"></div>
-                    <div class="skeleton-card" style="height:120px"></div>
-                </div>
-
-                <div class="row g-4 mt-2">
-                    <div class="col-xl-8 col-lg-7">
-                        <div class="card-j p-4 h-100">
-                            <div class="card-header-j">
-                                <h5 class="card-title-j"><i class="fas fa-chart-area text-gold"></i> حركة المبيعات (7 أيام)</h5>
-                                <div class="card-tools">
-                                    <select class="form-select-j sm" id="chartFilter">
-                                        <option value="orders">عدد الطلبات</option>
-                                        <option value="revenue">الإيرادات</option>
-                                    </select>
-                                </div>
+                <div class="kpi-grid" id="kpiGrid"></div>
+                <div class="row g-3">
+                    <div class="col-lg-4">
+                        <div class="card-j p-3 h-100">
+                            <div style="font-weight:800;margin-bottom:1rem;color:var(--ink-mid);font-size:.85rem;">
+                                <i class="fas fa-chart-pie" style="color:var(--gold)"></i> توزيع الحالات
                             </div>
-                            <div class="chart-container mt-3">
-                                <canvas id="mainSalesChart"></canvas>
+                            <div class="chart-box"><canvas id="statusChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card-j p-3 h-100">
+                            <div style="font-weight:800;margin-bottom:1rem;color:var(--ink-mid);font-size:.85rem;">
+                                <i class="fas fa-boxes" style="color:var(--gold)"></i> أعلى المنتجات مبيعاً
+                            </div>
+                            <div class="chart-box"><canvas id="itemChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card-j p-3 h-100">
+                            <div style="font-weight:800;margin-bottom:1rem;color:var(--ink-mid);font-size:.85rem;">
+                                <i class="fas fa-exclamation-triangle" style="color:var(--ruby-light)"></i> تنبيهات المستودع
+                            </div>
+                            <div id="stockAlerts">
+                                <div class="skeleton" style="height:60px;margin-bottom:.5rem;"></div>
+                                <div class="skeleton" style="height:60px;"></div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-xl-4 col-lg-5">
-                        <div class="card-j p-4 h-100">
-                            <h5 class="card-title-j"><i class="fas fa-pie-chart text-gold"></i> حالة الطلبات الحالية</h5>
-                            <div class="chart-container mt-3">
-                                <canvas id="statusDonutChart"></canvas>
-                            </div>
-                            <div id="statusLegend" class="mt-3"></div>
-                        </div>
-                    </div>
                 </div>
-
-                <div class="row g-4 mt-2">
-                    <div class="col-md-6">
-                        <div class="card-j p-4">
-                            <h5 class="card-title-j text-danger"><i class="fas fa-exclamation-triangle"></i> تنبيهات نقص المخزون</h5>
-                            <div id="stockAlertsList" class="mt-3">
-                                <div class="empty-state p-4 text-center">
-                                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                                    <p>المخزون سليم حالياً</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="card-j p-3 mt-3">
+                    <div style="font-weight:800;margin-bottom:1rem;color:var(--ink-mid);font-size:.85rem;">
+                        <i class="fas fa-user-chart" style="color:var(--gold)"></i> تقييم المدخلين (عدد الطلبات)
                     </div>
-                    <div class="col-md-6">
-                        <div class="card-j p-4">
-                            <h5 class="card-title-j"><i class="fas fa-bolt text-gold"></i> آخر النشاطات</h5>
-                            <div id="recentActivityList" class="mt-3 activity-timeline">
-                                </div>
-                        </div>
-                    </div>
+                    <div id="entryUserRanking"></div>
                 </div>
-            </section>
+            </div>
 
-
-            <section id="page-orders" class="page">
-                <div class="page-header">
-                    <div class="page-title-box">
+            <!-- ════ ORDERS BOARD ════ -->
+            <div id="page-orders" class="page">
+                <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
                         <h1 class="page-title">بورد الطلبات</h1>
-                        <p class="page-subtitle">إدارة الحالات ومتابعة التوصيل</p>
+                        <p class="page-subtitle">إدارة ومتابعة الطلبات</p>
                     </div>
-                    <div class="page-actions d-flex gap-2">
-                        <div class="search-bar">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="orderBoardSearch" placeholder="ابحث بالاسم أو الرقم..." oninput="app.filterBoard()">
+                    <div class="search-bar" style="width:220px">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="ordersSearch" placeholder="بحث سريع..." oninput="app.renderBoard()">
+                    </div>
+                </div>
+                <!-- Bulk Panel -->
+                <div id="kbBulkPanel" class="bulk-panel">
+                    <span style="font-weight:700;color:var(--gold)">
+                        <i class="fas fa-check-square me-2"></i> تم تحديد <span id="kbBulkCount">0</span> طلب
+                    </span>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn-j btn-gold btn-sm-j" onclick="app.kbBulkPrint()"><i class="fas fa-print"></i> طباعة</button>
+                        <div class="dropdown-j" id="kbStatusDrop">
+                            <button class="btn-j btn-ghost btn-sm-j" onclick="app.toggleDrop('kbStatusDrop')"><i class="fas fa-exchange-alt"></i> تغيير الحالة</button>
+                            <div class="dropdown-menu-j">
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('new')"      ><span class="badge-j badge-new">جديدة</span></button>
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('process')"  ><span class="badge-j badge-process">قيد التحضير</span></button>
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('done')"     ><span class="badge-j badge-done">جاهزة</span></button>
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('delivered')"><span class="badge-j badge-delivered">مسلمة</span></button>
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('postponed')"><span class="badge-j badge-postponed">مؤجل</span></button>
+                                <button class="dropdown-item-j" onclick="app.kbBulkStatus('canceled')" ><span class="badge-j badge-canceled">ملغي</span></button>
+                            </div>
                         </div>
-                        <button class="btn-j btn-gold" onclick="app.gotoPage('entry')">
-                            <i class="fas fa-plus"></i> طلب جديد
-                        </button>
                     </div>
                 </div>
+                <div id="boardContainer"></div>
+            </div>
 
-                <div class="board-filters card-j p-2 mb-3">
-                    <div class="filter-chips">
-                        <button class="chip active" data-filter="all" onclick="app.setBoardFilter('all')">الكل</button>
-                        <button class="chip" data-filter="today" onclick="app.setBoardFilter('today')">طلبات اليوم</button>
-                        <button class="chip" data-filter="urgent" onclick="app.setBoardFilter('urgent')">مستعجل</button>
-                        <div class="divider-v"></div>
-                        <button class="btn-sm-j btn-ghost" onclick="app.expandAllKanban()"><i class="fas fa-expand-arrows-alt"></i> توسيع الكل</button>
-                    </div>
-                </div>
-
-                <div id="boardContainer" class="kanban-wrapper">
-                    </div>
-            </section>
-
-
-            <section id="page-entry" class="page">
+            <!-- ════ NEW ORDER ENTRY ════ -->
+            <div id="page-entry" class="page">
                 <div class="page-header">
-                    <div class="page-title-box">
-                        <h1 class="page-title">إدخال طلب ذكي</h1>
-                        <p class="page-subtitle">نظام الخطوات المتسلسلة لضمان دقة البيانات</p>
-                    </div>
+                    <h1 class="page-title">إدخال طلب جديد</h1>
+                    <p class="page-subtitle">أضف طلب بيع جديد وحدد المنتج من المستودع</p>
                 </div>
-
-                <div class="workflow-container card-j">
-                    <div class="stepper">
-                        <div class="step active" id="step1-indicator">
-                            <div class="step-num">1</div>
-                            <div class="step-label">بيانات العميل</div>
+                <div class="card-j p-4" style="max-width:800px; margin:0 auto;">
+                    <div class="form-group">
+                        <label class="form-label-j">اسم الزبون <span style="color:var(--ruby-light)">*</span></label>
+                        <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-8">
+                            <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
+                            <div class="input-prefix">
+                                <span class="prefix-label" id="ePhonePrefix" style="min-width:36px">07</span>
+                                <input type="text" id="eCustMob" class="form-control-j"
+                                    placeholder="9 123 4567" dir="ltr" maxlength="12" style="text-align:left">
+                            </div>
+                            <div id="eDupWarn" class="mt-2"
+                                style="display:none;font-size:.8rem;color:var(--gold-dark);background:rgba(201,168,76,.1);padding:.5rem .75rem;border-radius:10px;border-right:3px solid var(--gold)">
+                                <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
+                            </div>
                         </div>
-                        <div class="step-line"></div>
-                        <div class="step" id="step2-indicator">
-                            <div class="step-num">2</div>
-                            <div class="step-label">اختيار المنتجات</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step" id="step3-indicator">
-                            <div class="step-num">3</div>
-                            <div class="step-label">التأكيد والطباعة</div>
+                        <div class="col-4">
+                            <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
+                            <div class="select-wrapper">
+                                <select id="eGovernorate" class="form-control-j select-j">
+                                    <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
+                                    <option value="إربد">إربد</option>
+                                    <option value="الزرقاء">الزرقاء</option>
+                                    <option value="المفرق">المفرق</option>
+                                    <option value="البلقاء">البلقاء</option>
+                                    <option value="الكرك">الكرك</option>
+                                    <option value="الطفيلة">الطفيلة</option>
+                                    <option value="معان">معان</option>
+                                    <option value="العقبة">العقبة</option>
+                                    <option value="جرش">جرش</option>
+                                    <option value="عجلون">عجلون</option>
+                                    <option value="مادبا">مادبا</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="step-content active" id="step1-content">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label-j">اسم الزبون <span class="required">*</span></label>
-                                    <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label-j">رقم الموبايل <span class="required">*</span></label>
-                                    <div class="input-prefix">
-                                        <span class="prefix-label">07</span>
-                                        <input type="tel" id="eCustMob" class="form-control-j ltr-input" placeholder="9 123 4567" maxlength="12">
-                                    </div>
-                                    <div id="duplicateWarning" class="alert-sm text-gold mt-1" style="display:none">
-                                        <i class="fas fa-history"></i> هذا الرقم لديه طلبات سابقة
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label-j">المحافظة <span class="required">*</span></label>
-                                    <select id="eGovernorate" class="form-select-j">
-                                        </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label-j">العنوان التفصيلي</label>
-                                    <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة، الشارع، أقرب نقطة...">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="step-actions mt-5">
-                            <button class="btn-j btn-gold next-btn" onclick="app.validateStep1()">
-                                التالي: اختيار المنتجات <i class="fas fa-arrow-left ms-2"></i>
-                            </button>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="form-label-j">العنوان التفصيلي <span style="color:var(--ruby-light)">*</span></label>
+                            <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة - الشارع - أقرب نقطة دالة">
                         </div>
                     </div>
-
-                    <div class="step-content" id="step2-content">
-                        <div class="alert-info-j mb-4">
-                            <i class="fas fa-info-circle"></i> يرجى اختيار المنتج، ثم اللون لتظهر المقاسات المتوفرة فقط.
-                        </div>
-
-                        <div id="orderItemsContainer">
-                            <div class="order-item-row card-j p-3 mb-3 border-gold-left">
-                                <div class="row g-3">
-                                    <div class="col-lg-4 col-md-6">
-                                        <label class="form-label-j">البحث عن منتج (Auto-Fill)</label>
-                                        <div class="searchable-dropdown">
-                                            <input type="text" class="form-control-j prod-search" placeholder="اكتب اسم المنتج أو كوده..." oninput="app.searchProducts(this)">
-                                            <div class="search-results-box" style="display:none"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6">
-                                        <label class="form-label-j">اللون</label>
-                                        <select class="form-select-j prod-color" disabled onchange="app.onColorSelect(this)">
-                                            <option value="">اختر اللون أولاً</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6">
-                                        <label class="form-label-j">المقاس المتوفر</label>
-                                        <select class="form-select-j prod-size" disabled>
-                                            <option value="">اختر المقاس</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-2 col-md-6">
-                                        <label class="form-label-j">الكمية</label>
-                                        <div class="qty-control">
-                                            <button onclick="app.adjQty(this, -1)">-</button>
-                                            <input type="number" class="prod-qty" value="1" min="1">
-                                            <button onclick="app.adjQty(this, 1)">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button class="btn-j btn-ghost btn-sm-j mb-4" onclick="app.addOrderItemRow()">
-                            <i class="fas fa-plus"></i> إضافة منتج آخر
-                        </button>
-
-                        <div class="step-actions border-top pt-4">
-                            <button class="btn-j btn-ghost me-auto" onclick="app.prevStep(1)">السابق</button>
-                            <button class="btn-j btn-gold" onclick="app.validateStep2()">التالي: مراجعة السعر</button>
-                        </div>
+                    <div class="divider"></div>
+                    <!-- Items List -->
+                    <div style="font-weight:800;margin-bottom:.75rem;color:var(--ink)">
+                        <i class="fas fa-boxes" style="color:var(--gold)"></i> المنتجات
+                        <span style="font-size:.8rem;font-weight:400;color:var(--ink-mid)">(يمكن إضافة أكثر من منتج)</span>
                     </div>
-
-                    <div class="step-content" id="step3-content">
-                        <div class="row g-4">
-                            <div class="col-md-4">
-                                <div class="card-j p-4 bg-paper-warm">
-                                    <h6 class="mb-3 text-gold">ملخص السعر</h6>
-                                    <div class="form-group mb-3">
-                                        <label class="form-label-j">السعر شامل التوصيل <span class="required">*</span></label>
-                                        <div class="input-prefix">
-                                            <input type="number" id="ePrice" class="form-control-j" placeholder="0.00" step="0.5">
-                                            <span class="prefix-label">JOD</span>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label-j">ملاحظات التوصيل / Tags</label>
-                                        <input type="text" id="eTags" class="form-control-j" placeholder="مستعجل، هدية، الاتصال قبل الوصول">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card-j p-4 border">
-                                    <h6 class="mb-3">مراجعة البيانات النهائية</h6>
-                                    <div id="finalReviewArea" class="review-grid">
-                                        </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label-j">المصدر (الصفحة)</label>
-                                            <select id="ePageName" class="form-select-j"></select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label-j">الموظف المدخل</label>
-                                            <select id="eEntryUser" class="form-select-j"></select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="step-actions border-top pt-4 mt-4">
-                            <button class="btn-j btn-ghost me-auto" onclick="app.prevStep(2)">السابق</button>
-                            <button class="btn-j btn-emerald" onclick="app.saveOrder()">
-                                <i class="fas fa-check-circle me-2"></i> تأكيد وحفظ الطلب
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
-            <section id="page-reports" class="page">
-                <div class="page-header">
-                    <div class="page-title-box">
-                        <h1 class="page-title">التقارير والبحث المتقدم</h1>
-                        <p class="page-subtitle">فلترة شاملة وتصدير البيانات لملفات Excel</p>
-                    </div>
-                    <div class="page-actions d-flex gap-2">
-                        <button class="btn-j btn-emerald" onclick="app.exportToExcel()">
-                            <i class="fas fa-file-excel"></i> تصدير البيانات
-                        </button>
-                    </div>
-                </div>
-
-                <div class="card-j p-4 mb-4">
-                    <div class="row g-3">
+                    <div id="eItemsList"></div>
+                    <button class="btn-j btn-ghost btn-sm-j mb-3" onclick="app.addItemRow()">
+                        <i class="fas fa-plus"></i> إضافة منتج آخر
+                    </button>
+                    <div class="row g-3 mb-3">
                         <div class="col-md-3">
-                            <label class="form-label-j">بحث شامل</label>
-                            <input type="text" id="repSearch" class="form-control-j" placeholder="رقم، اسم، هاتف...">
+                            <label class="form-label-j">الوزن الإجمالي</label>
+                            <input type="text" id="eWeight" class="form-control-j" placeholder="كغ">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-j">الطول</label>
+                            <input type="text" id="eHeight" class="form-control-j" placeholder="سم">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-j">السعر شامل التوصيل <span style="color:var(--ruby-light)">*</span></label>
+                            <div class="input-prefix">
+                                <input type="number" id="ePrice" class="form-control-j" placeholder="0.00" step="0.5">
+                                <span class="prefix-label" id="eCurrencyLabel"
+                                    style="border-right:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">JOD</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-j">ملاحظات / Tags</label>
+                            <input type="text" id="eTags" class="form-control-j" placeholder="vip, هدية...">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-j">اسم الصفحة (المصدر) <span style="color:var(--ruby-light)">*</span></label>
+                            <div class="select-wrapper">
+                                <select id="ePageName" class="form-control-j select-j">
+                                    <option value="">اختر الصفحة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-j">المدخل <span style="color:var(--ruby-light)">*</span></label>
+                            <div class="select-wrapper">
+                                <select id="eEntryUser" class="form-control-j select-j"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-j">تاريخ الإدخال</label>
+                            <input type="text" id="eDate" class="form-control-j" readonly>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn-j btn-gold flex-fill" onclick="app.saveOrder()"><i class="fas fa-save"></i> حفظ الطلب</button>
+                        <button class="btn-j btn-ghost" onclick="app.resetOrderForm()"><i class="fas fa-undo"></i> مسح</button>
+                    </div>
+                    <div id="lastOrderPrintBtn" style="display:none;margin-top:1rem;">
+                        <button class="btn-j btn-ghost w-100" onclick="app.printLastOrder()">
+                            <i class="fas fa-print"></i> طباعة الطلب الأخير
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════ REPORTS ════ -->
+            <div id="page-reports" class="page">
+                <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h1 class="page-title">التقارير والبحث</h1>
+                        <p class="page-subtitle">بحث وتصفية الطلبات</p>
+                    </div>
+                    <button class="btn-j btn-emerald btn-sm-j" onclick="app.exportExcel()">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                </div>
+                <!-- Filters -->
+                <div class="card-j p-3 mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="search-bar">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="rSearch" placeholder="بحث شامل..." oninput="app.renderTable()">
+                            </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label-j">الحالة</label>
-                            <select id="repStatus" class="form-select-j">
-                                <option value="all">الكل</option>
-                                <option value="new">جديدة</option>
-                                <option value="process">قيد التحضير</option>
-                                <option value="done">جاهزة</option>
-                                <option value="delivered">مسلمة</option>
-                                <option value="postponed">مؤجلة</option>
-                                <option value="canceled">ملغاة</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="rStatus" class="form-control-j select-j" onchange="app.renderTable()">
+                                    <option value="">كل الحالات</option>
+                                    <option value="new">جديدة</option>
+                                    <option value="process">قيد التحضير</option>
+                                    <option value="done">جاهزة</option>
+                                    <option value="delivered">مسلمة</option>
+                                    <option value="postponed">مؤجل</option>
+                                    <option value="canceled">ملغي</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label-j">من تاريخ</label>
-                            <input type="date" id="repFrom" class="form-control-j">
+                            <div class="select-wrapper">
+                                <select id="rItem" class="form-control-j select-j" onchange="app.renderTable()">
+                                    <option value="">كل المنتجات</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label-j">إلى تاريخ</label>
-                            <input type="date" id="repTo" class="form-control-j">
+                            <div class="select-wrapper">
+                                <select id="rPage" class="form-control-j select-j" onchange="app.renderTable()">
+                                    <option value="">كل الصفحات</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end gap-2">
-                            <button class="btn-j btn-gold flex-fill" onclick="app.runReport()">
-                                <i class="fas fa-filter"></i> تطبيق الفلتر
-                            </button>
-                            <button class="btn-j btn-ghost" onclick="app.resetReportFilters()" title="إعادة تعيين">
+                        <div class="col-md-1">
+                            <input type="date" id="rFrom" class="form-control-j" onchange="app.renderTable()">
+                        </div>
+                        <div class="col-md-1">
+                            <input type="date" id="rTo" class="form-control-j" onchange="app.renderTable()">
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn-j btn-ghost btn-sm-j w-100" onclick="app.resetReportFilters()">
                                 <i class="fas fa-undo"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-
-                <div id="bulkActionsPanel" class="bulk-panel card-j mb-3" style="display:none">
-                    <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="bulk-info">
-                            <i class="fas fa-check-square text-gold me-2"></i>
-                            تم تحديد <span id="selectedCount" class="fw-bold">0</span> طلب
+                <div class="row g-2 mb-3" id="stageCards"></div>
+                <!-- Bulk Panel -->
+                <div id="rBulkPanel" class="bulk-panel">
+                    <span style="font-weight:700;color:var(--gold)">
+                        <i class="fas fa-check-square me-2"></i> <span id="rBulkCount">0</span> طلب محدد
+                    </span>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn-j btn-gold btn-sm-j" onclick="app.rBulkPrint()"><i class="fas fa-print"></i> طباعة</button>
+                        <div class="dropdown-j admin-only" id="rStatusDrop">
+                            <button class="btn-j btn-ghost btn-sm-j" onclick="app.toggleDrop('rStatusDrop')"><i class="fas fa-exchange-alt"></i> تغيير الحالة</button>
+                            <div class="dropdown-menu-j">
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('new')"      ><span class="badge-j badge-new">جديدة</span></button>
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('process')"  ><span class="badge-j badge-process">تحضير</span></button>
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('done')"     ><span class="badge-j badge-done">جاهزة</span></button>
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('delivered')"><span class="badge-j badge-delivered">مسلمة</span></button>
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('postponed')"><span class="badge-j badge-postponed">مؤجل</span></button>
+                                <button class="dropdown-item-j" onclick="app.rBulkStatus('canceled')" ><span class="badge-j badge-canceled">ملغي</span></button>
+                            </div>
                         </div>
-                        <div class="bulk-btns d-flex gap-2">
-                            <button class="btn-sm-j btn-gold" onclick="app.bulkPrint()"><i class="fas fa-print"></i> طباعة الملصقات</button>
-                            <button class="btn-sm-j btn-ghost" onclick="app.bulkUpdateStatus()"><i class="fas fa-exchange-alt"></i> تغيير الحالة</button>
-                            <button class="btn-sm-j btn-ruby admin-only" onclick="app.bulkDelete()"><i class="fas fa-trash"></i> حذف</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-wrap">
-                    <table class="table-j" id="reportsTable">
-                        <thead>
-                            <tr>
-                                <th><input type="checkbox" id="selectAllRep" onchange="app.toggleSelectAll(this)"></th>
-                                <th>الرقم</th>
-                                <th>الزبون</th>
-                                <th>الموبايل</th>
-                                <th>المنتجات</th>
-                                <th>المقاسات</th>
-                                <th>الإجمالي</th>
-                                <th>الحالة</th>
-                                <th>التاريخ</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportsTbody">
-                            </tbody>
-                    </table>
-                    <div id="reportLoading" class="p-5 text-center" style="display:none">
-                        <div class="spinner-border text-gold" role="status"></div>
-                    </div>
-                </div>
-            </section>
-
-
-            <section id="page-warehouse" class="page">
-                <div class="page-header">
-                    <div class="page-title-box">
-                        <h1 class="page-title">المستودع</h1>
-                        <p class="page-subtitle">مراقبة الجرد، المقاسات، والباركود</p>
-                    </div>
-                    <div class="page-actions d-flex gap-2">
-                        <button class="btn-j btn-gold" onclick="app.openModal('newItemModal')">
-                            <i class="fas fa-plus"></i> تعريف منتج جديد
+                        <button class="btn-j btn-ruby btn-sm-j admin-only" onclick="app.rBulkDelete()">
+                            <i class="fas fa-trash"></i> حذف
                         </button>
                     </div>
                 </div>
+                <!-- Table -->
+                <div class="table-wrap" style="max-height:500px;overflow-y:auto;">
+                    <table class="table-j">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="check-j" id="selectAllR" onchange="app.toggleSelectAll()"></th>
+                                <th>رقم الطلب</th><th>الزبون</th><th>الموبايل</th><th>المنتج</th>
+                                <th>اللون</th><th>المقاس</th><th>الكمية</th><th>السعر</th>
+                                <th>الصفحة</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <div class="warehouse-toolbar card-j p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div class="d-flex gap-2 align-items-center">
-                        <div class="search-bar">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="wareSearch" placeholder="بحث باسم المنتج أو الكود..." oninput="app.filterWarehouse()">
+            <!-- ════ WAREHOUSE ════ -->
+            <div id="page-warehouse" class="page">
+                <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h1 class="page-title">المستودع</h1>
+                        <p class="page-subtitle">إدارة المخزون والتتبع بالباركود</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn-j btn-gold btn-sm-j" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> منتج جديد</button>
+                        <button class="btn-j btn-ghost btn-sm-j" onclick="app.gotoPage('purchase')"><i class="fas fa-shopping-cart"></i> تسجيل مشتريات</button>
+                    </div>
+                </div>
+                <!-- Barcode Scanner -->
+                <div class="card-j p-3 mb-3" style="border:2px dashed var(--gold);background:rgba(201,168,76,.03)">
+                    <div style="font-weight:800;margin-bottom:.5rem;font-size:.85rem;color:var(--gold)">
+                        <i class="fas fa-barcode me-2"></i> مسح باركود للبحث السريع في المستودع
+                    </div>
+                    <div style="display:flex;gap:.75rem;align-items:center">
+                        <div class="search-bar" style="flex:1;border-color:rgba(201,168,76,.35)">
+                            <i class="fas fa-barcode" style="color:var(--gold)"></i>
+                            <input type="text" id="wBarcodeScanner" placeholder="امسح الباركود أو اكتبه..."
+                                dir="ltr" autocomplete="off" style="font-family:monospace;font-size:1rem;letter-spacing:2px"
+                                onkeydown="if(event.key==='Enter') app.scanWarehouseBarcode()"
+                                oninput="app.scanWarehouseBarcode()">
                         </div>
-                        <select class="form-select-j" id="wareCatFilter" onchange="app.filterWarehouse()">
-                            <option value="all">كل التصنيفات</option>
-                        </select>
-                    </div>
-                    <div class="view-switches d-flex gap-2">
-                        <button class="btn-icon active" onclick="app.setWareView('grid')"><i class="fas fa-th-large"></i></button>
-                        <button class="btn-icon" onclick="app.setWareView('list')"><i class="fas fa-list"></i></button>
+                        <button class="btn-j btn-ghost btn-sm-j"
+                            onclick="document.getElementById('wBarcodeScanner').value='';app.renderWarehouse()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
-
-                <div id="warehouseGrid" class="row g-4">
-                    </div>
-            </section>
-
-
-            <section id="page-purchases" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">المشتريات</h1>
-                    <p class="page-subtitle">تسجيل البضاعة الداخلة وتحديث المخزون</p>
-                </div>
-
-                <div class="row g-4">
-                    <div class="col-lg-5">
-                        <div class="card-j p-4">
-                            <h5 class="card-title-j"><i class="fas fa-plus-circle text-gold"></i> إضافة بضاعة للمستودع</h5>
-                            <form id="purchaseForm" class="mt-3">
-                                <div class="form-group mb-3">
-                                    <label class="form-label-j">المنتج</label>
-                                    <select id="pProdSelect" class="form-select-j" onchange="app.onPurchaseProdSelect()">
-                                        </select>
-                                </div>
-                                <div id="pVariantsContainer" class="variants-entry-box">
-                                    </div>
-                                <button type="button" class="btn-j btn-gold w-100 mt-4" onclick="app.savePurchase()">
-                                    تحديث المستودع <i class="fas fa-save ms-2"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="col-lg-7">
-                        <div class="card-j p-4">
-                            <h5 class="card-title-j"><i class="fas fa-history text-gold"></i> آخر عمليات التزويد</h5>
-                            <div class="table-wrap mt-3">
-                                <table class="table-j sm">
-                                    <thead>
-                                        <tr>
-                                            <th>التاريخ</th>
-                                            <th>المنتج</th>
-                                            <th>الكمية</th>
-                                            <th>التكلفة</th>
-                                            <th>بواسطة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="purchaseHistoryBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
-            <section id="page-returns" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">إدارة المرتجعات</h1>
-                    <p class="page-subtitle">استلام المرتجعات وإعادتها للمخزون تلقائياً</p>
-                </div>
-
-                <div class="card-j p-4 mb-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-barcode"></i> ابحث عن الطلب لإرجاعه</h6>
-                            <div class="search-bar w-100 mt-2">
+                <!-- Warehouse Filters -->
+                <div class="card-j p-3 mb-4">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-3">
+                            <div class="search-bar">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="returnOrderSearch" placeholder="امسح باركود الطلب أو اكتب الرقم..." onkeydown="if(event.key==='Enter') app.fetchOrderForReturn()">
+                                <input type="text" id="wSearch" placeholder="بحث باسم المنتج..." oninput="app.renderWarehouse()">
                             </div>
                         </div>
-                        <div class="col-md-6 text-md-start mt-3 mt-md-0">
-                            <button class="btn-j btn-ruby" onclick="app.fetchOrderForReturn()">
-                                <i class="fas fa-undo"></i> استلام مرتجع
+                        <div class="col-md-3">
+                            <div class="select-wrapper">
+                                <select id="wColorFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                                    <option value="">كل الألوان</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="select-wrapper">
+                                <select id="wPageFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                                    <option value="">كل الصفحات</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="select-wrapper">
+                                <select id="wStockFilter" class="form-control-j select-j" onchange="app.renderWarehouse()">
+                                    <option value="">كل الكميات</option>
+                                    <option value="low">منخفض (أقل من 5)</option>
+                                    <option value="zero">نفد المخزون</option>
+                                    <option value="ok">متوفر</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn-j btn-ghost btn-sm-j w-100" onclick="app.resetWarehouseFilters()">
+                                <i class="fas fa-undo"></i>
                             </button>
                         </div>
                     </div>
                 </div>
+                <div class="row g-3" id="warehouseGrid"></div>
+            </div>
 
-                <div id="returnPreviewArea" style="display:none">
-                    </div>
-
-                <div class="card-j p-4">
-                    <h5 class="card-title-j">سجل المرتجعات الأخيرة</h5>
-                    <div class="table-wrap mt-3">
-                        <table class="table-j">
-                            <thead>
-                                <tr>
-                                    <th>تاريخ المرتجع</th>
-                                    <th>رقم الطلب</th>
-                                    <th>المنتج</th>
-                                    <th>السبب</th>
-                                    <th>بواسطة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="returnsHistoryTbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-
-            <section id="page-definitions" class="page">
+            <!-- ════ PURCHASE ════ -->
+            <div id="page-purchase" class="page">
                 <div class="page-header">
-                    <h1 class="page-title">تعريفات النظام</h1>
-                    <p class="page-subtitle">إدارة الصفحات، الموظفين، والمحافظات</p>
+                    <h1 class="page-title">تسجيل مشتريات</h1>
+                    <p class="page-subtitle">إضافة بضاعة جديدة للمستودع — يدعم ماسح الباركود</p>
                 </div>
+                <!-- Barcode Scanner -->
+                <div class="card-j p-3 mb-4" style="border:2px dashed var(--gold);background:rgba(201,168,76,.04)">
+                    <div style="font-weight:800;margin-bottom:.75rem;font-size:.9rem;color:var(--gold)">
+                        <i class="fas fa-barcode me-2"></i> مسح باركود منتج موجود (اختياري)
+                    </div>
+                    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                        <div class="search-bar" style="flex:1;min-width:200px;border-color:rgba(201,168,76,.4)">
+                            <i class="fas fa-barcode" style="color:var(--gold)"></i>
+                            <input type="text" id="pBarcodeScanner"
+                                placeholder="امسح الباركود أو اكتبه واضغط Enter..." dir="ltr" autocomplete="off"
+                                style="font-family:monospace;font-size:1rem;letter-spacing:2px"
+                                onkeydown="if(event.key==='Enter') app.scanPurchaseBarcode()">
+                        </div>
+                        <button class="btn-j btn-gold btn-sm-j" onclick="app.scanPurchaseBarcode()"><i class="fas fa-search"></i> بحث</button>
+                        <button class="btn-j btn-ghost btn-sm-j" onclick="app.clearPurchaseBarcode()"><i class="fas fa-times"></i> مسح</button>
+                    </div>
+                    <div id="pBarcodeResult" style="display:none;margin-top:.75rem;"></div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card-j p-4">
+                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1.1rem;color:var(--ink)">
+                                <i class="fas fa-shopping-cart" style="color:var(--gold)"></i> تفاصيل عملية الشراء
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <label class="form-label-j">اختر منتجاً موجوداً</label>
+                                    <div class="select-wrapper">
+                                        <select id="pItem" class="form-control-j select-j" onchange="app.loadPurchaseItem()">
+                                            <option value="">— اختر منتجاً —</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:center;padding-top:1.5rem;font-weight:800;color:var(--ink-mid)">أو</div>
+                                <div class="col-md-5">
+                                    <label class="form-label-j">اسم منتج جديد <span style="color:var(--ruby-light)">*</span></label>
+                                    <input type="text" id="pNewItem" class="form-control-j" placeholder="اسم المنتج الجديد" list="productsList">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-j">باركود المنتج</label>
+                                    <input type="text" id="pBarcode" class="form-control-j" placeholder="JW12345 أو اتركه فارغاً" dir="ltr" style="font-family:monospace;letter-spacing:1px">
+                                    <div style="font-size:.72rem;color:var(--ink-mid);margin-top:3px">سيُولَّد تلقائياً إن تُرك فارغاً</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-j">سعر الشراء (JOD)</label>
+                                    <input type="number" id="pBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-j">سعر البيع المقترح</label>
+                                    <input type="number" id="pSellPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-j">لون المنتج</label>
+                                    <div style="display:flex;gap:6px;align-items:center">
+                                        <input type="text" id="pColor" class="form-control-j" placeholder="اختر اللون..." readonly
+                                            style="cursor:pointer;font-size:.88rem;border-right:4px solid var(--border)"
+                                            onclick="app.openColorPicker('main','p_color')">
+                                        <button id="p_color_btn_main" class="btn-j btn-ghost btn-sm-j"
+                                            onclick="app.openColorPicker('main','p_color')" style="flex-shrink:0">
+                                            <i class="fas fa-palette" style="color:var(--gold)"></i>
+                                        </button>
+                                        <button class="btn-j btn-ghost btn-xs-j"
+                                            onclick="document.getElementById('pColor').value='';document.getElementById('pColor').style.borderRight='4px solid var(--border)'" title="مسح">
+                                            <i class="fas fa-times" style="font-size:.7rem"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-j">اسم الصفحة / المصدر</label>
+                                    <div class="select-wrapper">
+                                        <select id="pPageName" class="form-control-j select-j">
+                                            <option value="">اختر الصفحة</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-j">تاريخ الفاتورة</label>
+                                    <input type="date" id="pInvoiceDate" class="form-control-j">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label-j">المقاسات والكميات المُشتراة <span style="color:var(--ruby-light)">*</span></label>
+                                    <div style="background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:12px;padding:1rem">
+                                        <div id="pSizesGrid" class="row g-2"></div>
+                                        <button class="btn-j btn-ghost btn-sm-j mt-2" onclick="app.addSizeRow()">
+                                            <i class="fas fa-plus"></i> إضافة مقاس
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label-j">ملاحظات</label>
+                                    <input type="text" id="pNotes" class="form-control-j" placeholder="أي ملاحظات إضافية...">
+                                </div>
+                            </div>
+                            <div class="mt-4 d-flex gap-3">
+                                <button class="btn-j btn-gold flex-fill" onclick="app.savePurchase()">
+                                    <i class="fas fa-save"></i> تسجيل الشراء وتحديث المستودع
+                                </button>
+                                <button class="btn-j btn-ghost" onclick="app.resetPurchase()" title="مسح الحقول">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card-j p-4 h-100">
+                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1rem;color:var(--ink)">
+                                <i class="fas fa-history" style="color:var(--gold)"></i> آخر عمليات الشراء
+                            </div>
+                            <div id="purchaseHistory" style="max-height:500px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- ════ RETURNS ════ -->
+            <div id="page-returns" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">المرتجعات</h1>
+                    <p class="page-subtitle">تسجيل المرتجعات وإعادة الكمية للمستودع تلقائياً</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card-j p-4">
+                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1.1rem">
+                                <i class="fas fa-undo-alt" style="color:var(--ruby-light)"></i> تسجيل مرتجع جديد
+                            </div>
+                            <!-- Barcode Scanner -->
+                            <div style="background:rgba(192,37,86,.04);border:1px dashed rgba(192,37,86,.3);border-radius:12px;padding:1rem;margin-bottom:1rem">
+                                <div style="font-size:.82rem;font-weight:700;color:var(--ruby-light);margin-bottom:.6rem">
+                                    <i class="fas fa-barcode me-1"></i> مسح باركود الطلب أو المنتج
+                                </div>
+                                <div style="display:flex;gap:.5rem">
+                                    <div class="search-bar" style="flex:1;border-color:rgba(192,37,86,.3)">
+                                        <i class="fas fa-barcode" style="color:var(--ruby-light)"></i>
+                                        <input type="text" id="retBarcodeScanner" placeholder="امسح الباركود أو اكتبه..."
+                                            dir="ltr" autocomplete="off" style="font-family:monospace;font-size:1rem"
+                                            onkeydown="if(event.key==='Enter') app.scanReturnBarcode()">
+                                    </div>
+                                    <button class="btn-j btn-ruby btn-sm-j" onclick="app.scanReturnBarcode()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Manual Search -->
+                            <div class="form-group">
+                                <label class="form-label-j">أو بحث برقم الطلب / اسم الزبون / الموبايل</label>
+                                <div class="search-bar">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="retSearch" placeholder="ابحث هنا..." oninput="app.searchForReturn()">
+                                </div>
+                            </div>
+                            <div id="retSearchResults"
+                                style="display:none;max-height:180px;overflow-y:auto;margin-bottom:.75rem;border:1px solid var(--border);border-radius:10px">
+                            </div>
+                            <div id="retOrderPreview" style="display:none" class="mb-3"></div>
+                            <!-- Return Form -->
+                            <div id="retForm" style="display:none">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="form-label-j">المقاس المُرتجَع <span style="color:var(--ruby-light)">*</span></label>
+                                        <div class="select-wrapper">
+                                            <select id="retSize" class="form-control-j select-j"></select>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-j">الكمية المُرتجَعة</label>
+                                        <div class="qty-control">
+                                            <button class="qty-btn" onclick="app.adjustQty('retQty',-1)">−</button>
+                                            <input type="number" id="retQty" class="form-control-j qty-input" value="1" min="1">
+                                            <button class="qty-btn" onclick="app.adjustQty('retQty',1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-j">سبب الإرجاع</label>
+                                        <div class="select-wrapper">
+                                            <select id="retReason" class="form-control-j select-j">
+                                                <option value="مقاس غير مناسب">مقاس غير مناسب</option>
+                                                <option value="منتج تالف">منتج تالف</option>
+                                                <option value="لم يعجب الزبون">لم يعجب الزبون</option>
+                                                <option value="طلب خاطئ">طلب خاطئ</option>
+                                                <option value="رفض الاستلام">رفض الاستلام</option>
+                                                <option value="أخرى">أخرى</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-j">ملاحظات إضافية</label>
+                                        <input type="text" id="retNotes" class="form-control-j" placeholder="أي تفاصيل...">
+                                    </div>
+                                    <div class="col-12">
+                                        <div style="background:rgba(192,37,86,.05);border:1px solid rgba(192,37,86,.15);border-radius:10px;padding:.75rem;font-size:.82rem;color:var(--ink-mid)">
+                                            <i class="fas fa-info-circle" style="color:var(--ruby-light)"></i>
+                                            سيتم إضافة الكمية المُرتجعة للمستودع تلقائياً وتحويل حالة الطلب إلى <strong>مؤجل</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn-j btn-ruby w-100 mt-4" onclick="app.saveReturn()">
+                                    <i class="fas fa-undo-alt"></i> تأكيد الإرجاع وإضافة للمستودع
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card-j p-4">
+                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1rem">
+                                <i class="fas fa-list" style="color:var(--ruby-light)"></i> سجل المرتجعات
+                            </div>
+                            <div id="returnsList" style="max-height:500px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════ DEFINITIONS ════ -->
+            <div id="page-definitions" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">التعريفات</h1>
+                    <p class="page-subtitle">إدارة الصفحات والمدخلين</p>
+                </div>
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card-j p-4 h-100">
-                            <h5 class="card-title-j"><i class="fas fa-file-invoice text-gold"></i> الصفحات / المصادر</h5>
-                            <div class="input-group mb-3 mt-3">
-                                <input type="text" id="newPageName" class="form-control-j" placeholder="اسم الصفحة الجديدة">
-                                <button class="btn-j btn-gold" onclick="app.addDefinition('pages')">إضافة</button>
+                        <div class="card-j p-4">
+                            <div style="font-weight:800;margin-bottom:1rem">
+                                <i class="fas fa-file-alt" style="color:var(--gold)"></i> الصفحات / المصادر
                             </div>
-                            <ul class="def-list" id="pagesDefList"></ul>
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="text" id="newPage" class="form-control-j" placeholder="اسم الصفحة">
+                                <button class="btn-j btn-gold btn-sm-j" onclick="app.addDef('pages','newPage')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div id="pagesList"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card-j p-4 h-100">
-                            <h5 class="card-title-j"><i class="fas fa-users-cog text-gold"></i> الموظفون / المستخدمون</h5>
-                            <div class="input-group mb-3 mt-3">
-                                <input type="text" id="newUserName" class="form-control-j" placeholder="اسم الموظف الجديد">
-                                <button class="btn-j btn-gold" onclick="app.addDefinition('users')">إضافة</button>
+                        <div class="card-j p-4">
+                            <div style="font-weight:800;margin-bottom:1rem">
+                                <i class="fas fa-user-edit" style="color:var(--gold)"></i> المدخلون
                             </div>
-                            <ul class="def-list" id="usersDefList"></ul>
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="text" id="newUser" class="form-control-j" placeholder="اسم المدخل">
+                                <button class="btn-j btn-gold btn-sm-j" onclick="app.addDef('entryUsers','newUser')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div id="usersList"></div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-
-            <section id="page-logs" class="page">
+            <!-- ════ LOGS ════ -->
+            <div id="page-logs" class="page">
                 <div class="page-header">
-                    <div class="page-title-box">
-                        <h1 class="page-title">سجل العمليات (System Logs)</h1>
-                        <p class="page-subtitle">تتبع الأخطاء والتغييرات بدقة متناهية</p>
-                    </div>
-                    <button class="btn-j btn-ruby btn-sm-j" onclick="app.clearLogs()">
-                        <i class="fas fa-trash"></i> مسح السجل القديم
-                    </button>
+                    <h1 class="page-title">سجل العمليات</h1>
+                    <p class="page-subtitle">تتبع جميع التغييرات في النظام</p>
                 </div>
-
-                <div class="card-j p-4">
-                    <div class="table-wrap" style="max-height:600px">
-                        <table class="table-j logs-table">
-                            <thead>
-                                <tr>
-                                    <th>التوقيت</th>
-                                    <th>المستخدم</th>
-                                    <th>النوع</th>
-                                    <th>العملية</th>
-                                    <th>التفاصيل</th>
-                                </tr>
-                            </thead>
-                            <tbody id="systemLogsTbody"></tbody>
-                        </table>
-                    </div>
+                <div class="table-wrap" style="max-height:600px;overflow-y:auto;">
+                    <table class="table-j">
+                        <thead>
+                            <tr>
+                                <th>التاريخ والوقت</th><th>المستخدم</th><th>العملية</th>
+                                <th>المعرف</th><th>التفاصيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody"></tbody>
+                    </table>
                 </div>
-            </section>
+            </div>
 
-        </main>
+        </div><!-- /main-content -->
 
-
-        <div class="bottom-nav d-flex d-md-none">
-            <button class="nav-btn active" data-page="dashboard" onclick="app.gotoPage('dashboard')">
-                <i class="fas fa-th-large"></i><span>الرئيسية</span>
-            </button>
-            <button class="nav-btn" data-page="orders" onclick="app.gotoPage('orders')">
-                <i class="fas fa-shopping-bag"></i><span>الطلبات</span>
-            </button>
-            <button class="nav-btn" data-page="entry" onclick="app.gotoPage('entry')">
-                <i class="fas fa-plus"></i><span>إدخال</span>
-            </button>
-            <button class="nav-btn" data-page="warehouse" onclick="app.gotoPage('warehouse')">
-                <i class="fas fa-warehouse"></i><span>المخزن</span>
-            </button>
+        <!-- ── Bottom Nav (Mobile) ──────────────────────────── -->
+        <div class="bottom-nav" id="bottomNav">
+            <button class="nav-btn active"    data-page="dashboard"   onclick="app.gotoPage('dashboard')"  ><i class="fas fa-chart-pie"></i>    <span>الرئيسية</span></button>
+            <button class="nav-btn"           data-page="orders"      onclick="app.gotoPage('orders')"     ><i class="fas fa-list-alt"></i>     <span>الطلبات</span></button>
+            <button class="nav-btn"           data-page="entry"       onclick="app.gotoPage('entry')"      ><i class="fas fa-plus-circle"></i>  <span>إدخال</span></button>
+            <button class="nav-btn"           data-page="reports"     onclick="app.gotoPage('reports')"    ><i class="fas fa-table"></i>        <span>التقارير</span></button>
+            <button class="nav-btn admin-only" data-page="warehouse"   onclick="app.gotoPage('warehouse')"  ><i class="fas fa-warehouse"></i>    <span>المستودع</span></button>
+            <button class="nav-btn admin-only" data-page="purchase"    onclick="app.gotoPage('purchase')"   ><i class="fas fa-shopping-cart"></i><span>مشتريات</span></button>
+            <button class="nav-btn admin-only" data-page="returns"     onclick="app.gotoPage('returns')"    ><i class="fas fa-undo-alt"></i>     <span>مرتجع</span></button>
+            <button class="nav-btn admin-only" data-page="definitions" onclick="app.gotoPage('definitions')"><i class="fas fa-cog"></i>          <span>تعريفات</span></button>
         </div>
 
-    </div> <div class="modal-j" id="orderDetailModal">
-        <div class="modal-overlay" onclick="app.closeModal('orderDetailModal')"></div>
+    </div><!-- /appContainer -->
+
+    <!-- ══════════════════════════════════════════════════════
+         ORDER DETAIL MODAL
+    ══════════════════════════════════════════════════════ -->
+    <div class="modal-j" id="orderModal">
+        <div class="modal-overlay" onclick="app.closeModal('orderModal')"></div>
         <div class="modal-sheet">
             <div class="modal-handle"></div>
-            <div class="modal-header-j">
-                <h5 class="modal-title-j"><i class="fas fa-receipt text-gold"></i> تفاصيل الطلبية <span id="mOrderId" class="text-gold"></span></h5>
-                <button class="btn-close-j" onclick="app.closeModal('orderDetailModal')">&times;</button>
-            </div>
-            
-            <div class="modal-body-j">
-                <ul class="nav nav-pills mb-3" id="pills-tab">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-details">المعلومات</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-edit">تعديل الطلب</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-history">سجل الحالة</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content" id="pills-tabContent">
-                    <div class="tab-pane fade show active" id="tab-details">
-                        <div id="orderDetailsView"></div>
-                    </div>
-                    <div class="tab-pane fade" id="tab-edit">
-                        <form id="editOrderForm">
-                            </form>
-                    </div>
-                    <div class="tab-pane fade" id="tab-history">
-                        <div id="orderStatusHistory"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer-j">
-                <div class="d-flex gap-2 w-100">
-                    <button class="btn-j btn-gold flex-fill" id="btnSaveOrderEdit" onclick="app.saveOrderEdit()" style="display:none">حفظ التغييرات</button>
-                    <button class="btn-j btn-ghost flex-fill" onclick="app.printSingleOrderLabel()">طباعة ملصق</button>
-                    <button class="btn-j btn-ruby admin-only" onclick="app.deleteOrder()">حذف</button>
-                </div>
+            <div class="modal-title" id="orderModalTitle">تفاصيل الطلب</div>
+            <div id="orderModalContent"></div>
+            <div class="d-flex gap-2 mt-4 flex-wrap">
+                <button class="btn-j btn-gold flex-fill" id="modalUpdateBtn" onclick="app.updateOrder()">
+                    <i class="fas fa-save"></i> حفظ التعديلات
+                </button>
+                <button class="btn-j btn-ghost" id="modalPrintBtn"><i class="fas fa-print"></i> طباعة</button>
+                <button class="btn-j btn-ruby btn-sm-j admin-only" id="modalDeleteBtn"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════
+         NEW ITEM MODAL
+    ══════════════════════════════════════════════════════ -->
     <div class="modal-j" id="newItemModal">
         <div class="modal-overlay" onclick="app.closeModal('newItemModal')"></div>
-        <div class="modal-sheet" style="max-width:600px">
+        <div class="modal-sheet" style="max-width:500px">
             <div class="modal-handle"></div>
-            <div class="modal-header-j">
-                <h5 class="modal-title-j">تعريف منتج جديد بالمستودع</h5>
-            </div>
-            <div class="modal-body-j">
-                <form id="newItemForm">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label-j">اسم المنتج</label>
-                            <input type="text" id="nimName" class="form-control-j" placeholder="مثال: تيشرت أوفرسايز" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label-j">كود المنتج (SKU)</label>
-                            <input type="text" id="nimCode" class="form-control-j" placeholder="JW-1001">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label-j">التصنيف</label>
-                            <select id="nimCategory" class="form-select-j"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label-j">سعر البيع الافتراضي</label>
-                            <input type="number" id="nimPrice" class="form-control-j" placeholder="0.00">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label-j">الألوان والمقاسات المتاحة لهذا الموديل</label>
-                            <div id="nimVariants" class="variant-tags-box">
-                                </div>
-                            <button type="button" class="btn-sm-j btn-ghost mt-2" onclick="app.addVariantRow()">+ إضافة خيارات</button>
-                        </div>
+            <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--gold)"></i> إضافة منتج جديد للمستودع</div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label-j">اسم المنتج <span style="color:var(--ruby-light)">*</span></label>
+                    <input type="text" id="nimName" class="form-control-j" placeholder="مثال: بنطلون جينز، بلوزة صيفية..." list="productsList">
+                </div>
+                <div class="col-6">
+                    <label class="form-label-j">اسم الصفحة / المصدر</label>
+                    <div class="select-wrapper">
+                        <select id="nimPage" class="form-control-j select-j">
+                            <option value="">اختر الصفحة</option>
+                        </select>
                     </div>
-                </form>
+                </div>
+                <div class="col-6">
+                    <label class="form-label-j">سعر الشراء (JOD)</label>
+                    <input type="number" id="nimBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                </div>
+                <div class="col-6">
+                    <label class="form-label-j">سعر البيع المقترح</label>
+                    <input type="number" id="nimSellPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                </div>
+                <div class="col-12">
+                    <label class="form-label-j">المقاسات والكميات الأولية</label>
+                    <div style="background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:12px;padding:.75rem">
+                        <div id="nimSizesGrid" class="row g-2"></div>
+                        <button class="btn-j btn-ghost btn-sm-j mt-2" onclick="app.addNimSizeRow()">
+                            <i class="fas fa-plus"></i> إضافة مقاس
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer-j mt-3">
-                <button class="btn-j btn-gold w-100" onclick="app.saveNewItem()">حفظ المنتج في المستودع</button>
+            <div class="d-flex gap-3 mt-4">
+                <button class="btn-j btn-gold flex-fill" onclick="app.saveNewItem()"><i class="fas fa-save"></i> حفظ المنتج</button>
+                <button class="btn-j btn-ghost" onclick="app.closeModal('newItemModal')">إلغاء</button>
             </div>
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
 
-    <div id="printArea" style="display:none">
-        <div class="jawaher-label">
-            <div class="print-column-left">
-                <div class="print-title">معلومات التوصيل</div>
-                <div class="print-field"><strong>العنوان:</strong> <span id="pLabelAddr"></span></div>
-                <div class="print-field"><strong>الموبايل:</strong> <span id="pLabelMob" dir="ltr"></span></div>
-                <div class="print-field"><strong>الملاحظة:</strong> <span id="pLabelNote"></span></div>
-                <div class="print-price-box">
-                    <div class="price-label">المبلغ المطلوب من الزبون:</div>
-                    <div class="price-value"><span id="pLabelPrice"></span> JOD</div>
-                </div>
-            </div>
-            <div class="print-column-right">
-                <div class="print-header">
-                    <div class="print-logo">جواهر</div>
-                    <div class="print-order-id">#<span id="pLabelId"></span></div>
-                </div>
-                <div class="print-customer-name" id="pLabelCust"></div>
-                <div class="print-items-list" id="pLabelItems"></div>
-                <div class="print-barcode">
-                    <svg id="labelBarcodeCanvas"></svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div id="toastContainer" class="toast-container position-fixed bottom-0 start-0 p-3"></div>
-
-    <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
-    <audio id="snd-error" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-    <audio id="snd-scan" src="https://assets.mixkit.co/active_storage/sfx/2567/2567-preview.mp3"></audio>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- ── App Entry Point ─────────────────────────────────── -->
     <script type="module" src="app.js"></script>
-
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                // محاكاة انتهاء التحميل إذا لم تستجب app.js
-                const intro = document.getElementById('introScreen');
-                if (intro && intro.style.display !== 'none' && !window.appInitialized) {
-                    console.log("Auto-hiding intro after timeout...");
-                    intro.classList.add('fade-out');
-                    setTimeout(() => intro.style.display = 'none', 700);
-                }
-            }, 5000);
-        });
-    </script>
 
 </body>
 </html>
