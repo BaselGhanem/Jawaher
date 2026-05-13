@@ -209,127 +209,137 @@
             </div>
 
             <!-- ════ NEW ORDER ENTRY ════ -->
-            <div id="page-entry" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">إدخال طلب جديد</h1>
-                    <p class="page-subtitle">أضف طلب بيع جديد وحدد المنتج من المستودع</p>
+          <!-- ════ NEW ORDER ENTRY (مرتبة بشكل أفضل) ════ -->
+<div id="page-entry" class="page">
+    <div class="page-header">
+        <h1 class="page-title">إدخال طلب جديد</h1>
+        <p class="page-subtitle">أضف طلب بيع جديد وحدد المنتج من المستودع</p>
+    </div>
+    <div class="card-j p-4" style="max-width:900px; margin:0 auto;">
+        
+        <!-- قسم 1: بيانات العميل -->
+        <div class="section-title mb-3">
+            <i class="fas fa-user-friends" style="color:var(--gold)"></i> بيانات العميل
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label-j">اسم الزبون <span style="color:var(--ruby-light)">*</span></label>
+                <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
+                <div style="display: flex; align-items: center; background: #FDF5E6; border: 1px solid #E9DCC0; border-radius: 15px; overflow: hidden; height: 50px; direction: ltr;">
+                    <span style="width: 55px; display: flex; align-items: center; justify-content: center; color: #C9A84C; font-weight: bold; border-right: 1px solid #E9DCC0; font-size: 1.1rem; height: 100%;">07</span>
+                    <input type="text" id="eCustMob" placeholder="9 123 4567" dir="ltr" maxlength="12"
+                        style="flex: 1; border: none; background: transparent; padding: 0 15px; outline: none; color: #666; font-size: 1.1rem; text-align: left;">
                 </div>
-                <div class="card-j p-4" style="max-width:800px; margin:0 auto;">
-                    <div class="form-group">
-                        <label class="form-label-j">اسم الزبون <span style="color:var(--ruby-light)">*</span></label>
-                        <input type="text" id="eCustName" class="form-control-j" placeholder="الاسم الكامل">
-                    </div>
-   <div class="row g-3 mb-3">
-    <div class="col-8">
-        <label class="form-label-j">رقم الموبايل <span style="color:var(--ruby-light)">*</span></label>
-        
-        <!-- تمت إضافة direction: ltr لضمان بقاء 07 على اليسار دائماً -->
-        <div style="display: flex; align-items: center; background: #FDF5E6; border: 1px solid #E9DCC0; border-radius: 15px; overflow: hidden; height: 50px; direction: ltr;">
-            
-            <!-- تم تغيير border-left إلى border-right ليفصل بين 07 والمدخل -->
-            <span style="width: 55px; display: flex; align-items: center; justify-content: center; color: #C9A84C; font-weight: bold; border-right: 1px solid #E9DCC0; font-size: 1.1rem; height: 100%;">07</span>
-            
-            <input type="text" id="eCustMob" placeholder="9 123 4567" dir="ltr" maxlength="12"
-                style="flex: 1; border: none; background: transparent; padding: 0 15px; outline: none; color: #666; font-size: 1.1rem; text-align: left;">
-        </div>
-        
-        <!-- رسالة التنبيه (تتبع اتجاه الصفحة الطبيعي) -->
-        <div id="eDupWarn" class="mt-2" style="display:none;font-size:.8rem;color:var(--gold-dark);background:rgba(201,168,76,.1);padding:.5rem .75rem;border-radius:10px;border-right:3px solid var(--gold)">
-            <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
-        </div>
-    </div>
-</div>
-
-    
-    <div class="col-4">
-        <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
-        <div class="select-wrapper">
-            <select id="eGovernorate" class="form-control-j select-j">
-                <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
-                <option value="إربد">إربد</option>
-                <option value="الزرقاء">الزرقاء</option>
-                <option value="المفرق">المفرق</option>
-                <option value="البلقاء">البلقاء</option>
-                <option value="الكرك">الكرك</option>
-                <option value="الطفيلة">الطفيلة</option>
-                <option value="معان">معان</option>
-                <option value="العقبة">العقبة</option>
-                <option value="جرش">جرش</option>
-                <option value="عجلون">عجلون</option>
-                <option value="مادبا">مادبا</option>
-            </select>
-        </div>
-    </div>
-</div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <label class="form-label-j">العنوان التفصيلي <span style="color:var(--ruby-light)">*</span></label>
-                            <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة - الشارع - أقرب نقطة دالة">
-                        </div>
-                    </div>
-                    <div class="divider"></div>
-                    <!-- Items List -->
-                    <div style="font-weight:800;margin-bottom:.75rem;color:var(--ink)">
-                        <i class="fas fa-boxes" style="color:var(--gold)"></i> المنتجات
-                        <span style="font-size:.8rem;font-weight:400;color:var(--ink-mid)">(يمكن إضافة أكثر من منتج)</span>
-                    </div>
-                    <div id="eItemsList"></div>
-                    <button class="btn-j btn-ghost btn-sm-j mb-3" onclick="app.addItemRow()">
-                        <i class="fas fa-plus"></i> إضافة منتج آخر
-                    </button>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label-j">الوزن الإجمالي</label>
-                            <input type="text" id="eWeight" class="form-control-j" placeholder="كغ">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label-j">الطول</label>
-                            <input type="text" id="eHeight" class="form-control-j" placeholder="سم">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label-j">السعر شامل التوصيل <span style="color:var(--ruby-light)">*</span></label>
-                            <div class="input-prefix">
-                                <input type="number" id="ePrice" class="form-control-j" placeholder="0.00" step="0.5">
-                                <span class="prefix-label" id="eCurrencyLabel"
-                                    style="border-right:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">JOD</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label-j">ملاحظات / Tags</label>
-                            <input type="text" id="eTags" class="form-control-j" placeholder="vip, هدية...">
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label-j">اسم الصفحة (المصدر) <span style="color:var(--ruby-light)">*</span></label>
-                            <div class="select-wrapper">
-                                <select id="ePageName" class="form-control-j select-j">
-                                    <option value="">اختر الصفحة</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label-j">المدخل <span style="color:var(--ruby-light)">*</span></label>
-                            <div class="select-wrapper">
-                                <select id="eEntryUser" class="form-control-j select-j"></select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label-j">تاريخ الإدخال</label>
-                            <input type="text" id="eDate" class="form-control-j" readonly>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn-j btn-gold flex-fill" onclick="app.saveOrder()"><i class="fas fa-save"></i> حفظ الطلب</button>
-                        <button class="btn-j btn-ghost" onclick="app.resetOrderForm()"><i class="fas fa-undo"></i> مسح</button>
-                    </div>
-                    <div id="lastOrderPrintBtn" style="display:none;margin-top:1rem;">
-                        <button class="btn-j btn-ghost w-100" onclick="app.printLastOrder()">
-                            <i class="fas fa-print"></i> طباعة الطلب الأخير
-                        </button>
-                    </div>
+                <div id="eDupWarn" class="mt-2" style="display:none;font-size:.8rem;color:var(--gold-dark);background:rgba(201,168,76,.1);padding:.5rem .75rem;border-radius:10px;border-right:3px solid var(--gold)">
+                    <i class="fas fa-exclamation-triangle"></i> <span id="eDupMsg"></span>
                 </div>
             </div>
+            <div class="col-md-4">
+                <label class="form-label-j">المحافظة <span style="color:var(--ruby-light)">*</span></label>
+                <div class="select-wrapper">
+                    <select id="eGovernorate" class="form-control-j select-j">
+                        <option value="العاصمة (عمّان)">العاصمة (عمّان)</option>
+                        <option value="إربد">إربد</option>
+                        <option value="الزرقاء">الزرقاء</option>
+                        <option value="المفرق">المفرق</option>
+                        <option value="البلقاء">البلقاء</option>
+                        <option value="الكرك">الكرك</option>
+                        <option value="الطفيلة">الطفيلة</option>
+                        <option value="معان">معان</option>
+                        <option value="العقبة">العقبة</option>
+                        <option value="جرش">جرش</option>
+                        <option value="عجلون">عجلون</option>
+                        <option value="مادبا">مادبا</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label-j">العنوان التفصيلي <span style="color:var(--ruby-light)">*</span></label>
+                <input type="text" id="eAddr" class="form-control-j" placeholder="المنطقة - الشارع - أقرب نقطة دالة">
+            </div>
+        </div>
+
+        <div class="divider my-2"></div>
+
+        <!-- قسم 2: تفاصيل الطلب (السعر، الوزن، الخ) -->
+        <div class="section-title mb-3 mt-2">
+            <i class="fas fa-shopping-cart" style="color:var(--gold)"></i> تفاصيل الطلب
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label-j">السعر شامل التوصيل <span style="color:var(--ruby-light)">*</span></label>
+                <div class="input-prefix">
+                    <input type="number" id="ePrice" class="form-control-j" placeholder="0.00" step="0.5">
+                    <span class="prefix-label" style="border-right:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">JOD</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-j">الوزن الإجمالي (كغ)</label>
+                <input type="text" id="eWeight" class="form-control-j" placeholder="كغ">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-j">الطول (سم)</label>
+                <input type="text" id="eHeight" class="form-control-j" placeholder="سم">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">ملاحظات / Tags</label>
+                <input type="text" id="eTags" class="form-control-j" placeholder="vip, هدية...">
+            </div>
+        </div>
+
+        <div class="divider my-2"></div>
+
+        <!-- قسم 3: المنتجات -->
+        <div class="section-title mb-3 mt-2">
+            <i class="fas fa-boxes" style="color:var(--gold)"></i> المنتجات
+            <span style="font-size:.8rem;font-weight:400;color:var(--ink-mid)">(يمكن إضافة أكثر من منتج)</span>
+        </div>
+        <div id="eItemsList" class="mb-2"></div>
+        <button class="btn-j btn-ghost btn-sm-j mb-4" onclick="app.addItemRow()">
+            <i class="fas fa-plus"></i> إضافة منتج آخر
+        </button>
+
+        <div class="divider my-2"></div>
+
+        <!-- قسم 4: معلومات إدارية -->
+        <div class="section-title mb-3 mt-2">
+            <i class="fas fa-info-circle" style="color:var(--gold)"></i> معلومات إضافية
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label-j">اسم الصفحة (المصدر) <span style="color:var(--ruby-light)">*</span></label>
+                <div class="select-wrapper">
+                    <select id="ePageName" class="form-control-j select-j">
+                        <option value="">اختر الصفحة</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-j">المدخل <span style="color:var(--ruby-light)">*</span></label>
+                <div class="select-wrapper">
+                    <select id="eEntryUser" class="form-control-j select-j"></select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-j">تاريخ الإدخال</label>
+                <input type="text" id="eDate" class="form-control-j" readonly>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 mt-4">
+            <button class="btn-j btn-gold flex-fill" onclick="app.saveOrder()"><i class="fas fa-save"></i> حفظ الطلب</button>
+            <button class="btn-j btn-ghost" onclick="app.resetOrderForm()"><i class="fas fa-undo"></i> مسح</button>
+        </div>
+        <div id="lastOrderPrintBtn" style="display:none;margin-top:1rem;">
+            <button class="btn-j btn-ghost w-100" onclick="app.printLastOrder()">
+                <i class="fas fa-print"></i> طباعة الطلب الأخير
+            </button>
+        </div>
+    </div>
+</div>
 
             <!-- ════ REPORTS ════ -->
             <div id="page-reports" class="page">
@@ -870,4 +880,5 @@
 <script type="module" src="app.js?v=1.0.1"></script>
 
 </body>
+
 </html>
