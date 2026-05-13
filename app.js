@@ -849,17 +849,40 @@ if (!itemId) {
         this.toast('تمت الطباعة وتحويل الحالة إلى جاهزة', 'success');
     },
 
-    _buildLabelHTML(labels, multi = false) {
+   _buildLabelHTML(labels, multi = false) {
         const pageStyle = multi ? `@page { size: 10cm 10cm; margin: 0; }` : `@page { size: 10cm 10cm; margin: 0; }`;
         let barcodeScripts = '';
+        
         let labelsHtml = labels.map(({ id, o }) => {
-            const items   = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
-            const bcId    = `bc_${id.slice(-8)}`;
+            // 1. منطق تجميع أسماء الصفحات
+            let pageNamesSet = new Set();
+            
+            // إضافة اسم الصفحة الرئيسي المخزن في الطلب
+            if (o.pageName) pageNamesSet.add(o.pageName);
+            
+            // تجميع أسماء الصفحات من المنتجات داخل الطلبية (من المستودع)
+            const orderItems = o.items || [{ itemId: o.itemId }];
+            orderItems.forEach(it => {
+                const warehouseItem = this.warehouse[it.itemId];
+                if (warehouseItem && warehouseItem.pageName) {
+                    pageNamesSet.add(warehouseItem.pageName);
+                }
+            });
+
+            // تحويل الـ Set إلى نص مدمج بفاصلة أو علامة &
+            const finalPageHeader = pageNamesSet.size > 0 
+                ? Array.from(pageNamesSet).join(' & ') 
+                : 'جواهر';
+
+            const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
+            const bcId = `bc_${id.slice(-8)}`;
             barcodeScripts += `JsBarcode("#${bcId}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });`;
+            
             return `<div style="width:10cm;height:10cm;padding:4mm;display:${multi ? 'flex' : 'block'};flex-direction:column;page-break-after:${multi ? 'always' : 'unset'};overflow:hidden">
                 <div style="width:100%;height:100%;display:flex;flex-direction:column;border:1.5px solid #222;border-radius:4px">
                     <div style="text-align:center;padding:3px 6px;border-bottom:1.5px solid #222;background:#111;color:#C9A84C">
-                        <div style="font-size:1rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${o.pageName || 'جواهر'} ◆</div>
+                        <!-- عرض الأسماء المدمجة هنا -->
+                        <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${finalPageHeader} ◆</div>
                         <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''} | ${o.entryUser || ''}</div>
                     </div>
                     <div style="flex:1;display:flex;flex-direction:column;padding:3px">
@@ -899,7 +922,6 @@ if (!itemId) {
             </style>
         </head><body>${labelsHtml}<script>${barcodeScripts}<\/script></body></html>`;
     },
-
     // ============ REPORTS ============
     getFiltered() {
         const q  = document.getElementById('rSearch')?.value.toLowerCase() || '';
