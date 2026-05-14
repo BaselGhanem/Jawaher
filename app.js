@@ -1644,7 +1644,8 @@ for (const row of this.pSizeData) {
         const existingSizes = item?.sizes || {};
         const mergedSizes = { ...existingSizes };
         Object.entries(sizes).forEach(([s, q]) => { mergedSizes[s] = (mergedSizes[s] || 0) + q; });
-        const updateData = { buyPrice, sellPrice, pageName, color, sizes: mergedSizes, sizeColors };
+      const updateData = { buyPrice, sellPrice, pageName, sizes: mergedSizes, sizeColors };
+
         if (manualBarcode && !existingId) updateData.barcode = manualBarcode;
         await update(ref(db, `jawaher_warehouse/${targetId}`), updateData);
         await push(purchasesRef, { timestamp: Date.now(), date: invoiceDate, itemId: targetId, itemName: item?.name || newName, sizes, sizeColors, buyPrice, sellPrice, pageName, color, notes, user: this.userName });
