@@ -79,6 +79,8 @@ window.app = {
         if (this.role === 'Delivery') { document.getElementById('rStatus').value = 'done'; this.gotoPage('reports'); }
         else if (this.role === 'User') { this.gotoPage('entry'); }
         else { this.gotoPage('dashboard'); }
+                document.getElementById('modalDeleteBtn').style.display = this.role === 'Admin' ? '' : 'none';
+
     },
 
     // ============ DARK MODE ============
@@ -471,7 +473,9 @@ window.app = {
         if (mob.length < 7) { this.toast('رقم الموبايل غير صحيح', 'error'); return; }
         if (!addr) { this.toast('يرجى إدخال العنوان', 'error'); return; }
         if (!pageName) { this.toast('اسم الصفحة إجباري', 'error'); return; }
-        if (!entryUser) { this.toast('اسم المدخل إجباري', 'error'); return; }
+      if (this.role === 'User') document.getElementById('eEntryUser').value = this.userName;
+        const entryUserFinal = document.getElementById('eEntryUser').value;
+        if (!entryUserFinal) { this.toast('اسم المدخل إجباري', 'error'); return; }
         if (!price || price <= 0) { this.toast('يرجى إدخال السعر', 'error'); return; }
 
         const items = [];
@@ -516,7 +520,7 @@ window.app = {
             custName, custMob: '07' + mob, country: 'الأردن', governorate: gov, custAddr: addr,
             itemId: items[0].itemId, itemName: items[0].itemName, itemColor: items[0].itemColor,
             size: items[0].size, exactKey: items[0].exactKey, qty: items[0].qty,
-            items, price, currency: 'JOD', weight, height, pageName, entryUser, tags, status: 'new'
+       items, price, currency: 'JOD', weight, height, pageName, entryUser: entryUserFinal, tags, status: 'new'
         };
 
         const newRef = await push(ordersRef, payload);
@@ -703,9 +707,12 @@ window.app = {
             ${itemsSummary}
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
-            <span style="font-weight:800; color:var(--emerald)">${o.price || 0} JOD</span>
-            <span style="font-size:.72rem;color:var(--ink-mid)">${o.date || ''}</span>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+            <span style="font-weight:800;color:var(--emerald)">${o.price || 0} JOD</span>
+            <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:.72rem;color:var(--ink-mid)">${o.date || ''}</span>
+                <button class="btn-j btn-emerald btn-xs-j" onclick="event.stopPropagation();app.openWhatsApp('${o.id}')" title="واتساب" style="padding:.2rem .45rem"><i class="fab fa-whatsapp"></i></button>
+            </div>
         </div>
     </div>`;
     },
@@ -751,15 +758,21 @@ window.app = {
 <div class="col-12">
     <label class="form-label-j"><i class="fas fa-shopping-basket"></i> الأصناف المطلوبة</label>
   <div class="items-display-list" style="background: var(--paper-warm); border-radius: 10px; padding: 10px; border: 1px solid var(--border);">
-        ${(o.items || [{ itemName: o.itemName, size: o.size, itemColor: o.itemColor, qty: o.qty }]).map(item => `
-            <div class="item-row-view" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 800; font-size: 0.9rem;">${item.itemName || 'صنف غير معروف'}</span>
-                    <span style="font-size: 0.75rem; color: var(--gold-dark);">مقاس: ${item.size || '-'}</span>
+     ${(o.items || [{ itemName: o.itemName, size: o.size, itemColor: o.itemColor, qty: o.qty }]).map((item, idx) => `
+            <div class=\"item-row-view\" id=\"mo_item_${idx}\" style=\"display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);\">
+                <div style=\"display:flex;flex-direction:column;\">
+                    <span style=\"font-weight:800;font-size:.9rem;\">${item.itemName || 'صنف غير معروف'}</span>
+                    <span style=\"font-size:.75rem;color:var(--gold-dark);\">مقاس: ${item.size || '-'}</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 0.8rem; border-right: 4px solid ${this._colorHex(item.itemColor)}; padding-right: 6px;">${item.itemColor || 'بدون لون'}</span>
-                    <span style="font-weight: 700; color: var(--emerald); background: rgba(26,107,74,0.1); padding: 2px 8px; border-radius: 5px;">x${item.qty || 1}</span>
+                <div style=\"display:flex;align-items:center;gap:8px;\">
+                    <span style=\"font-size:.8rem;border-right:4px solid ${this._colorHex(item.itemColor)};padding-right:6px;\">${item.itemColor || 'بدون لون'}</span>
+                    ${isRO ? `<span style=\"font-weight:700;color:var(--emerald);background:rgba(26,107,74,.1);padding:2px 8px;border-radius:5px;\">x${item.qty||1}</span>` : `
+                    <div class=\"qty-control\" style=\"transform:scale(.82);transform-origin:right\">
+                        <button class=\"qty-btn\" onclick=\"app._moAdjQty(${idx},-1)\">−</button>
+                        <input type=\"number\" id=\"mo_qty_${idx}\" class=\"form-control-j qty-input\" value=\"${item.qty||1}\" min=\"1\" style=\"width:40px\">
+                        <button class=\"qty-btn\" onclick=\"app._moAdjQty(${idx},1)\">+</button>
+                    </div>
+                    <button class=\"btn-j btn-ruby btn-xs-j\" onclick=\"app._moRemoveItem('${id}',${idx})\" title=\"حذف الصنف\"><i class=\"fas fa-times\"></i></button>`}
                 </div>
             </div>
         `).join('')}
@@ -793,30 +806,50 @@ window.app = {
         this.openModal('orderModal');
     },
 
-    async updateOrder() {
-        const id = this.modalOrderId;
-        if (!id) return;
-
+async updateOrder() {
+        const id = this.modalOrderId; if (!id) return;
+        const o = this.orders[id];
         try {
-            // تحديث البيانات الأساسية فقط لتجنب الأخطاء مع قائمة الأصناف المتعددة
-            await update(ref(db, `jawaher_orders/${id}`), {
+            const payload = {
                 custName: document.getElementById('mo_name').value.trim(),
                 custMob: document.getElementById('mo_mob').value.trim(),
                 custAddr: document.getElementById('mo_addr').value.trim(),
                 price: parseFloat(document.getElementById('mo_price').value) || 0,
-                qty: parseInt(document.getElementById('mo_qty').value) || 1,
                 tags: document.getElementById('mo_tags').value.trim(),
-            });
-
-            this.log('edit', id, 'تعديل بيانات الطلب الأساسية');
+            };
+            if (o.items) {
+                payload.items = o.items.map((it, idx) => {
+                    const el = document.getElementById(`mo_qty_${idx}`);
+                    return el ? { ...it, qty: parseInt(el.value)||it.qty } : it;
+                });
+                payload.qty = payload.items.reduce((s, it) => s + (it.qty||1), 0);
+            }
+            await update(ref(db, `jawaher_orders/${id}`), payload);
+            this.log('edit', id, 'تعديل بيانات الطلب');
             this.toast('تم حفظ التعديلات بنجاح ✓', 'success');
             this.closeModal('orderModal');
-        } catch (error) {
-            console.error("Update Error:", error);
+        } catch (err) {
+            console.error(err);
             this.toast('حدث خطأ أثناء التحديث', 'error');
         }
     },
-    async moveOrder(id, status) {
+
+    _moAdjQty(idx, delta) {
+        const el = document.getElementById(`mo_qty_${idx}`);
+        if (el) el.value = Math.max(1, (parseInt(el.value)||1) + delta);
+    },
+
+    async _moRemoveItem(orderId, idx) {
+        const o = this.orders[orderId];
+        if (!o?.items || o.items.length <= 1) { this.toast('لا يمكن حذف الصنف الوحيد', 'error'); return; }
+        if (!confirm('حذف هذا الصنف من الطلب؟')) return;
+        const newItems = o.items.filter((_, i) => i !== idx);
+        await update(ref(db, `jawaher_orders/${orderId}`), { items: newItems, qty: newItems.reduce((s,it)=>s+(it.qty||1),0) });
+        this.log('edit', orderId, `حذف صنف idx:${idx} من الطلب`);
+        this.toast('تم حذف الصنف ✓', 'success');
+        this.openOrderModal(orderId);
+    },
+        async moveOrder(id, status) {
         await update(ref(db, `jawaher_orders/${id}`), { status });
         if (status === 'delivered') await this.deductStock(id);
         this.log('status', id, `تغيير الحالة إلى ${STATUS_AR[status]}`);
@@ -1020,9 +1053,9 @@ window.app = {
                 <td style="font-size:.8rem" dir="ltr">${o.date || ''}</td>
                 <td>
                     <div style="display:flex;gap:4px">
-                        <button class="btn-j btn-gold btn-xs-j" onclick="app.openOrderModal('${id}')"><i class="fas fa-eye"></i></button>
-                        ${isAdmin ? `<button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteOrder('${id}')"><i class="fas fa-trash"></i></button>` : ''}
-                    </div>
+<button class="btn-j btn-gold btn-xs-j" onclick="app.openOrderModal('${id}')"><i class="fas fa-eye"></i></button>
+                        <button class="btn-j btn-emerald btn-xs-j" onclick="app.openWhatsApp('${id}')" title="واتساب"><i class="fab fa-whatsapp"></i></button>
+                        ${isAdmin ? `<button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteOrder('${id}')"><i class="fas fa-trash"></i></button>` : ''}                    </div>
                 </td>
             </tr>`;
         }).join('');
@@ -1745,8 +1778,8 @@ window.app = {
         if (header) header.innerHTML = `<i class="fas fa-box" style="color:var(--gold)"></i> حركة الصنف: <span style="color:var(--gold)">${item.name}</span>`;
         
         // الانتقال للصفحة
-        this.gotoPage('movement');
-                this.renderMovementTable();
+  
+                 this.gotoPage('movement');
 
     },
     renderMovementTable() {
@@ -1865,6 +1898,14 @@ window.app = {
             </tr>
         `).join('');
     },
+openWhatsApp(id) {
+    const o = this.orders[id];
+    if (!o) return;
+    const items = (o.items || [{ itemName: o.itemName, size: o.size, itemColor: o.itemColor, qty: o.qty }])
+        .map(it => `• ${it.itemName} (${it.size} - ${it.itemColor}) ×${it.qty}`).join('\n');
+    const msg = `مرحباً ${o.custName} 👋\nطلبك جاهز للتوصيل:\n${items}\nالسعر: ${o.price} JOD\nالعنوان: ${o.governorate} - ${o.custAddr}\nشكراً لك ✨`;
+    window.open(`https://wa.me/${o.custMob.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+},
 
     _getMvClass(type) {
         if (type === 'مشتريات') return 'new';
