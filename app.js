@@ -999,90 +999,175 @@ async deductStock(orderId) {
     },
 
     // ============ PRINT ============
-    printOrder(o, id) {
-        const win = window.open('', '_blank');
-        const pageLogo = o.pageName || 'جواهر';
-        const items = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty, price: o.price }];
+      printOrder(o, id) {
+
+        const win       = window.open('', '_blank');
+
+        const pageLogo  = o.pageName || 'جواهر';
+
+        const items     = o.items ? o.items : [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty, price: o.price }];
+
         win.document.write(this._buildLabelHTML([{ id, o }]));
+
         win.document.close();
+
         setTimeout(() => { win.print(); }, 800);
+
         update(ref(db, `jawaher_orders/${id}`), { status: 'done' });
+
         this.deductStock(id);
+
     },
+
+
 
     executePrint(ids) {
-        const win = window.open('', '_blank');
+
+        const win     = window.open('', '_blank');
+
         const updates = {};
-        const labels = ids.map(id => ({ id, o: this.orders[id] })).filter(x => x.o);
+
+        const labels  = ids.map(id => ({ id, o: this.orders[id] })).filter(x => x.o);
+
         win.document.write(this._buildLabelHTML(labels, true));
+
         win.document.close();
+
         setTimeout(() => {
+
             win.print();
+
             labels.forEach(({ id }) => { updates[`jawaher_orders/${id}/status`] = 'done'; });
+
             update(ref(db), updates).then(() => { labels.forEach(({ id }) => this.deductStock(id)); });
+
         }, 800);
+
         this.toast('تمت الطباعة وتحويل الحالة إلى جاهزة', 'success');
+
     },
 
-    _buildLabelHTML(labels, multi = false) {
+
+
+ _buildLabelHTML(labels, multi = false) {
+
         const pageStyle = `@page { size: 10cm 10cm; margin: 0; }`;
+
         let barcodeScripts = '';
 
+        
+
         let labelsHtml = labels.map(({ id, o }) => {
+
             let pageNamesSet = new Set();
+
             if (o.pageName) pageNamesSet.add(o.pageName);
 
+            
+
             const orderItems = o.items || [{ itemId: o.itemId }];
+
             orderItems.forEach(it => {
+
                 const warehouseItem = this.warehouse[it.itemId];
+
                 if (warehouseItem && warehouseItem.pageName) pageNamesSet.add(warehouseItem.pageName);
+
             });
 
+
+
             const finalPageHeader = pageNamesSet.size > 0 ? Array.from(pageNamesSet).join(' & ') : 'جواهر';
+
             const items = o.items || [{ itemName: o.itemName, itemColor: o.itemColor, size: o.size, qty: o.qty }];
+
             const bcId = `bc_${id.slice(-8)}`;
+
             barcodeScripts += `JsBarcode("#${bcId}", "${id.slice(-12)}", { format:"CODE128", width:1.2, height:18, displayValue:false });`;
 
+            
+
             return `
+
             <div style="width:10cm;height:10cm;padding:4mm;display:block;page-break-after:always;overflow:hidden">
+
                 <div style="width:100%;height:100%;display:flex;flex-direction:column;border:1.5px solid #222;border-radius:4px">
+
                     <div style="text-align:center;padding:3px 6px;border-bottom:1.5px solid #222;background:#111;color:#C9A84C">
+
                         <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${finalPageHeader} ◆</div>
+
                         <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''}</div>
+
                     </div>
+
                     <div style="flex:1;display:flex;flex-direction:column;padding:3px">
+
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;flex:1">
+
                             <div style="display:flex;flex-direction:column;gap:2px">
+
                                 <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">اسم الزبون</div><div style="font-size:1rem;font-weight:800">${o.custName || ''}</div></div>
+
                                 <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">المقاسات</div><div style="font-size:.72rem;font-weight:700">${items.map(it => it.size).join('، ') || '-'}</div></div>
+
                             </div>
+
                             <div style="display:flex;flex-direction:column;gap:2px">
+
                                 <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">رقم الهاتف</div><div style="font-size:.95rem;font-weight:800;direction:ltr;text-align:right">${o.custMob || ''}</div></div>
+
                                 <div style="background:#eef7f2;border-radius:3px;padding:2px 5px;border:1.5px solid #1A6B4A"><div style="font-size:.52rem;color:#1A6B4A">السعر</div><div style="font-size:1.1rem;font-weight:800;color:#1A6B4A">${o.price || 0} JOD</div></div>
+
                             </div>
+
                         </div>
+
                         <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:3px;padding:2px 5px;margin-top:2px">
+
                             <div style="font-size:.52rem;color:#888">المنتجات</div>
+
                             <div style="font-size:.7rem;font-weight:700">${items.map(it => `${it.itemName || ''} (${it.itemColor || ''}) ×${it.qty || 1}`).join(' | ')}</div>
+
                         </div>
+
                     </div>
+
                     <div style="text-align:center;padding:2px;border-top:1px solid #eee"><svg id="${bcId}" style="max-width:100%;height:20px !important"></svg></div>
+
                 </div>
+
             </div>`;
+
         }).join('');
 
+
+
         return `<!DOCTYPE html><html dir="rtl"><head>
+
             <meta charset="UTF-8"><title>بوليصة طباعة</title>
+
             <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"><\/script>
+
             <style>
+
                 ${pageStyle}
+
                 * { box-sizing: border-box; }
+
                 body { font-family: 'Almarai',Arial; margin:0; padding:0; background:#fff; }
+
                 @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+
             </style>
+
         </head><body>${labelsHtml}<script>${barcodeScripts}<\/script></body></html>`;
+
     },
+
+
     // ============ REPORTS ============
   getFiltered() {
         const q = document.getElementById('rSearch')?.value.toLowerCase() || '';
