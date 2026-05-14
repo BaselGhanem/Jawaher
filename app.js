@@ -119,7 +119,7 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
     startListeners() {
         onValue(ordersRef, snap => { this.orders = snap.val() || {}; this.updateCurrentPage(); this.updateRItemFilter(); });
         onValue(warehouseRef, snap => { this.warehouse = snap.val() || {}; this.updateItemSelects(); this.updateCurrentPage(); });
-        nValue(returnsRef, snap => { this.returns = snap.val() || {}; this.updateCurrentPage(); });
+        onValue(returnsRef, snap => { this.returns = snap.val() || {}; this.updateCurrentPage(); });
 onValue(purchasesRef, snap => { this.purchases = snap.val() || {}; this.updateCurrentPage(); });
         onValue(defPagesRef, snap => {
             this.pages = snap.val() ? Object.entries(snap.val()).map(([id, v]) => ({ id, name: v.name })) : [];
