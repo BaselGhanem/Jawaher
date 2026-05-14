@@ -346,12 +346,18 @@ if (targetId.startsWith('psc_')) {
         this.itemRows = [{ id: Date.now() }];
         this.renderItemRows();
     },
+addItemRow() {
+        this._saveItemRowsState();
+        
+        const lastRow = this.itemRows[this.itemRows.length - 1];
+        if (!lastRow.savedItem || !lastRow.savedColor || !lastRow.savedSize) {
+            this.toast('يرجى اختيار (المنتج + اللون + المقاس) للمنتج الحالي قبل إضافة منتج آخر', 'error');
+            return;
+        }
 
-    addItemRow() {
-        this._saveItemRowsState();
-        this.itemRows.push({ id: Date.now() });
-        this.renderItemRows();
-    },
+        this.itemRows.push({ id: Date.now() });
+        this.renderItemRows();
+    },
 
     removeItemRow(idx) {
         if (this.itemRows.length <= 1) return;
@@ -425,7 +431,20 @@ if (targetId.startsWith('psc_')) {
                 </div>
             </div>
         `).join('');
-        this.itemRows.forEach((row, idx) => { if (row.savedItem) this.loadRowColors(idx); });
+        this.itemRows.forEach((row, idx) => { 
+            if (row.savedItem) {
+                this.loadRowColors(idx);
+                // إعادة تعيين اللون المحفوظ
+                const colorInp = document.getElementById(`ir_color_${idx}`);
+                if (colorInp && row.savedColor) {
+                    colorInp.value = row.savedColor;
+                    colorInp.dataset.hex = row.savedColorHex || '';
+                    colorInp.style.borderRight = `4px solid ${row.savedColorHex || 'var(--border)'}`;
+                }
+                // إعادة تعيين المقاس المحفوظ
+                this.loadRowSizes(idx, row.savedSize, row.savedColor);
+            } 
+        });
     },
     loadRowColors(idx) {
         const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
