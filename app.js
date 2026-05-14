@@ -690,8 +690,12 @@ addItemRow() {
             counts[o.status]++;
             if (o.status === 'delivered') {
                 totalRev += parseFloat(o.price || 0);
-                const item = this.warehouse[o.itemId];
-                if (item) totalCost += parseFloat(item.buyPrice || 0) * (o.qty || 1);
+                // حساب التكلفة من كل أصناف الطلب وليس الصنف الأول فقط
+                const itemsList = o.items || [{ itemId: o.itemId, qty: o.qty }];
+                itemsList.forEach(it => {
+                    const wItem = this.warehouse[it.itemId];
+                    if (wItem) totalCost += parseFloat(wItem.buyPrice || 0) * (parseInt(it.qty) || 1);
+                });
             }
             if (o.status !== 'canceled') itemSales[o.itemName] = (itemSales[o.itemName] || 0) + (o.qty || 1);
         });
@@ -1024,9 +1028,27 @@ async updateOrder() {
 
     async deleteOrder(id) {
         if (!confirm('حذف الطلب نهائياً؟')) return;
+        const o = this.orders[id];
+        const updates = {};
+        // إرجاع المخزون إذا كان الطلب مخصوماً مسبقاً
+        if (o && o.stockDeducted) {
+            const itemsToReturn = o.items || [{ itemId: o.itemId, size: o.exactKey || o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+            for (const it of itemsToReturn) {
+                if (!it.itemId) continue;
+                const wItem = this.warehouse[it.itemId]; if (!wItem) continue;
+                let key = it.exactKey || it.size;
+                if (wItem.sizes && wItem.sizes[key] === undefined && it.itemColor) {
+                    if (wItem.sizes[`${it.size} - ${it.itemColor}`] !== undefined) key = `${it.size} - ${it.itemColor}`;
+                }
+                const current = wItem.sizes?.[key] || 0;
+                updates[`jawaher_warehouse/${it.itemId}/sizes/${key}`] = current + (parseInt(it.qty) || 1);
+            }
+        }
         await remove(ref(db, `jawaher_orders/${id}`));
-        this.log('delete', id, 'حذف الطلب');
-        this.toast('تم الحذف', 'success'); this.closeModal('orderModal');
+        if (Object.keys(updates).length > 0) await update(ref(db), updates);
+        this.log('delete', id, `حذف الطلب${o?.stockDeducted ? ' (تم إرجاع المخزون)' : ''}`);
+        this.toast('تم الحذف' + (o?.stockDeducted ? ' وإرجاع الكمية للمستودع' : ''), 'success');
+        this.closeModal('orderModal');
     },
 
     // ============ STOCK DEDUCTION ============
@@ -1696,10 +1718,6 @@ async deductStock(orderId) {
         const reason = document.getElementById('asReason')?.value || 'تصحيح جرد';
 
         // التحقق من الحقول الإجبارية
-        if (!color || !size) {
-            this.toast('خطأ: يجب تحديد اللون والمقاس معاً لتحديث المخزون', 'error');
-            return;
-        }
         if (!color) { this.toast('يرجى تحديد اللون أولاً', 'error'); return; }
         if (!size) { this.toast('يرجى تحديد المقاس', 'error'); return; }
         if (qty === 0) { this.toast('يرجى إدخال كمية صحيحة', 'error'); return; }
@@ -2042,32 +2060,28 @@ for (const row of this.pSizeData) {
         this.updateRetSizes(0);
     },
 updateRetSizes(itemIdx) {
-        const orderId = this.retSelectedOrderId;
-        if (!orderId) return;
-        const o = this.orders[orderId];
-        const itemsList = o.items || [{ itemId: o.itemId, itemName: o.itemName, size: o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
-        const selectedItem = itemsList[itemIdx];
-        
-        const sizeSel = document.getElementById('retSize');
-        if (!sizeSel) return;
+        const orderId = this.retSelectedOrderId;
+        if (!orderId) return;
+        const o = this.orders[orderId];
+        const itemsList = o.items || [{ itemId: o.itemId, itemName: o.itemName, size: o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+        const selectedItem = itemsList[itemIdx];
+        
+        const sizeSel = document.getElementById('retSize');
+        if (!sizeSel) return;
 
-        const wItem = selectedItem.itemId ? this.warehouse[selectedItem.itemId] : null;
-        const sizesW = wItem ? Object.keys(wItem.sizes || {}) : [];
-        const allSizes = [selectedItem.size || '', ...sizesW.filter(s => s !== selectedItem.size)].filter(Boolean);
-        
-        // منع التكرار
-        const uniqueSizes = [...new Set(allSizes)];
-        sizeSel.innerHTML = uniqueSizes.map(s => `<option value="${s}">${s}</option>`).join('');
-        sizeSel.value = selectedItem.size || '';
+        // نعرض فقط المقاس المسجل في الطلب (exactKey أو size) لمنع إرجاع مقاس خاطئ للمستودع
+        const orderKey = selectedItem.exactKey || selectedItem.size || '';
+        const displaySize = orderKey.includes(' - ') ? orderKey.split(' - ')[0] : orderKey;
+        sizeSel.innerHTML = orderKey ? `<option value="${orderKey}">${displaySize}${selectedItem.itemColor ? ' - ' + selectedItem.itemColor : ''}</option>` : '';
+        sizeSel.value = orderKey;
 
-        // تحديد أقصى كمية مسموح إرجاعها بناءً على المتاح في الطلب
-        const qtyInput = document.getElementById('retQty');
-        if (qtyInput) {
-            qtyInput.max = selectedItem.qty || 1;
-            qtyInput.value = 1; // تصفير الكمية لـ 1 كقيمة افتراضية
-        }
-    },
-
+        // تحديد أقصى كمية مسموح إرجاعها بناءً على المتاح في الطلب
+        const qtyInput = document.getElementById('retQty');
+        if (qtyInput) {
+            qtyInput.max = selectedItem.qty || 1;
+            qtyInput.value = 1;
+        }
+    }
     clearReturnSelection() {
         this.retSelectedOrderId = null;
         ['retOrderPreview', 'retForm', 'retSearchResults'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
