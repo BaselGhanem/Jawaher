@@ -1263,6 +1263,7 @@ window.app = {
                         </div>
                         <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                             <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
+                            <button class="btn-j btn-sapphire btn-xs-j" onclick="app.openMovementModal('${id}')" title="حركة الصنف"><i class="fas fa-history"></i></button>
                             <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -1722,7 +1723,160 @@ window.app = {
             if (e.key === 'Escape') { this.closeModal('orderModal'); this.closeAllDropdowns(); }
         });
         document.addEventListener('click', e => { if (!e.target.closest('.dropdown-j')) this.closeAllDropdowns(); });
-    }
+    },
+    // ============ ITEM MOVEMENT LOGIC ============
+    currentMvItemId: null,
+    mvSortKey: 'timestamp',
+    mvSortDir: 1,
+
+    openMovementModal(itemId) {
+        this.currentMvItemId = itemId;
+        const item = this.warehouse[itemId];
+        if (!item) return;
+        
+        document.getElementById('mvItemName').textContent = item.name;
+        this.renderMovementTable();
+        this.openModal('movementModal');
+    },
+
+    renderMovementTable() {
+        const itemId = this.currentMvItemId;
+        const movements = [];
+        
+        // 1. جلب المشتريات
+        Object.values(this.purchases).forEach(p => {
+            if (p.itemId === itemId) {
+                const qty = Object.values(p.sizes || {}).reduce((a, b) => a + b, 0);
+                movements.push({
+                    timestamp: p.timestamp,
+                    date: p.date,
+                    type: 'مشتريات',
+                    in: qty,
+                    out: 0,
+                    details: `شراء بضاعة جديدة - ${p.notes || ''}`,
+                    user: p.user || 'نظام'
+                });
+            }
+        });
+
+        // 2. جلب المبيعات (الطلبات التي تم تسليمها أو تحضيرها وخصمت من المخزون)
+        Object.values(this.orders).forEach(o => {
+            const itemMatch = (o.items || []).find(it => it.itemId === itemId) || (o.itemId === itemId ? o : null);
+            if (itemMatch && (o.status === 'delivered' || o.status === 'done')) {
+                const qty = itemMatch.qty || 1;
+                movements.push({
+                    timestamp: o.timestamp,
+                    date: o.date,
+                    type: 'مبيعات',
+                    in: 0,
+                    out: qty,
+                    details: `طلب رقم ${o.id ? o.id.slice(-6) : ''} للزبون ${o.custName}`,
+                    user: o.entryUser || 'نظام'
+                });
+            }
+        });
+
+        // 3. جلب المرتجعات
+        Object.values(this.returns).forEach(r => {
+            if (r.itemId === itemId) {
+                movements.push({
+                    timestamp: r.timestamp,
+                    date: r.date,
+                    type: 'مرتجع',
+                    in: r.qty || 0,
+                    out: 0,
+                    details: `مرتجع من زبون: ${r.reason || ''}`,
+                    user: r.user || 'نظام'
+                });
+            }
+        });
+
+        // 4. جلب تعديلات المخزون اليدوية من السجل (Logs)
+        Object.values(this.logsData).forEach(l => {
+            if (l.action === 'stock_adjust' && l.id === itemId) {
+                const qtyMatch = l.details.match(/تعديل مخزون: (-?\d+)/);
+                const qty = qtyMatch ? parseInt(qtyMatch[1]) : 0;
+                movements.push({
+                    timestamp: l.timestamp,
+                    date: l.date,
+                    type: 'تعديل',
+                    in: qty > 0 ? qty : 0,
+                    out: qty < 0 ? Math.abs(qty) : 0,
+                    details: l.details,
+                    user: l.user
+                });
+            }
+        });
+
+        // الترتيب حسب الوقت أولاً لحساب الرصيد بشكل صحيح
+        movements.sort((a, b) => a.timestamp - b.timestamp);
+
+        // حساب الرصيد التراكمي
+        let runningBalance = 0;
+        movements.forEach(m => {
+            runningBalance += (m.in - m.out);
+            m.balance = runningBalance;
+        });
+
+        // تطبيق الفلاتر
+        const q = document.getElementById('mvSearch').value.toLowerCase();
+        const typeF = document.getElementById('mvType').value;
+        const fromD = document.getElementById('mvFrom').value;
+        const toD = document.getElementById('mvTo').value;
+
+        let filtered = movements.filter(m => {
+            if (q && !m.details.toLowerCase().includes(q)) return false;
+            if (typeF && m.type !== typeF) return false;
+            if (fromD || toD) {
+                const md = new Date(m.timestamp);
+                if (fromD && md < new Date(fromD)) return false;
+                if (toD && md > new Date(toD)) return false;
+            }
+            return true;
+        });
+
+        // الترتيب النهائي للعرض (افتراضي: الأحدث أولاً)
+        filtered.sort((a, b) => {
+            let v1 = a[this.mvSortKey], v2 = b[this.mvSortKey];
+            return v1 < v2 ? -this.mvSortDir : v1 > v2 ? this.mvSortDir : 0;
+        });
+
+        // عرض البيانات في الجدول
+        const tbody = document.getElementById('movementTableBody');
+        tbody.innerHTML = filtered.map(m => `
+            <tr>
+                <td style="font-size:.8rem">${new Date(m.timestamp).toLocaleString('ar-JO')}</td>
+                <td><span class="badge-j badge-${this._getMvClass(m.type)}">${m.type}</span></td>
+                <td style="color:var(--emerald); font-weight:bold">${m.in || '-'}</td>
+                <td style="color:var(--ruby); font-weight:bold">${m.out || '-'}</td>
+                <td style="background:var(--paper-warm); font-weight:800">${m.balance}</td>
+                <td style="font-size:.8rem">${m.details}</td>
+                <td>${m.user}</td>
+            </tr>
+        `).join('');
+    },
+
+    _getMvClass(type) {
+        if (type === 'مشتريات') return 'new';
+        if (type === 'مبيعات') return 'delivered';
+        if (type === 'مرتجع') return 'postponed';
+        return 'process';
+    },
+
+    sortMovement(key) {
+        if (this.mvSortKey === key) this.mvSortDir *= -1;
+        else { this.mvSortKey = key; this.mvSortDir = -1; }
+        this.renderMovementTable();
+    },
+
+    exportMovementExcel() {
+        const item = this.warehouse[this.currentMvItemId];
+        const table = document.getElementById('movementTable');
+        const ws = XLSX.utils.table_to_sheet(table);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "حركة صنف");
+        XLSX.writeFile(wb, `حركة_${item.name}_${Date.now()}.xlsx`);
+    },
 };
 
 // ── DOM Ready ────────────────────────────────────────────────

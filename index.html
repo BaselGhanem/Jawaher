@@ -877,8 +877,57 @@
 
     <!-- ── App Entry Point ─────────────────────────────────── -->
     <script type="module" src="app.js"></script>
-<script type="module" src="app.js?v=2.0.1"></script>
+<script type="module" src="app.js?v=1.0.1"></script>
+<div class="modal-j" id="movementModal">
+    <div class="modal-overlay" onclick="app.closeModal('movementModal')"></div>
+    <div class="modal-sheet" style="max-width: 95%; width: 1000px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-history color-gold"></i> حركة الصنف: <span id="mvItemName" class="color-gold"></span></span>
+            <button class="btn-j btn-emerald btn-xs-j" onclick="app.exportMovementExcel()">
+                <i class="fas fa-file-excel"></i> تصدير إكسل
+            </button>
+        </div>
 
+        <div class="card-j p-2 mb-3" style="background: var(--paper-warm)">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" id="mvSearch" class="form-control-j" placeholder="بحث في التفاصيل..." oninput="app.renderMovementTable()">
+                </div>
+                <div class="col-md-3">
+                    <select id="mvType" class="form-control-j select-j" onchange="app.renderMovementTable()">
+                        <option value="">كل العمليات</option>
+                        <option value="مشتريات">مشتريات</option>
+                        <option value="مبيعات">مبيعات</option>
+                        <option value="مرتجع">مرتجع</option>
+                        <option value="تعديل">تعديل جرد</option>
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex gap-2">
+                    <input type="date" id="mvFrom" class="form-control-j" onchange="app.renderMovementTable()">
+                    <input type="date" id="mvTo" class="form-control-j" onchange="app.renderMovementTable()">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrap" style="max-height: 450px; overflow-y: auto;">
+            <table class="table-j" id="movementTable">
+                <thead>
+                    <tr>
+                        <th onclick="app.sortMovement('timestamp')">التاريخ <i class="fas fa-sort"></i></th>
+                        <th onclick="app.sortMovement('type')">النوع <i class="fas fa-sort"></i></th>
+                        <th>الوارد (+)</th>
+                        <th>الصادر (-)</th>
+                        <th style="background: var(--gold-light); color: #000;">الرصيد</th>
+                        <th>التفاصيل</th>
+                        <th>المستخدم</th>
+                    </tr>
+                </thead>
+                <tbody id="movementTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 </body>
 
 </html>
