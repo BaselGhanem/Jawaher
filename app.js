@@ -431,8 +431,8 @@ const popup = document.createElement('div');
         colorInp.value = ''; colorInp.style.borderRight = '4px solid var(--border)'; colorInp.dataset.hex = '';
         if (sizeSel) { sizeSel.innerHTML = '<option value="">المقاس</option>'; }
         if (stockInfo) stockInfo.textContent = '';
-        if (!item) return;
-        // collect unique colors that have stock
+      if (!item) return;
+        // check if item has any colors with stock
         const colorSet = new Set();
         Object.entries(item.sizes || {}).forEach(([s, q]) => {
             if (q <= 0) return;
@@ -442,6 +442,13 @@ const popup = document.createElement('div');
             else c = item.color || '';
             if (c) colorSet.add(c);
         });
+        if (colorSet.size === 0) {
+            this.toast(`المنتج "${item.name}" لا يوجد له ألوان متوفرة في المستودع`, 'error');
+            sel.value = '';
+            return;
+        }
+        // collect unique colors that have stock
+      
         // store on element for picker filtering
         colorInp.dataset.availableColors = JSON.stringify([...colorSet]);
         colorInp.dataset.itemIdx = idx;
