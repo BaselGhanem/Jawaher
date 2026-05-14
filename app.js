@@ -247,11 +247,14 @@ window.app = {
         const btn = document.getElementById(btnId) || document.getElementById(targetId);
         if (!btn) return;
         this._colorPickerOpen = targetId;
-
-        const popup = document.createElement('div');
+const popup = document.createElement('div');
         popup.className = 'color-picker-popup';
+        // filter to available colors if this is an item row color picker
+        const targetEl = document.getElementById(targetId);
+        const availableColors = targetEl?.dataset?.availableColors ? JSON.parse(targetEl.dataset.availableColors) : null;
 
         COLORS_AR.forEach(c => {
+            if (availableColors && !availableColors.includes(c.name)) return;
             const el = document.createElement('div');
             el.title = c.name;
             el.style.cssText = `width:28px;height:28px;border-radius:8px;background:${c.hex};border:2px solid ${c.border};cursor:pointer;transition:transform .15s`;
@@ -264,7 +267,7 @@ window.app = {
 
                     // تحديثات إضافية بناءً على الحقل
                     if (targetId.startsWith('ir_color_')) {
-                        app.filterSizesByColor(target.dataset.idx, c.name);
+                        app.loadRowSizes(parseInt(target.dataset.idx), null, c.name);
                     }
                     // سطر جديد: لتحديث رصيد المستودع فور اختيار اللون
                     if (targetId === 'asColor') {
@@ -372,10 +375,9 @@ window.app = {
            data-idx="${idx}" 
            list="productsList" 
            placeholder="ابحث عن منتج..." 
-           oninput="app.loadRowSizes(${idx})" 
+           oninput="app.loadRowColors(${idx})" 
            value="${row.savedItem || ''}">
-</div>
-                  
+</div>                  
                     <div class="col-md-2">
                         <label class="form-label-j">اللون</label>
                         <div style="display:flex;gap:4px;align-items:center">
@@ -412,27 +414,62 @@ window.app = {
                 </div>
             </div>
         `).join('');
-        this.itemRows.forEach((row, idx) => { if (row.savedItem) this.loadRowSizes(idx, row.savedSize); });
+        this.itemRows.forEach((row, idx) => { if (row.savedItem) this.loadRowColors(idx); });
     },
-
-    loadRowSizes(idx, preselectSize) {
+    loadRowColors(idx) {
+        const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
+        const colorInp = document.getElementById(`ir_color_${idx}`);
+        const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
+        const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
+        if (!sel || !colorInp) return;
+        const itemName = sel.value.trim();
+        const foundEntry = Object.entries(this.warehouse).find(([, w]) => w.name === itemName);
+        const item = foundEntry ? foundEntry[1] : null;
+        const pageSel = document.getElementById('ePageName');
+        if (item && item.pageName && pageSel) pageSel.value = item.pageName;
+        // reset
+        colorInp.value = ''; colorInp.style.borderRight = '4px solid var(--border)'; colorInp.dataset.hex = '';
+        if (sizeSel) { sizeSel.innerHTML = '<option value="">المقاس</option>'; }
+        if (stockInfo) stockInfo.textContent = '';
+        if (!item) return;
+        // collect unique colors that have stock
+        const colorSet = new Set();
+        Object.entries(item.sizes || {}).forEach(([s, q]) => {
+            if (q <= 0) return;
+            let c = '';
+            if (item.variations?.[s]) c = item.variations[s].color;
+            else if (s.includes(' - ')) c = s.split(' - ')[1];
+            else c = item.color || '';
+            if (c) colorSet.add(c);
+        });
+        // store on element for picker filtering
+        colorInp.dataset.availableColors = JSON.stringify([...colorSet]);
+        colorInp.dataset.itemIdx = idx;
+    },
+    loadRowSizes(idx, preselectSize, filterColor = null) {
         const sel = document.querySelector(`.ir-item[data-idx="${idx}"]`);
         const sizeSel = document.querySelector(`.ir-size[data-idx="${idx}"]`);
         const stockInfo = document.querySelector(`.ir-stock[data-idx="${idx}"]`);
         if (!sel || !sizeSel) return;
         const itemName = sel.value.trim();
-        // البحث عن المعرّف (ID) باستخدام الاسم المكتوب في حقل الإدخال
         const foundEntry = Object.entries(this.warehouse).find(([id, w]) => w.name === itemName);
         const itemId = foundEntry ? foundEntry[0] : null;
         const item = foundEntry ? foundEntry[1] : null;
         const pageSel = document.getElementById('ePageName');
-        if (item && item.pageName && pageSel) {
-            pageSel.value = item.pageName; // يختار الصفحة إذا كانت موجودة في القائمة الأصلية
-        }
+        if (item && item.pageName && pageSel) pageSel.value = item.pageName;
         sizeSel.innerHTML = '<option value="">المقاس</option>';
         if (!item) return;
+        const colorToFilter = filterColor || document.getElementById(`ir_color_${idx}`)?.value || null;
         Object.entries(item.sizes || {}).forEach(([s, q]) => {
-            sizeSel.innerHTML += `<option value="${s}" data-qty="${q}" ${preselectSize === s ? 'selected' : ''}>${s} (${q})</option>`;
+            if (colorToFilter) {
+                let vColor = '';
+                if (item.variations?.[s]) vColor = item.variations[s].color;
+                else if (s.includes(' - ')) vColor = s.split(' - ')[1];
+                else vColor = item.color || '';
+                if (vColor !== colorToFilter) return;
+            }
+            if (q > 0 || preselectSize === s)
+                sizeSel.innerHTML += `<option value="${s}" data-qty="${q}" ${preselectSize === s ? 'selected' : ''}>${s} (${q})</option>`;
         });
         const showStock = () => {
             const opt = sizeSel.selectedOptions[0];
