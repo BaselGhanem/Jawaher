@@ -25,9 +25,7 @@ window.app = {
     modalOrderId: null,
     lastOrderId: null,
     isDark: localStorage.getItem('jwDark') === 'true',
-    pSizeRows: [],
-    pSizeColors: [],
-    pSizeColorHex: [],
+   pSizeData: [],   // each element: { size, qty, color, colorHex }
     retSelectedOrderId: null,
     itemRows: [],
     logsData: {},
@@ -266,7 +264,13 @@ const popup = document.createElement('div');
                     target.value = c.name;
                     target.dataset.hex = c.hex;
                     target.style.borderRight = `4px solid ${c.hex}`;
-
+if (targetId.startsWith('psc_')) {
+    const idx = parseInt(targetId.split('_')[1]);
+    if (app.pSizeData && app.pSizeData[idx]) {
+        app.pSizeData[idx].color = c.name;
+        app.pSizeData[idx].colorHex = c.hex;
+    }
+}
                     // تحديثات إضافية بناءً على الحقل
                     if (targetId.startsWith('ir_color_')) {
                         app.loadRowSizes(parseInt(target.dataset.idx), null, c.name);
@@ -1533,52 +1537,72 @@ async updateOrder() {
     },
 
     // ============ PURCHASE ============
-    renderPurchasePage() { this.renderPurchaseHistory(); this.pSizeRows = [...DEFAULT_SIZES]; this.pSizeColors = DEFAULT_SIZES.map(() => ''); this.pSizeColorHex = DEFAULT_SIZES.map(() => ''); this.renderSizesGrid(); },
+renderPurchasePage() { 
+    this.renderPurchaseHistory(); 
+    if (this.pSizeData.length === 0) {
+        this.pSizeData = DEFAULT_SIZES.map(s => ({ size: s, qty: 0, color: '', colorHex: '' }));
+    }
+    this.renderSizesGrid(); 
+},
+updateSizeData(idx, field, value) {
+    if (!this.pSizeData[idx]) return;
+    this.pSizeData[idx][field] = value;
+},
+ renderSizesGrid() {
+    const grid = document.getElementById('pSizesGrid'); if (!grid) return;
+    grid.innerHTML = this.pSizeData.map((row, i) => `
+        <div class="col-12 size-row-item" id="psr_${i}">
+            <div style="display:flex;gap:6px;align-items:center;background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:10px;padding:.5rem .65rem">
+                <input type="text" class="form-control-j" style="width:58px;text-align:center;font-weight:700;flex-shrink:0" placeholder="مقاس"
+                       value="${row.size}" onchange="app.updateSizeData(${i}, 'size', this.value)">
+                <input type="number" class="form-control-j" placeholder="كمية" min="0" style="width:65px;flex-shrink:0"
+                       value="${row.qty}" onchange="app.updateSizeData(${i}, 'qty', parseInt(this.value)||0)">
+                <input type="text" id="psc_${i}" class="form-control-j" placeholder="اللون *" readonly
+                       style="flex:1;cursor:pointer;font-size:.82rem;border-right:4px solid ${row.colorHex || 'var(--ruby-light)'}"
+                       value="${row.color}" data-hex="${row.colorHex}"
+                       onclick="app.openColorPicker(${i},'psc')">
+                <button class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${i},'psc')" style="flex-shrink:0;padding:.3rem .5rem">
+                    <i class="fas fa-palette" style="color:var(--gold)"></i>
+                </button>
+                <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeSizeRow(${i})" style="flex-shrink:0"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    `).join('');
+},
 
-    renderSizesGrid() {
-        const grid = document.getElementById('pSizesGrid'); if (!grid) return;
-        grid.innerHTML = this.pSizeRows.map((s, i) => {
-            const colorVal = this.pSizeColors?.[i] || '';
-            const colorHex = this.pSizeColorHex?.[i] || '';
-            return `<div class="col-12 size-row-item" id="psr_${i}">
-                <div style="display:flex;gap:6px;align-items:center;background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:10px;padding:.5rem .65rem">
-                    <input type="text"   class="form-control-j" style="width:58px;text-align:center;font-weight:700;flex-shrink:0" placeholder="مقاس" value="${s}">
-                    <input type="number" class="form-control-j" placeholder="كمية" min="0" value="0" style="width:65px;flex-shrink:0">
-                    <input type="text"   id="psc_${i}" class="form-control-j" placeholder="اللون *" readonly
-                        style="flex:1;cursor:pointer;font-size:.82rem;border-right:4px solid ${colorHex || 'var(--ruby-light)'}"
-                        value="${colorVal}" data-hex="${colorHex}" onclick="app.openColorPicker(${i},'psc')">
-                    <button id="psc_btn_${i}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${i},'psc')" style="flex-shrink:0;padding:.3rem .5rem">
-                        <i class="fas fa-palette" style="color:var(--gold)"></i>
-                    </button>
-                    <button class="btn-j btn-ruby btn-xs-j" onclick="app.removeSizeRow(${i})" style="flex-shrink:0"><i class="fas fa-times" style="font-size:.7rem"></i></button>
-                </div>
-            </div>`;
-        }).join('');
-    },
+  addSizeRow() { 
+    this.pSizeData.push({ size: '', qty: 0, color: '', colorHex: '' });
+    this.renderSizesGrid(); 
+},
+removeSizeRow(i) { 
+    this.pSizeData.splice(i, 1); 
+    this.renderSizesGrid(); 
+},
 
-    addSizeRow() { this._saveSizeColors(); this.pSizeRows.push(''); this.pSizeColors.push(''); this.pSizeColorHex.push(''); this.renderSizesGrid(); },
-    removeSizeRow(i) { this._saveSizeColors(); this.pSizeRows.splice(i, 1); this.pSizeColors.splice(i, 1); this.pSizeColorHex.splice(i, 1); this.renderSizesGrid(); },
-    _saveSizeColors() {
-        this.pSizeRows.forEach((s, i) => {
-            const el = document.getElementById(`psc_${i}`);
-            if (el) { this.pSizeColors[i] = el.value; this.pSizeColorHex[i] = el.dataset.hex || ''; }
-        });
-    },
 
-    loadPurchaseItem() {
-        const id = document.getElementById('pItem').value; if (!id || !this.warehouse[id]) return;
-        const item = this.warehouse[id];
-        document.getElementById('pBuyPrice').value = item.buyPrice || '';
-        document.getElementById('pSellPrice').value = item.sellPrice || '';
-        const pColorEl = document.getElementById('pColor');
-        if (pColorEl) { pColorEl.value = item.color || ''; pColorEl.style.borderRight = item.color ? `4px solid ${this._colorHex(item.color) || 'var(--gold)'}` : '4px solid var(--border)'; }
-        document.getElementById('pPageName').value = item.pageName || '';
-        this.pSizeRows = Object.keys(item.sizes || {});
-        if (!this.pSizeRows.length) this.pSizeRows = [...DEFAULT_SIZES];
-        this.pSizeColors = this.pSizeRows.map(() => '');
-        this.pSizeColorHex = this.pSizeRows.map(() => '');
-        this.renderSizesGrid();
-    },
+loadPurchaseItem() {
+    const id = document.getElementById('pItem').value; 
+    if (!id || !this.warehouse[id]) return;
+    const item = this.warehouse[id];
+    document.getElementById('pBuyPrice').value = item.buyPrice || '';
+    document.getElementById('pSellPrice').value = item.sellPrice || '';
+    document.getElementById('pColor').value = item.color || '';
+    document.getElementById('pPageName').value = item.pageName || '';
+    
+    // بناء pSizeData من المقاسات الموجودة
+    this.pSizeData = Object.entries(item.sizes || {}).map(([size, qty]) => {
+        let color = '', colorHex = '';
+        if (item.variations && item.variations[size]) {
+            color = item.variations[size].color;
+            colorHex = item.variations[size].hex;
+        }
+        return { size, qty, color, colorHex };
+    });
+    if (this.pSizeData.length === 0) {
+        this.pSizeData = DEFAULT_SIZES.map(s => ({ size: s, qty: 0, color: '', colorHex: '' }));
+    }
+    this.renderSizesGrid();
+},
 
     async savePurchase() {
         const existingId = document.getElementById('pItem').value;
@@ -1594,17 +1618,19 @@ async updateOrder() {
         if (!pageName) { this.toast('اسم الصفحة إجباري', 'error'); return; }
         if (!existingId && !newName) { this.toast('يرجى اختيار أو إدخال اسم المنتج', 'error'); return; }
 
-        const sizeRows = document.getElementById('pSizesGrid').querySelectorAll('.size-row-item');
-        const sizes = {}; const sizeColors = {};
-        let colorMissing = false;
-        sizeRows.forEach(row => {
-            const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
-            const sz = inputs[0]?.value.trim(); const qty = parseInt(inputs[1]?.value) || 0; const sc = inputs[2]?.value.trim() || '';
-            if (sz && qty > 0) {
-                if (!sc) { colorMissing = true; return; }
-                sizes[sz] = qty; sizeColors[sz] = sc;
-            }
-        });
+      const sizes = {};
+const sizeColors = {};
+let colorMissing = false;
+for (const row of this.pSizeData) {
+    const sz = row.size.trim();
+    const qty = row.qty || 0;
+    const col = row.color.trim();
+    if (sz && qty > 0) {
+        if (!col) { colorMissing = true; break; }
+        sizes[sz] = qty;
+        sizeColors[sz] = col;
+    }
+}
         if (colorMissing) { this.toast('اللون إجباري لكل مقاس', 'error'); return; }
         if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية', 'error'); return; }
 
@@ -1627,16 +1653,22 @@ async updateOrder() {
         this.resetPurchase(); this.renderPurchaseHistory();
     },
 
-    resetPurchase() {
-        ['pItem', 'pBuyPrice', 'pSellPrice', 'pNotes', 'pBarcode', 'pInvoiceDate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        const pColorEl = document.getElementById('pColor');
-        if (pColorEl) { pColorEl.value = ''; pColorEl.style.borderRight = '4px solid var(--border)'; }
-        document.getElementById('pNewItem').value = '';
-        const scanner = document.getElementById('pBarcodeScanner'); const result = document.getElementById('pBarcodeResult');
-        if (scanner) scanner.value = ''; if (result) result.style.display = 'none';
-        this.pSizeRows = [...DEFAULT_SIZES]; this.pSizeColors = DEFAULT_SIZES.map(() => ''); this.pSizeColorHex = DEFAULT_SIZES.map(() => '');
-        this.renderSizesGrid();
-    },
+  resetPurchase() {
+    ['pItem', 'pBuyPrice', 'pSellPrice', 'pNotes', 'pBarcode', 'pInvoiceDate'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const pColorEl = document.getElementById('pColor');
+    if (pColorEl) { pColorEl.value = ''; pColorEl.style.borderRight = '4px solid var(--border)'; }
+    document.getElementById('pNewItem').value = '';
+    const scanner = document.getElementById('pBarcodeScanner');
+    const result = document.getElementById('pBarcodeResult');
+    if (scanner) scanner.value = '';
+    if (result) result.style.display = 'none';
+    
+    // إعادة تعيين pSizeData وليس المصفوفات القديمة
+    this.pSizeData = DEFAULT_SIZES.map(s => ({ size: s, qty: 0, color: '', colorHex: '' }));
+    this.renderSizesGrid();
+},
 
     renderPurchaseHistory() {
         const hist = document.getElementById('purchaseHistory'); if (!hist) return;
