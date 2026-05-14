@@ -913,16 +913,47 @@ async updateOrder() {
         if (el) el.value = Math.max(1, (parseInt(el.value)||1) + delta);
     },
 
-    async _moRemoveItem(orderId, idx) {
-        const o = this.orders[orderId];
-        if (!o?.items || o.items.length <= 1) { this.toast('لا يمكن حذف الصنف الوحيد', 'error'); return; }
-        if (!confirm('حذف هذا الصنف من الطلب؟')) return;
-        const newItems = o.items.filter((_, i) => i !== idx);
-        await update(ref(db, `jawaher_orders/${orderId}`), { items: newItems, qty: newItems.reduce((s,it)=>s+(it.qty||1),0) });
-        this.log('edit', orderId, `حذف صنف idx:${idx} من الطلب`);
-        this.toast('تم حذف الصنف ✓', 'success');
-        this.openOrderModal(orderId);
-    },
+  async _moRemoveItem(orderId, idx) {
+        const o = this.orders[orderId];
+        if (!o?.items || o.items.length <= 1) { this.toast('لا يمكن حذف الصنف الوحيد', 'error'); return; }
+        if (!confirm('حذف هذا الصنف من الطلب؟')) return;
+
+        const itemToRemove = o.items[idx];
+        const newItems = o.items.filter((_, i) => i !== idx);
+        const updates = {};
+
+        // 1. تحديث بيانات الطلب (الأصناف والكمية الإجمالية)
+        updates[`jawaher_orders/${orderId}/items`] = newItems;
+        updates[`jawaher_orders/${orderId}/qty`] = newItems.reduce((s, it) => s + (it.qty || 1), 0);
+
+        // 2. إرجاع المخزون إذا كان الطلب مسلماً أو مخصوماً مسبقاً
+        if (o.stockDeducted || o.status === 'done' || o.status === 'delivered') {
+            const wItem = this.warehouse[itemToRemove.itemId];
+            if (wItem) {
+                let keyToReturn = itemToRemove.exactKey || itemToRemove.size;
+                
+                // البحث عن المفتاح الصحيح إذا كان مسجلاً بصيغة (المقاس - اللون)
+                if (wItem.sizes && wItem.sizes[keyToReturn] === undefined && itemToRemove.itemColor) {
+                    if (wItem.sizes[`${itemToRemove.size} - ${itemToRemove.itemColor}`] !== undefined) {
+                        keyToReturn = `${itemToRemove.size} - ${itemToRemove.itemColor}`;
+                    }
+                }
+                
+                const currentStock = wItem.sizes?.[keyToReturn] || 0;
+                const qtyToReturn = parseInt(itemToRemove.qty) || 1;
+                
+                updates[`jawaher_warehouse/${itemToRemove.itemId}/sizes/${keyToReturn}`] = currentStock + qtyToReturn;
+                this.log('stock_return', orderId, `إرجاع ${qtyToReturn} قطعة من ${wItem.name} بسبب حذف صنف من طلب مخصوم`);
+            }
+        }
+
+        // تنفيذ جميع التحديثات دفعة واحدة
+        await update(ref(db), updates);
+        
+        this.log('edit', orderId, `حذف صنف idx:${idx} من الطلب`);
+        this.toast('تم حذف الصنف (وإرجاع الكمية للمستودع إن لزم الأمر) ✓', 'success');
+        this.openOrderModal(orderId);
+    },
         async moveOrder(id, status) {
         await update(ref(db, `jawaher_orders/${id}`), { status });
         if (status === 'delivered') await this.deductStock(id);
@@ -938,24 +969,34 @@ async updateOrder() {
     },
 
     // ============ STOCK DEDUCTION ============
-    async deductStock(orderId) {
-        const o = this.orders[orderId]; if (!o) return;
-        const itemsToDeduct = o.items || [{ itemId: o.itemId, size: o.exactKey || o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
-        const updates = {};
-        for (const it of itemsToDeduct) {
-            if (!it.itemId) continue;
-            const item = this.warehouse[it.itemId]; if (!item) continue;
-            let keyToDeduct = it.exactKey || it.size;
-            if (item.sizes && item.sizes[keyToDeduct] === undefined && it.itemColor) {
-                if (item.sizes[`${it.size} - ${it.itemColor}`] !== undefined) keyToDeduct = `${it.size} - ${it.itemColor}`;
-            }
-            const current = item.sizes?.[keyToDeduct] || 0;
-            const qty = parseInt(it.qty) || 1;
-            updates[`jawaher_warehouse/${it.itemId}/sizes/${keyToDeduct}`] = Math.max(0, current - qty);
-            this.log('stock', orderId, `خصم ${qty} قطعة من ${item.name} مقاس/لون ${keyToDeduct}`);
-        }
-        if (Object.keys(updates).length > 0) await update(ref(db), updates);
-    },
+async deductStock(orderId) {
+        const o = this.orders[orderId]; if (!o) return;
+        
+        // الحماية: إذا تم خصم مخزون هذا الطلب مسبقاً، لا تقم بالخصم مرة أخرى
+        if (o.stockDeducted) return; 
+
+        const itemsToDeduct = o.items || [{ itemId: o.itemId, size: o.exactKey || o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+        const updates = {};
+        
+        for (const it of itemsToDeduct) {
+            if (!it.itemId) continue;
+            const item = this.warehouse[it.itemId]; if (!item) continue;
+            let keyToDeduct = it.exactKey || it.size;
+            if (item.sizes && item.sizes[keyToDeduct] === undefined && it.itemColor) {
+                if (item.sizes[`${it.size} - ${it.itemColor}`] !== undefined) keyToDeduct = `${it.size} - ${it.itemColor}`;
+            }
+            const current = item.sizes?.[keyToDeduct] || 0;
+            const qty = parseInt(it.qty) || 1;
+            updates[`jawaher_warehouse/${it.itemId}/sizes/${keyToDeduct}`] = Math.max(0, current - qty);
+            this.log('stock', orderId, `خصم ${qty} قطعة من ${item.name} مقاس/لون ${keyToDeduct}`);
+        }
+        
+        if (Object.keys(updates).length > 0) {
+            // وضع علامة أنه تم الخصم لتجنب الخصم المزدوج
+            updates[`jawaher_orders/${orderId}/stockDeducted`] = true; 
+            await update(ref(db), updates);
+        }
+    },
 
     // ============ PRINT ============
     printOrder(o, id) {
@@ -1476,8 +1517,12 @@ async updateOrder() {
         if (qty === 0) { this.toast('يرجى إدخال كمية صحيحة', 'error'); return; }
 
         // بناء المفتاح الموحد (المقاس - اللون)
-        const key = `${size} - ${color}`;
-        const current = item.sizes?.[key] || 0;
+       // تحديد المفتاح الصحيح للمقاس لمنع تكرار المفاتيح أو تجاهل الرصيد القديم
+        let key = `${size} - ${color}`;
+        if (item.sizes && item.sizes[size] !== undefined && item.variations?.[size]?.color === color) {
+            key = size; // استخدم المفتاح القديم إذا كان موجوداً ويحمل نفس اللون
+        }
+        const current = item.sizes?.[key] || 0;
         const finalQty = current + qty;
 
         if (finalQty < 0) {
@@ -1757,31 +1802,67 @@ for (const row of this.pSizeData) {
             </div>`).join('');
     },
 
-    selectReturnOrder(id, order) {
-        const o = order || this.orders[id]; if (!o) return;
-        this.retSelectedOrderId = id;
-        document.getElementById('retSearchResults').style.display = 'none';
-        document.getElementById('retSearch').value = o.custName;
-        const preview = document.getElementById('retOrderPreview');
-        preview.style.display = 'block';
-        preview.innerHTML = `<div class="return-item-preview">
-            <div class="return-item-icon"><i class="fas fa-box"></i></div>
-            <div style="flex:1">
-                <div style="font-weight:800;font-size:1rem">${o.custName}</div>
-                <div style="font-size:.82rem;color:var(--ink-mid);margin:2px 0">${o.itemName || '-'} | مقاس ${o.size || '-'} | كمية: ${o.qty || 1}</div>
-                <div style="font-size:.82rem;color:var(--gold)">${o.price || 0} ${o.currency || 'JOD'}</div>
-                <div style="font-size:.75rem;color:var(--ink-mid)">${o.custMob || ''} | ${STATUS_AR[o.status] || ''}</div>
-            </div>
-            <button class="btn-j btn-ghost btn-xs-j" onclick="app.clearReturnSelection()"><i class="fas fa-times"></i></button>
-        </div>`;
-        const sizeSel = document.getElementById('retSize');
-        const item = o.itemId ? this.warehouse[o.itemId] : null;
-        const sizesW = item ? Object.keys(item.sizes || {}) : [];
-        const allSizes = [o.size || '', ...sizesW.filter(s => s !== o.size)].filter(Boolean);
-        sizeSel.innerHTML = allSizes.map(s => `<option value="${s}">${s}</option>`).join('');
-        sizeSel.value = o.size || '';
-        document.getElementById('retForm').style.display = 'block';
-    },
+ selectReturnOrder(id, order) {
+        const o = order || this.orders[id]; if (!o) return;
+        this.retSelectedOrderId = id;
+        document.getElementById('retSearchResults').style.display = 'none';
+        document.getElementById('retSearch').value = o.custName;
+        const preview = document.getElementById('retOrderPreview');
+        preview.style.display = 'block';
+
+        // تجهيز الأصناف (يدعم الطلبات القديمة بصنف واحد، والجديدة بعدة أصناف)
+        const itemsList = o.items || [{ itemId: o.itemId, itemName: o.itemName, size: o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+        
+        // بناء قائمة منسدلة لاختيار الصنف المرتجع
+        let itemsDropdownHtml = `<select id="retItemSelect" class="form-control-j mb-2" onchange="app.updateRetSizes(this.value)">`;
+        itemsList.forEach((it, idx) => {
+            itemsDropdownHtml += `<option value="${idx}">${it.itemName || 'بدون اسم'} | لون: ${it.itemColor || '-'} | مقاس: ${it.size || '-'} (الكمية: ${it.qty || 1})</option>`;
+        });
+        itemsDropdownHtml += `</select>`;
+
+        preview.innerHTML = `<div class="return-item-preview">
+            <div class="return-item-icon"><i class="fas fa-box"></i></div>
+            <div style="flex:1">
+                <div style="font-weight:800;font-size:1rem;margin-bottom:6px">${o.custName}</div>
+                <label style="font-size:.75rem;color:var(--ink-mid)">اختر الصنف المراد إرجاعه:</label>
+                ${itemsDropdownHtml}
+                <div style="font-size:.82rem;color:var(--gold)">الإجمالي: ${o.price || 0} ${o.currency || 'JOD'}</div>
+                <div style="font-size:.75rem;color:var(--ink-mid)">${o.custMob || ''} | حالة الطلب: ${STATUS_AR[o.status] || ''}</div>
+            </div>
+            <button class="btn-j btn-ghost btn-xs-j" onclick="app.clearReturnSelection()" style="align-self:flex-start"><i class="fas fa-times"></i></button>
+        </div>`;
+        
+        document.getElementById('retForm').style.display = 'block';
+        
+        // تحديث المقاسات والكمية الافتراضية للصنف الأول
+        this.updateRetSizes(0);
+    },
+updateRetSizes(itemIdx) {
+        const orderId = this.retSelectedOrderId;
+        if (!orderId) return;
+        const o = this.orders[orderId];
+        const itemsList = o.items || [{ itemId: o.itemId, itemName: o.itemName, size: o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+        const selectedItem = itemsList[itemIdx];
+        
+        const sizeSel = document.getElementById('retSize');
+        if (!sizeSel) return;
+
+        const wItem = selectedItem.itemId ? this.warehouse[selectedItem.itemId] : null;
+        const sizesW = wItem ? Object.keys(wItem.sizes || {}) : [];
+        const allSizes = [selectedItem.size || '', ...sizesW.filter(s => s !== selectedItem.size)].filter(Boolean);
+        
+        // منع التكرار
+        const uniqueSizes = [...new Set(allSizes)];
+        sizeSel.innerHTML = uniqueSizes.map(s => `<option value="${s}">${s}</option>`).join('');
+        sizeSel.value = selectedItem.size || '';
+
+        // تحديد أقصى كمية مسموح إرجاعها بناءً على المتاح في الطلب
+        const qtyInput = document.getElementById('retQty');
+        if (qtyInput) {
+            qtyInput.max = selectedItem.qty || 1;
+            qtyInput.value = 1; // تصفير الكمية لـ 1 كقيمة افتراضية
+        }
+    },
 
     clearReturnSelection() {
         this.retSelectedOrderId = null;
@@ -1789,18 +1870,84 @@ for (const row of this.pSizeData) {
         document.getElementById('retSearch').value = '';
     },
 
-    async saveReturn() {
+ async saveReturn() {
         const orderId = this.retSelectedOrderId; if (!orderId) { this.toast('يرجى تحديد طلب', 'error'); return; }
         const o = this.orders[orderId]; if (!o) return;
+
+        // سحب الصنف المحدد من القائمة المنسدلة
+        const itemIdx = document.getElementById('retItemSelect')?.value || 0;
+        const itemsList = o.items || [{ itemId: o.itemId, itemName: o.itemName, size: o.size, exactKey: o.exactKey, itemColor: o.itemColor, qty: o.qty }];
+        const returnedItem = itemsList[itemIdx];
+
         const size = document.getElementById('retSize').value;
         const qty = parseInt(document.getElementById('retQty').value) || 1;
         const reason = document.getElementById('retReason').value;
         const notes = document.getElementById('retNotes').value;
-        if (o.itemId) { const current = this.warehouse[o.itemId]?.sizes?.[size] || 0; await update(ref(db, `jawaher_warehouse/${o.itemId}/sizes`), { [size]: current + qty }); }
-        await push(returnsRef, { timestamp: Date.now(), date: new Date().toLocaleDateString('en-GB'), orderId, custName: o.custName, custMob: o.custMob, itemName: o.itemName || '', itemId: o.itemId || '', size, qty, reason, notes, user: this.userName });
-        await update(ref(db, `jawaher_orders/${orderId}`), { status: 'postponed' });
-        this.log('return', orderId, `مرتجع ${qty} قطعة مقاس ${size} - السبب: ${reason}`);
-        this.toast('تم تسجيل المرتجع ✓', 'success');
+
+        if (qty > (returnedItem.qty || 1)) {
+            this.toast(`لا يمكنك إرجاع كمية أكبر من الموجودة في الطلب (${returnedItem.qty || 1})`, 'error');
+            return;
+        }
+
+        const updates = {};
+
+        // 1. إرجاع الكمية للمستودع
+        if (returnedItem.itemId && this.warehouse[returnedItem.itemId]) {
+            const wItem = this.warehouse[returnedItem.itemId];
+            let keyToReturn = size;
+            
+            // الحماية لضمان توافق المفاتيح إذا كان المقاس مسجلاً (المقاس - اللون)
+            if (wItem.sizes && wItem.sizes[size] === undefined && returnedItem.itemColor) {
+                if (wItem.sizes[`${size} - ${returnedItem.itemColor}`] !== undefined) {
+                    keyToReturn = `${size} - ${returnedItem.itemColor}`;
+                }
+            }
+            const currentStock = wItem.sizes?.[keyToReturn] || 0;
+            updates[`jawaher_warehouse/${returnedItem.itemId}/sizes/${keyToReturn}`] = currentStock + qty;
+        }
+
+        // 2. تسجيل المرتجع الجديد
+        const newReturnRef = push(returnsRef); // ننشئ ريفرنس جديد ونضيفه لحزمة التحديثات
+        updates[`jawaher_returns/${newReturnRef.key}`] = { 
+            timestamp: Date.now(), 
+            date: new Date().toLocaleDateString('en-GB'), 
+            orderId, 
+            custName: o.custName, 
+            custMob: o.custMob, 
+            itemName: returnedItem.itemName || '', 
+            itemColor: returnedItem.itemColor || '',
+            itemId: returnedItem.itemId || '', 
+            size, 
+            qty, 
+            reason, 
+            notes, 
+            user: this.userName 
+        };
+
+        // 3. تحديث مصفوفة الطلب الأصلي لمنع إرجاع نفس القطعة مرتين
+        const updatedItems = [...itemsList];
+        updatedItems[itemIdx].qty = (updatedItems[itemIdx].qty || 1) - qty;
+        
+        // تصفية الأصناف: الاحتفاظ فقط بالأصناف التي كميتها أكبر من صفر
+        const finalItems = updatedItems.filter(it => it.qty > 0);
+        
+        updates[`jawaher_orders/${orderId}/items`] = finalItems.length > 0 ? finalItems : null;
+        updates[`jawaher_orders/${orderId}/qty`] = finalItems.reduce((sum, it) => sum + (it.qty || 1), 0);
+        
+        // إذا تم إرجاع كل الأصناف، نغير الحالة لملغي (canceled)، وإلا نتركه مؤجل
+        if (finalItems.length === 0) {
+            updates[`jawaher_orders/${orderId}/status`] = 'canceled';
+        } else {
+            updates[`jawaher_orders/${orderId}/status`] = 'postponed'; 
+        }
+
+        // إرسال التحديثات دفعة واحدة للفايربيس
+        await update(ref(db), updates);
+
+        this.log('return', orderId, `مرتجع ${qty} قطعة من ${returnedItem.itemName} (اللون: ${returnedItem.itemColor || '-'} | المقاس: ${size}) - السبب: ${reason}`);
+        this.toast('تم تسجيل المرتجع بنجاح. ⚠ يرجى تعديل السعر الإجمالي للطلب يدوياً إذا لزم الأمر', 'warning');
+
+        // تصفير الواجهة
         ['retSearch', 'retNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         document.getElementById('retQty').value = '1';
         const scanEl = document.getElementById('retBarcodeScanner'); if (scanEl) scanEl.value = '';
@@ -1808,7 +1955,6 @@ for (const row of this.pSizeData) {
         this.retSelectedOrderId = null;
         this.renderReturnsList();
     },
-
     renderReturnsList() {
         const el = document.getElementById('returnsList'); if (!el) return;
         const entries = Object.values(this.returns).sort((a, b) => b.timestamp - a.timestamp);
