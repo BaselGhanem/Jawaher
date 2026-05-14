@@ -670,7 +670,25 @@ body {
     box-shadow: 0 12px 40px rgba(0,0,0,.2);
     display: grid; grid-template-columns: repeat(6,1fr); gap: 6px; width: 220px;
 }
+/* تنسيقات لتقليل الفراغات في صفحة الحركة */
+#page-movement .page-header {
+    margin-bottom: 1rem !important; /* تقليل الفراغ تحت العنوان */
+}
 
+#page-movement .page-subtitle {
+    margin-top: -5px; /* تقريب اسم الصنف من العنوان الرئيسي */
+    margin-bottom: 5px;
+}
+
+#page-movement .card-j {
+    padding: 12px !important; /* تقليل الحشوة داخل كرت الفلاتر */
+    margin-bottom: 15px !important;
+}
+
+#page-movement .form-label-j {
+    margin-bottom: 4px; /* تقليل المسافة بين الكلمة والحقل */
+    font-size: 0.8rem;
+}
 /* ============ RESPONSIVE DESKTOP ============ */
 @media (min-width: 992px) {
     .bottom-nav { display: none; }
