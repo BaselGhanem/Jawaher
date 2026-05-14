@@ -1590,6 +1590,7 @@ async updateOrder() {
         const pageName = document.getElementById('pPageName').value.trim();
         const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
         const notes = document.getElementById('pNotes').value.trim();
+        const color = document.getElementById('pColor')?.value.trim() || '';
         if (!pageName) { this.toast('اسم الصفحة إجباري', 'error'); return; }
         if (!existingId && !newName) { this.toast('يرجى اختيار أو إدخال اسم المنتج', 'error'); return; }
 
