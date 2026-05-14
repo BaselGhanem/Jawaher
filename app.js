@@ -467,7 +467,11 @@ addItemRow() {
 
         const dd = document.createElement('div');
         dd.id = `item_dd_${idx}`;
-        dd.style.cssText = `position:fixed;z-index:99999;background:var(--surface);border:1.5px solid var(--gold);border-radius:10px;max-height:220px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.5);width:${rect.width}px;left:${rect.left}px;${showAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`}`;
+        // detect dark mode
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const bg = isDark ? '#1a1a2e' : '#ffffff';
+        const border = '1.5px solid #C9A84C';
+        dd.style.cssText = `position:fixed;z-index:99999;background:${bg};border:${border};border-radius:10px;max-height:220px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.55);width:${rect.width}px;left:${rect.left}px;${showAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`}`;
         dd.innerHTML = matches.map(([id, w]) => {
             const colorDot = w.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${this._colorHex(w.color)||'#ccc'};border:1px solid rgba(0,0,0,.2);vertical-align:middle;margin-left:5px;flex-shrink:0"></span>` : '';
             const total = Object.values(w.sizes || {}).reduce((a, b) => a + b, 0);
@@ -514,9 +518,10 @@ addItemRow() {
         Object.entries(item.sizes || {}).forEach(([s, q]) => {
             if (q <= 0) return;
             let c = '';
-            if (item.variations?.[s]) c = item.variations[s].color;
+            // المفتاح المركب "S - وردي" يحتوي اللون مباشرة
+            if (s.includes(' - ')) c = s.split(' - ').slice(1).join(' - ');
+            else if (item.variations?.[s]) c = item.variations[s].color;
             else if (item.sizeColors?.[s]) c = item.sizeColors[s];
-            else if (s.includes(' - ')) c = s.split(' - ')[1];
             else c = item.color || '';
             if (c) colorSet.add(c);
         });
@@ -545,17 +550,19 @@ addItemRow() {
         sizeSel.innerHTML = '<option value="">المقاس</option>';
         if (!item) return;
         const colorToFilter = filterColor || document.getElementById(`ir_color_${idx}`)?.value || null;
-        Object.entries(item.sizes || {}).forEach(([s, q]) => {
-            if (colorToFilter) {
-                let vColor = '';
-                if (item.variations?.[s]) vColor = item.variations[s].color;
-                else if (item.sizeColors?.[s]) vColor = item.sizeColors[s];
-                else if (s.includes(' - ')) vColor = s.split(' - ')[1];
-                else vColor = item.color || '';
-                if (vColor !== colorToFilter) return;
-            }
-            if (q > 0 || preselectSize === s)
-                sizeSel.innerHTML += `<option value="${s}" data-qty="${q}" ${preselectSize === s ? 'selected' : ''}>${s} (${q})</option>`;
+        Object.entries(item.sizes || {}).forEach(([key, q]) => {
+            // فصل المقاس واللون من المفتاح المركب
+            let dispSize = key, keyColor = '';
+            if (key.includes(' - ')) {
+                dispSize = key.split(' - ')[0];
+                keyColor = key.split(' - ').slice(1).join(' - ');
+            } else if (item.variations?.[key]) keyColor = item.variations[key].color;
+            else if (item.sizeColors?.[key]) keyColor = item.sizeColors[key];
+            else keyColor = item.color || '';
+
+            if (colorToFilter && keyColor !== colorToFilter) return;
+            if (q > 0 || preselectSize === key)
+                sizeSel.innerHTML += `<option value="${key}" data-qty="${q}" data-color="${keyColor}" ${preselectSize === key ? 'selected' : ''}>${dispSize} (${q})</option>`;
         });
         const showStock = () => {
             const opt = sizeSel.selectedOptions[0];
@@ -564,9 +571,12 @@ addItemRow() {
             const val = sizeSel.value;
             if (val && item) {
                 let vColor = '', vHex = '';
-                if (item.variations && item.variations[val]) { vColor = item.variations[val].color; vHex = item.variations[val].hex || this._colorHex(vColor); }
+                // أولوية: data-color من الـ option (مخزن مسبقاً) → variations → sizeColors → اللون العام
+                const selOpt = sizeSel.selectedOptions[0];
+                if (selOpt?.dataset?.color) { vColor = selOpt.dataset.color; vHex = this._colorHex(vColor) || ''; }
+                else if (item.variations && item.variations[val]) { vColor = item.variations[val].color; vHex = item.variations[val].hex || this._colorHex(vColor); }
                 else if (item.sizeColors?.[val]) { vColor = item.sizeColors[val]; vHex = this._colorHex(vColor) || ''; }
-                else if (val.includes(' - ')) { vColor = val.split(' - ')[1]; vHex = this._colorHex(vColor); }
+                else if (val.includes(' - ')) { vColor = val.split(' - ').slice(1).join(' - '); vHex = this._colorHex(vColor); }
                 else if (item.color) { vColor = item.color; vHex = this._colorHex(vColor) || ''; }
                 const cInp = document.getElementById(`ir_color_${idx}`);
                 if (cInp && vColor) { cInp.value = vColor; cInp.dataset.hex = vHex || ''; cInp.style.borderRight = `4px solid ${vHex || 'var(--border)'}`; }
@@ -1568,17 +1578,25 @@ async deductStock(orderId) {
                         <div class="item-qty-bar"><div class="item-qty-fill ${fillCls}" style="width:${Math.min(total > 0 ? Math.round(total / Math.max(total, 20) * 100) : 0, 100)}%"></div></div>
                         ${w.buyPrice ? `<div style="font-size:.75rem;color:var(--ink-mid);margin-bottom:.5rem">شراء: <strong>${w.buyPrice} JOD</strong>${w.sellPrice ? ' | بيع: <strong>' + w.sellPrice + ' JOD</strong>' : ''}</div>` : ''}
                         <div class="item-sizes mb-3">
-                            ${sizes.length === 0 ? `<span style="color:var(--ink-mid);font-size:.8rem">لا توجد مقاسات</span>` : sizes.map(([s, q]) => {
-                                const v = w.variations ? w.variations[s] : null;
+                            ${sizes.length === 0 ? `<span style="color:var(--ink-mid);font-size:.8rem">لا توجد مقاسات</span>` : sizes.map(([key, q]) => {
+                                // فصل المقاس واللون من المفتاح "S - وردي" أو "S"
+                                let dispSize = key, dispColor = '';
+                                if (key.includes(' - ')) {
+                                    dispSize = key.split(' - ')[0];
+                                    dispColor = key.split(' - ').slice(1).join(' - ');
+                                }
+                                const v = w.variations ? w.variations[key] : null;
                                 const vCode = v && v.barcode ? v.barcode : (w.barcode || id.slice(-8)).toUpperCase();
-                                // أولوية اللون: variation → sizeColors → اللون العام
-                                const vColor = (v && v.color) ? v.color : (w.sizeColors && w.sizeColors[s]) ? w.sizeColors[s] : (w.color || '');
+                                // أولوية اللون: من المفتاح المركب → variation → sizeColors → اللون العام
+                                const vColor = dispColor || (v && v.color) || (w.sizeColors && w.sizeColors[key]) || w.color || '';
+                                const colorHex = this._colorHex(vColor) || '#ccc';
                                 return `<div style="background:rgba(0,0,0,.02);border:1px solid var(--border);padding:6px;border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;width:100%">
-                                    <div>
-                                        <span style="font-weight:700;font-size:.85rem">${s}</span>${vColor ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${this._colorHex(vColor)||'#ccc'};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin:0 4px"></span><span style="font-size:.78rem;color:var(--ink-mid)">${vColor}</span>` : ''}:
-                                        <strong style="${q === 0 ? 'color:var(--ruby)' : ''}">${q}</strong> قطعة
+                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                                        <span style="font-weight:700;font-size:.85rem">${dispSize}</span>
+                                        ${vColor ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${colorHex};border:1px solid rgba(0,0,0,.15);flex-shrink:0"></span><span style="font-size:.78rem;color:var(--ink-mid)">${vColor}</span>` : ''}
+                                        <span style="${q === 0 ? 'color:var(--ruby)' : 'color:var(--ink)'}">: <strong>${q}</strong> قطعة</span>
                                     </div>
-                                    <div style="font-size:.7rem;font-family:monospace;background:var(--paper);padding:4px 6px;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="app.showBarcode('${vCode}','${w.name} - ${s}')" title="طباعة الباركود">
+                                    <div style="font-size:.7rem;font-family:monospace;background:var(--paper);padding:4px 6px;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="app.showBarcode('${vCode}','${w.name} - ${dispSize}')" title="طباعة الباركود">
                                         <i class="fas fa-barcode" style="color:var(--gold)"></i> ${vCode}
                                     </div>
                                 </div>`;
@@ -1829,18 +1847,21 @@ loadPurchaseItem() {
     document.getElementById('pPageName').value = item.pageName || '';
     
     // بناء pSizeData من المقاسات الموجودة
-    this.pSizeData = Object.entries(item.sizes || {}).map(([size, qty]) => {
-        let color = '', colorHex = '';
-        if (item.variations && item.variations[size]) {
-            color = item.variations[size].color || '';
-            colorHex = item.variations[size].hex || '';
-        } else if (item.sizeColors && item.sizeColors[size]) {
-            color = item.sizeColors[size];
-            colorHex = this._colorHex(color) || '';
+    this.pSizeData = Object.entries(item.sizes || {}).map(([key, qty]) => {
+        // المفتاح قد يكون "S - وردي" أو "S" فقط
+        let size = key, color = '', colorHex = '';
+        if (key.includes(' - ')) {
+            size = key.split(' - ')[0];
+            color = key.split(' - ').slice(1).join(' - ');
+        } else if (item.variations && item.variations[key]) {
+            color = item.variations[key].color || '';
+            colorHex = item.variations[key].hex || '';
+        } else if (item.sizeColors && item.sizeColors[key]) {
+            color = item.sizeColors[key];
         } else if (item.color) {
             color = item.color;
-            colorHex = this._colorHex(color) || '';
         }
+        colorHex = this._colorHex(color) || '';
         return { size, qty, color, colorHex };
     });
     if (this.pSizeData.length === 0) {
@@ -1872,8 +1893,10 @@ for (const row of this.pSizeData) {
     const col = row.color.trim();
     if (sz && qty > 0) {
         if (!col) { colorMissing = true; break; }
-        sizes[sz] = qty;
-        sizeColors[sz] = col;
+        // المفتاح: "مقاس - لون" للسماح بنفس المقاس بألوان مختلفة
+        const key = col ? `${sz} - ${col}` : sz;
+        sizes[key] = (sizes[key] || 0) + qty;
+        sizeColors[key] = col;
     }
 }
         if (colorMissing) { this.toast('اللون إجباري لكل مقاس', 'error'); return; }
