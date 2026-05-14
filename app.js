@@ -65,13 +65,13 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
         document.getElementById('loginPass').value = '';
     },
 
-    applyPermissions() {
+  applyPermissions() {
         const isAdmin = this.role === 'Admin';
         document.querySelectorAll('.admin-only').forEach(el => {
             if (isAdmin) {
                 if (el.classList.contains('nav-btn')) el.style.display = 'flex';
                 else if (el.classList.contains('dropdown-j')) el.style.display = 'inline-block';
-                else el.style.display = '';
+                else el.style.display = 'block'; // <--- تم التعديل هنا لإجبار الإظهار
             } else {
                 el.style.display = 'none';
             }
@@ -79,8 +79,8 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
         if (this.role === 'Delivery') { document.getElementById('rStatus').value = 'done'; this.gotoPage('reports'); }
         else if (this.role === 'User') { this.gotoPage('entry'); }
         else { this.gotoPage('dashboard'); }
-                document.getElementById('modalDeleteBtn').style.display = this.role === 'Admin' ? '' : 'none';
-
+        
+        document.getElementById('modalDeleteBtn').style.display = this.role === 'Admin' ? '' : 'none';
     },
 
     // ============ DARK MODE ============
@@ -1084,7 +1084,7 @@ async deductStock(orderId) {
         </head><body>${labelsHtml}<script>${barcodeScripts}<\/script></body></html>`;
     },
     // ============ REPORTS ============
-    getFiltered() {
+  getFiltered() {
         const q = document.getElementById('rSearch')?.value.toLowerCase() || '';
         const st = document.getElementById('rStatus')?.value || '';
         const it = document.getElementById('rItem')?.value || '';
@@ -1092,7 +1092,8 @@ async deductStock(orderId) {
         const fr = document.getElementById('rFrom')?.value || '';
         const to = document.getElementById('rTo')?.value || '';
         return Object.entries(this.orders).filter(([id, o]) => {
-    if (q && !(o.custName.toLowerCase().includes(q) || o.custMob.includes(q) || id.includes(q))) return false;
+            // إضافة حماية للمتغيرات لتجنب توقف الصفحة
+            if (q && !((o.custName || '').toLowerCase().includes(q) || (o.custMob || '').includes(q) || id.includes(q))) return false;
             if (st && o.status !== st) return false;
             if (it && o.itemName !== it) return false;
             if (pg && o.pageName !== pg) return false;
@@ -1346,8 +1347,9 @@ async deductStock(orderId) {
         const wPageSel = document.getElementById('wPageFilter');
         if (wPageSel) { const cur = wPageSel.value; const pages = [...new Set(items.map(([, w]) => w.pageName).filter(Boolean))].sort(); wPageSel.innerHTML = '<option value="">كل الصفحات</option>' + pages.map(p => `<option value="${p}" ${cur === p ? 'selected' : ''}>${p}</option>`).join(''); }
 
-        items = items.filter(([, w]) => {
-            if (q && !w.name.toLowerCase().includes(q) && !(w.barcode || '').toLowerCase().includes(q)) return false;
+       items = items.filter(([, w]) => {
+            // إضافة حماية لاسم المنتج والباركود
+            if (q && !(w.name || '').toLowerCase().includes(q) && !(w.barcode || '').toLowerCase().includes(q)) return false;
             if (colorF && w.color !== colorF) return false;
             if (pageF && w.pageName !== pageF) return false;
             const total = Object.values(w.sizes || {}).reduce((a, b) => a + b, 0);
@@ -2117,10 +2119,10 @@ updateRetSizes(itemIdx) {
         });
 
         // تطبيق الفلاتر
-        const q = document.getElementById('mvSearch').value.toLowerCase();
-        const typeF = document.getElementById('mvType').value;
-        const fromD = document.getElementById('mvFrom').value;
-        const toD = document.getElementById('mvTo').value;
+        const q = document.getElementById('mvSearch')?.value.toLowerCase() || '';
+        const typeF = document.getElementById('mvType')?.value || '';
+        const fromD = document.getElementById('mvFrom')?.value || '';
+        const toD = document.getElementById('mvTo')?.value || '';
 
         let filtered = movements.filter(m => {
             if (q && !m.details.toLowerCase().includes(q)) return false;
