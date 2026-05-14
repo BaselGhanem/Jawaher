@@ -1781,8 +1781,14 @@ loadPurchaseItem() {
     this.pSizeData = Object.entries(item.sizes || {}).map(([size, qty]) => {
         let color = '', colorHex = '';
         if (item.variations && item.variations[size]) {
-            color = item.variations[size].color;
-            colorHex = item.variations[size].hex;
+            color = item.variations[size].color || '';
+            colorHex = item.variations[size].hex || '';
+        } else if (item.sizeColors && item.sizeColors[size]) {
+            color = item.sizeColors[size];
+            colorHex = this._colorHex(color) || '';
+        } else if (item.color) {
+            color = item.color;
+            colorHex = this._colorHex(color) || '';
         }
         return { size, qty, color, colorHex };
     });
@@ -1823,14 +1829,17 @@ for (const row of this.pSizeData) {
         if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية', 'error'); return; }
 
         let targetId = existingId;
+        let isNewItem = false;
         if (!targetId) {
+            isNewItem = true;
             const barcode = manualBarcode || ('JW' + Date.now().toString().slice(-8));
-            const newRef = await push(warehouseRef, { name: newName, buyPrice, sellPrice, pageName, color, barcode, sizes: {}, createdAt: Date.now() });
+            const newRef = await push(warehouseRef, { name: newName, buyPrice, sellPrice, pageName, color, barcode, sizes: {}, sizeColors: {}, createdAt: Date.now() });
             targetId = newRef.key;
         }
+        // للمنتج الجديد: الكاش المحلي لم يُحدَّث بعد، نبني البيانات من الجلسة الحالية
         const item = this.warehouse[targetId];
-        const existingSizes = item?.sizes || {};
-        const existingSizeColors = item?.sizeColors || {};
+        const existingSizes = isNewItem ? {} : (item?.sizes || {});
+        const existingSizeColors = isNewItem ? {} : (item?.sizeColors || {});
         const mergedSizes = { ...existingSizes };
         Object.entries(sizes).forEach(([s, q]) => { mergedSizes[s] = (mergedSizes[s] || 0) + q; });
         const mergedSizeColors = { ...existingSizeColors, ...sizeColors };
