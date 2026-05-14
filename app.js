@@ -1087,53 +1087,84 @@ async deductStock(orderId) {
 
             
 
+            // بناء صفوف الأصناف للبوليصة
+            const itemsRows = items.map(it => `
+                <tr>
+                    <td style="padding:2px 5px;border:1px solid #ddd;font-size:.72rem;font-weight:700">${it.itemName || '-'}</td>
+                    <td style="padding:2px 5px;border:1px solid #ddd;font-size:.72rem;text-align:center">${it.itemColor || '-'}</td>
+                    <td style="padding:2px 5px;border:1px solid #ddd;font-size:.72rem;text-align:center">${it.size || '-'}</td>
+                    <td style="padding:2px 5px;border:1px solid #ddd;font-size:.72rem;text-align:center;font-weight:800">${it.qty || 1}</td>
+                </tr>`).join('');
+
             return `
 
-            <div style="width:10cm;height:10cm;padding:4mm;display:block;page-break-after:always;overflow:hidden">
+            <div style="width:10cm;height:10cm;padding:3mm;display:block;page-break-after:always;overflow:hidden;box-sizing:border-box">
 
-                <div style="width:100%;height:100%;display:flex;flex-direction:column;border:1.5px solid #222;border-radius:4px">
+                <div style="width:100%;height:100%;display:flex;flex-direction:column;border:2px solid #222;border-radius:5px;font-family:Almarai,Arial">
 
-                    <div style="text-align:center;padding:3px 6px;border-bottom:1.5px solid #222;background:#111;color:#C9A84C">
+                    <!-- الهيدر -->
+                    <div style="text-align:center;padding:3px 6px;border-bottom:2px solid #222;background:#111;color:#C9A84C">
+                        <div style="font-size:0.95rem;font-weight:800;letter-spacing:1px">◆ ${finalPageHeader} ◆</div>
+                        <div style="font-size:.58rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''}</div>
+                    </div>
 
-                        <div style="font-size:0.9rem;font-weight:800;letter-spacing:1px;font-family:Almarai,Arial">◆ ${finalPageHeader} ◆</div>
+                    <!-- الجسم الرئيسي - عمودين -->
+                    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden">
 
-                        <div style="font-size:.6rem;color:#aaa">#${id.slice(-8)} | ${o.date || ''}</div>
+                        <!-- العمود الأيمن: اسم الزبون، العنوان، رقم التلفون، ملاحظات، السعر الشامل -->
+                        <div style="display:flex;flex-direction:column;gap:2px;padding:3px;border-left:1px solid #ddd">
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">اسم الزبون</div>
+                                <div style="font-size:.85rem;font-weight:800;line-height:1.2">${o.custName || ''}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">عنوان</div>
+                                <div style="font-size:.68rem;font-weight:700;line-height:1.2">${o.governorate ? o.governorate + ' - ' : ''}${o.custAddr || '-'}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">رقم تلفون</div>
+                                <div style="font-size:.85rem;font-weight:800;direction:ltr;text-align:right">${o.custMob || ''}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee;flex:1">
+                                <div style="font-size:.48rem;color:#888">ملاحظات</div>
+                                <div style="font-size:.65rem;font-weight:600">${o.tags || ''}</div>
+                            </div>
+                            <div style="background:#eef7f2;border-radius:3px;padding:2px 5px;border:1.5px solid #1A6B4A">
+                                <div style="font-size:.48rem;color:#1A6B4A">السعر الشامل</div>
+                                <div style="font-size:1rem;font-weight:800;color:#1A6B4A">${o.price || 0} JOD</div>
+                            </div>
+                        </div>
+
+                        <!-- العمود الأيسر: اسم الصنف، الموديل (الصفحة)، الوزن، الطول، القيمة -->
+                        <div style="display:flex;flex-direction:column;gap:2px;padding:3px">
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">اسم الصنف</div>
+                                <div style="font-size:.72rem;font-weight:800;line-height:1.2">${items.map(it => it.itemName || '').join('، ')}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">الموديل</div>
+                                <div style="font-size:.68rem;font-weight:700">${items.map(it => it.itemColor || '').join('، ') || '-'}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">الوزن</div>
+                                <div style="font-size:.72rem;font-weight:700">${o.weight || '-'}</div>
+                            </div>
+                            <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee">
+                                <div style="font-size:.48rem;color:#888">الطول</div>
+                                <div style="font-size:.72rem;font-weight:700">${o.height || '-'}</div>
+                            </div>
+                            <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:3px;padding:2px 5px;flex:1">
+                                <div style="font-size:.48rem;color:#888">القيمة</div>
+                                <div style="font-size:.68rem;font-weight:700">${items.map(it => `${it.size||''} ×${it.qty||1}`).join(' | ')}</div>
+                            </div>
+                        </div>
 
                     </div>
 
-                    <div style="flex:1;display:flex;flex-direction:column;padding:3px">
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;flex:1">
-
-                            <div style="display:flex;flex-direction:column;gap:2px">
-
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">اسم الزبون</div><div style="font-size:1rem;font-weight:800">${o.custName || ''}</div></div>
-
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">المقاسات</div><div style="font-size:.72rem;font-weight:700">${items.map(it => it.size).join('، ') || '-'}</div></div>
-
-                            </div>
-
-                            <div style="display:flex;flex-direction:column;gap:2px">
-
-                                <div style="background:#f9f9f9;border-radius:3px;padding:2px 5px;border:1px solid #eee"><div style="font-size:.52rem;color:#888">رقم الهاتف</div><div style="font-size:.95rem;font-weight:800;direction:ltr;text-align:right">${o.custMob || ''}</div></div>
-
-                                <div style="background:#eef7f2;border-radius:3px;padding:2px 5px;border:1.5px solid #1A6B4A"><div style="font-size:.52rem;color:#1A6B4A">السعر</div><div style="font-size:1.1rem;font-weight:800;color:#1A6B4A">${o.price || 0} JOD</div></div>
-
-                            </div>
-
-                        </div>
-
-                        <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:3px;padding:2px 5px;margin-top:2px">
-
-                            <div style="font-size:.52rem;color:#888">المنتجات</div>
-
-                            <div style="font-size:.7rem;font-weight:700">${items.map(it => `${it.itemName || ''} (${it.itemColor || ''}) ×${it.qty || 1}`).join(' | ')}</div>
-
-                        </div>
-
+                    <!-- الباركود -->
+                    <div style="text-align:center;padding:2px;border-top:1px solid #eee">
+                        <svg id="${bcId}" style="max-width:100%;height:20px !important"></svg>
                     </div>
-
-                    <div style="text-align:center;padding:2px;border-top:1px solid #eee"><svg id="${bcId}" style="max-width:100%;height:20px !important"></svg></div>
 
                 </div>
 
@@ -2132,10 +2163,18 @@ updateRetSizes(itemIdx) {
         Object.values(this.purchases).forEach(p => {
             if (p.itemId === itemId) {
                 const qty = Object.values(p.sizes || {}).reduce((a, b) => a + b, 0);
+                // استخراج الألوان من المشتريات
+                const colors = [...new Set(Object.keys(p.sizes || {}).map(k => {
+                    const wItem = this.warehouse[itemId];
+                    if (wItem && wItem.variations && wItem.variations[k]) return wItem.variations[k].color || '';
+                    if (k.includes(' - ')) return k.split(' - ')[1];
+                    return wItem?.color || '';
+                }).filter(Boolean))];
                 movements.push({
                     timestamp: p.timestamp,
                     date: p.date,
                     type: 'مشتريات',
+                    color: colors.join('، '),
                     in: qty,
                     out: 0,
                     details: `شراء بضاعة جديدة - ${p.notes || ''}`,
@@ -2144,15 +2183,17 @@ updateRetSizes(itemIdx) {
             }
         });
 
-        // 2. جلب المبيعات (الطلبات التي تم تسليمها أو تحضيرها وخصمت من المخزون)
+        // 2. جلب المبيعات
         Object.values(this.orders).forEach(o => {
             const itemMatch = (o.items || []).find(it => it.itemId === itemId) || (o.itemId === itemId ? o : null);
             if (itemMatch && (o.status === 'delivered' || o.status === 'done')) {
                 const qty = itemMatch.qty || 1;
+                const color = itemMatch.itemColor || o.itemColor || '';
                 movements.push({
                     timestamp: o.timestamp,
                     date: o.date,
                     type: 'مبيعات',
+                    color,
                     in: 0,
                     out: qty,
                     details: `طلب رقم ${o.id ? o.id.slice(-6) : ''} للزبون ${o.custName}`,
@@ -2164,10 +2205,12 @@ updateRetSizes(itemIdx) {
         // 3. جلب المرتجعات
         Object.values(this.returns).forEach(r => {
             if (r.itemId === itemId) {
+                const color = r.itemColor || r.color || '';
                 movements.push({
                     timestamp: r.timestamp,
                     date: r.date,
                     type: 'مرتجع',
+                    color,
                     in: r.qty || 0,
                     out: 0,
                     details: `مرتجع من زبون: ${r.reason || ''}`,
@@ -2176,15 +2219,17 @@ updateRetSizes(itemIdx) {
             }
         });
 
-        // 4. جلب تعديلات المخزون اليدوية من السجل (Logs)
+        // 4. جلب تعديلات المخزون اليدوية
         Object.values(this.logsData).forEach(l => {
             if (l.action === 'stock_adjust' && l.id === itemId) {
                 const qtyMatch = l.details.match(/تعديل مخزون: (-?\d+)/);
                 const qty = qtyMatch ? parseInt(qtyMatch[1]) : 0;
+                const colorMatch = l.details.match(/اللون: ([^|]+)/);
                 movements.push({
                     timestamp: l.timestamp,
                     date: l.date,
                     type: 'تعديل',
+                    color: colorMatch ? colorMatch[1].trim() : '',
                     in: qty > 0 ? qty : 0,
                     out: qty < 0 ? Math.abs(qty) : 0,
                     details: l.details,
@@ -2203,15 +2248,25 @@ updateRetSizes(itemIdx) {
             m.balance = runningBalance;
         });
 
+        // تحديث قائمة فلتر الألوان
+        const mvColorSel = document.getElementById('mvColor');
+        if (mvColorSel) {
+            const curColor = mvColorSel.value;
+            const allColors = [...new Set(movements.map(m => m.color).filter(Boolean))].sort();
+            mvColorSel.innerHTML = '<option value="">كل الألوان</option>' + allColors.map(c => `<option value="${c}" ${curColor === c ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
         // تطبيق الفلاتر
         const q = document.getElementById('mvSearch')?.value.toLowerCase() || '';
         const typeF = document.getElementById('mvType')?.value || '';
+        const colorF = document.getElementById('mvColor')?.value || '';
         const fromD = document.getElementById('mvFrom')?.value || '';
         const toD = document.getElementById('mvTo')?.value || '';
 
         let filtered = movements.filter(m => {
             if (q && !m.details.toLowerCase().includes(q)) return false;
             if (typeF && m.type !== typeF) return false;
+            if (colorF && m.color !== colorF) return false;
             if (fromD || toD) {
                 const md = new Date(m.timestamp);
                 if (fromD && md < new Date(fromD)) return false;
@@ -2220,7 +2275,7 @@ updateRetSizes(itemIdx) {
             return true;
         });
 
-        // الترتيب النهائي للعرض (افتراضي: الأحدث أولاً)
+        // الترتيب النهائي للعرض
         filtered.sort((a, b) => {
             let v1 = a[this.mvSortKey], v2 = b[this.mvSortKey];
             return v1 < v2 ? -this.mvSortDir : v1 > v2 ? this.mvSortDir : 0;
@@ -2228,17 +2283,21 @@ updateRetSizes(itemIdx) {
 
         // عرض البيانات في الجدول
         const tbody = document.getElementById('movementTableBody');
-        tbody.innerHTML = filtered.map(m => `
+        tbody.innerHTML = filtered.map(m => {
+            const colorHex = this._colorHex(m.color);
+            const colorDot = colorHex ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colorHex};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin-left:3px"></span>` : '';
+            return `
             <tr>
                 <td style="font-size:.8rem">${new Date(m.timestamp).toLocaleString('ar-JO')}</td>
                 <td><span class="badge-j badge-${this._getMvClass(m.type)}">${m.type}</span></td>
+                <td style="font-size:.8rem">${colorDot}${m.color || '-'}</td>
                 <td style="color:var(--emerald); font-weight:bold">${m.in || '-'}</td>
                 <td style="color:var(--ruby); font-weight:bold">${m.out || '-'}</td>
                 <td style="background:var(--paper-warm); font-weight:800">${m.balance}</td>
                 <td style="font-size:.8rem">${m.details}</td>
                 <td>${m.user}</td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     },
 openWhatsApp(id) {
     const o = this.orders[id];

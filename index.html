@@ -795,13 +795,20 @@
                             </div>
                         </div>
                         <div class="col-md-2">
+                            <div class="select-wrapper">
+                                <select id="mvColor" class="form-control-j select-j" onchange="app.renderMovementTable()">
+                                    <option value="">كل الألوان</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
                             <input type="date" id="mvFrom" class="form-control-j" onchange="app.renderMovementTable()">
                         </div>
                         <div class="col-md-2">
                             <input type="date" id="mvTo" class="form-control-j" onchange="app.renderMovementTable()">
                         </div>
                         <div class="col-md-1">
-                            <button class="btn-j btn-ghost btn-sm-j w-100" onclick="document.getElementById('mvSearch').value='';document.getElementById('mvType').value='';document.getElementById('mvFrom').value='';document.getElementById('mvTo').value='';app.renderMovementTable()">
+                            <button class="btn-j btn-ghost btn-sm-j w-100" onclick="document.getElementById('mvSearch').value='';document.getElementById('mvType').value='';document.getElementById('mvColor').value='';document.getElementById('mvFrom').value='';document.getElementById('mvTo').value='';app.renderMovementTable()">
                                 <i class="fas fa-undo"></i>
                             </button>
                         </div>
@@ -815,6 +822,7 @@
                             <tr>
                                 <th onclick="app.sortMovement('timestamp')" style="cursor:pointer">التاريخ <i class="fas fa-sort fa-xs"></i></th>
                                 <th>النوع</th>
+                                <th>اللون</th>
                                 <th onclick="app.sortMovement('in')" style="cursor:pointer;color:var(--emerald)">وارد <i class="fas fa-sort fa-xs"></i></th>
                                 <th onclick="app.sortMovement('out')" style="cursor:pointer;color:var(--ruby-light)">صادر <i class="fas fa-sort fa-xs"></i></th>
                                 <th onclick="app.sortMovement('balance')" style="cursor:pointer">الرصيد <i class="fas fa-sort fa-xs"></i></th>
