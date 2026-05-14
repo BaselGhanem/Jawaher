@@ -119,8 +119,8 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
     startListeners() {
         onValue(ordersRef, snap => { this.orders = snap.val() || {}; this.updateCurrentPage(); this.updateRItemFilter(); });
         onValue(warehouseRef, snap => { this.warehouse = snap.val() || {}; this.updateItemSelects(); this.updateCurrentPage(); });
-        onValue(returnsRef, snap => { this.returns = snap.val() || {}; });
-        onValue(purchasesRef, snap => { this.purchases = snap.val() || {}; });
+        nValue(returnsRef, snap => { this.returns = snap.val() || {}; this.updateCurrentPage(); });
+onValue(purchasesRef, snap => { this.purchases = snap.val() || {}; this.updateCurrentPage(); });
         onValue(defPagesRef, snap => {
             this.pages = snap.val() ? Object.entries(snap.val()).map(([id, v]) => ({ id, name: v.name })) : [];
             this.updatePageSelect(); this.renderDefinitions();
@@ -129,8 +129,8 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
             this.entryUsers = snap.val() ? Object.entries(snap.val()).map(([id, v]) => ({ id, name: v.name })) : [];
             this.updateEntryUserSelect(); this.renderDefinitions();
         });
-        if (this.role === 'Admin') {
-            onValue(logsRef, snap => { this.logsData = snap.val() || {}; });
+       if (this.role === 'Admin') {
+    onValue(logsRef, snap => { this.logsData = snap.val() || {}; this.updateCurrentPage(); });
         }
     },
 
@@ -142,6 +142,11 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
         if (id === 'orders') this.renderBoard();
         if (id === 'reports') { this.renderTable(); this.renderStageCards(); }
         if (id === 'warehouse') this.renderWarehouse();
+        if (id === 'purchase') this.renderPurchasePage();
+    if (id === 'returns') this.renderReturnsList();
+    if (id === 'definitions') this.renderDefinitions();
+    if (id === 'logs') this.renderLogs();
+    if (id === 'movement') this.renderMovementTable();
     },
 
     // ============ DEFINITIONS ============
@@ -206,8 +211,8 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
             </div>`;
         const pg = document.getElementById('pagesList');
         const us = document.getElementById('usersList');
-        if (pg) pg.innerHTML = this.pages.map(p => mkItem(p.name, 'pages', p.id)).join('');
-        if (us) us.innerHTML = this.entryUsers.map(u => mkItem(u.name, 'entryUsers', u.id)).join('');
+      if (pg) pg.innerHTML = this.pages.length ? this.pages.map(p => mkItem(p.name, 'pages', p.id)).join('') : '<div style="color:var(--ink-mid); font-size:0.85rem;">لا توجد صفحات معرفة</div>';
+    if (us) us.innerHTML = this.entryUsers.length ? this.entryUsers.map(u => mkItem(u.name, 'entryUsers', u.id)).join('') : '<div style="color:var(--ink-mid); font-size:0.85rem;">لا يوجد مدخلين معرفين</div>';
     },
 
     // ============ COUNTRY ============
@@ -1026,8 +1031,8 @@ async updateOrder() {
         const pg = document.getElementById('rPage')?.value || '';
         const fr = document.getElementById('rFrom')?.value || '';
         const to = document.getElementById('rTo')?.value || '';
-        return Object.entries(this.orders).filter(([, o]) => {
-            if (q && !(o.custName.toLowerCase().includes(q) || o.custMob.includes(q) || id.includes(q))) return false;
+        return Object.entries(this.orders).filter(([id, o]) => {
+    if (q && !(o.custName.toLowerCase().includes(q) || o.custMob.includes(q) || id.includes(q))) return false;
             if (st && o.status !== st) return false;
             if (it && o.itemName !== it) return false;
             if (pg && o.pageName !== pg) return false;
