@@ -1520,7 +1520,8 @@ async deductStock(orderId) {
                             ${sizes.length === 0 ? `<span style="color:var(--ink-mid);font-size:.8rem">لا توجد مقاسات</span>` : sizes.map(([s, q]) => {
                                 const v = w.variations ? w.variations[s] : null;
                                 const vCode = v && v.barcode ? v.barcode : (w.barcode || id.slice(-8)).toUpperCase();
-                                const vColor = (v && v.color) ? v.color : (w.color || '');
+                                // أولوية اللون: variation → sizeColors → اللون العام
+                                const vColor = (v && v.color) ? v.color : (w.sizeColors && w.sizeColors[s]) ? w.sizeColors[s] : (w.color || '');
                                 return `<div style="background:rgba(0,0,0,.02);border:1px solid var(--border);padding:6px;border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;width:100%">
                                     <div>
                                         <span style="font-weight:700;font-size:.85rem">${s}</span>${vColor ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${this._colorHex(vColor)||'#ccc'};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin:0 4px"></span><span style="font-size:.78rem;color:var(--ink-mid)">${vColor}</span>` : ''}:
@@ -1829,9 +1830,11 @@ for (const row of this.pSizeData) {
         }
         const item = this.warehouse[targetId];
         const existingSizes = item?.sizes || {};
+        const existingSizeColors = item?.sizeColors || {};
         const mergedSizes = { ...existingSizes };
         Object.entries(sizes).forEach(([s, q]) => { mergedSizes[s] = (mergedSizes[s] || 0) + q; });
-      const updateData = { buyPrice, sellPrice, pageName, sizes: mergedSizes, sizeColors };
+        const mergedSizeColors = { ...existingSizeColors, ...sizeColors };
+        const updateData = { buyPrice, sellPrice, pageName, sizes: mergedSizes, sizeColors: mergedSizeColors };
 
         if (manualBarcode && !existingId) updateData.barcode = manualBarcode;
         await update(ref(db, `jawaher_warehouse/${targetId}`), updateData);
@@ -2163,13 +2166,10 @@ updateRetSizes(itemIdx) {
         Object.values(this.purchases).forEach(p => {
             if (p.itemId === itemId) {
                 const qty = Object.values(p.sizes || {}).reduce((a, b) => a + b, 0);
-                // استخراج الألوان من المشتريات
-                const colors = [...new Set(Object.keys(p.sizes || {}).map(k => {
-                    const wItem = this.warehouse[itemId];
-                    if (wItem && wItem.variations && wItem.variations[k]) return wItem.variations[k].color || '';
-                    if (k.includes(' - ')) return k.split(' - ')[1];
-                    return wItem?.color || '';
-                }).filter(Boolean))];
+                // استخراج الألوان من sizeColors المخزنة في سجل الشراء
+                const colors = [...new Set(Object.values(p.sizeColors || {}).filter(Boolean))];
+                // إذا لم تكن sizeColors موجودة، ارجع للون العام المخزن
+                if (colors.length === 0 && p.color) colors.push(p.color);
                 movements.push({
                     timestamp: p.timestamp,
                     date: p.date,
