@@ -387,18 +387,16 @@ addItemRow() {
                 <div class="row g-2 align-items-end">
                 <div class="col-md-4">
     <label class="form-label-j">المنتج <span style="color:var(--ruby-light)">*</span></label>
-    <div style="position:relative">
-        <input type="text" 
-               class="form-control-j ir-item" 
-               data-idx="${idx}"
-               placeholder="ابحث عن منتج..." 
-               autocomplete="off"
-               value="${row.savedItem || ''}"
-               oninput="app.onItemSearch(${idx}, this.value)"
-               onfocus="app.onItemSearch(${idx}, this.value)"
-               onblur="setTimeout(()=>app.closeItemDropdown(${idx}),200)">
-        <div id="item_dd_${idx}" style="display:none;position:absolute;top:100%;right:0;left:0;z-index:9999;background:var(--surface);border:1px solid var(--gold);border-radius:8px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.3)"></div>
-    </div>
+    <input type="text" 
+           class="form-control-j ir-item" 
+           data-idx="${idx}"
+           id="ir_item_inp_${idx}"
+           placeholder="ابحث عن منتج..." 
+           autocomplete="off"
+           value="${row.savedItem || ''}"
+           oninput="app.onItemSearch(${idx}, this.value)"
+           onfocus="app.onItemSearch(${idx}, this.value)"
+           onblur="setTimeout(()=>app.closeItemDropdown(${idx}),200)">
 </div>                  
                     <div class="col-md-2">
                         <label class="form-label-j">اللون</label>
@@ -452,27 +450,34 @@ addItemRow() {
         });
     },
     onItemSearch(idx, val) {
-        const dd = document.getElementById(`item_dd_${idx}`);
-        if (!dd) return;
+        const inp = document.getElementById(`ir_item_inp_${idx}`);
+        if (!inp) return;
+        const existing = document.getElementById(`item_dd_${idx}`);
+        if (existing) existing.remove();
+
         const q = val.trim().toLowerCase();
         const items = Object.entries(this.warehouse);
-        const matches = q === ''
-            ? items
-            : items.filter(([, w]) => w.name.toLowerCase().includes(q));
-        if (matches.length === 0) { dd.style.display = 'none'; return; }
+        const matches = q === '' ? items : items.filter(([, w]) => w.name.toLowerCase().includes(q));
+        if (matches.length === 0) return;
+
+        const rect = inp.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const ddHeight = Math.min(matches.length * 50, 220);
+        const showAbove = spaceBelow < ddHeight + 20 && rect.top > ddHeight;
+
+        const dd = document.createElement('div');
+        dd.id = `item_dd_${idx}`;
+        dd.style.cssText = `position:fixed;z-index:99999;background:var(--surface);border:1.5px solid var(--gold);border-radius:10px;max-height:220px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.5);width:${rect.width}px;left:${rect.left}px;${showAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`}`;
         dd.innerHTML = matches.map(([id, w]) => {
             const colorDot = w.color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${this._colorHex(w.color)||'#ccc'};border:1px solid rgba(0,0,0,.2);vertical-align:middle;margin-left:5px;flex-shrink:0"></span>` : '';
             const total = Object.values(w.sizes || {}).reduce((a, b) => a + b, 0);
             const stockClr = total === 0 ? 'var(--ruby-light)' : total <= 3 ? '#f0a500' : 'var(--emerald)';
-            return `<div onclick="app.selectItem(${idx},'${w.name.replace(/'/g,"\'")}','${id}')"
-                style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);font-size:.85rem"
-                onmouseenter="this.style.background='rgba(201,168,76,.1)'" onmouseleave="this.style.background=''">
-                ${colorDot}
-                <span style="flex:1;font-weight:700">${w.name}</span>
-                <span style="font-size:.72rem;color:${stockClr};font-weight:700">${total} قطعة</span>
+            return `<div onclick="app.selectItem(${idx},'${w.name.replace(/'/g,"\'")}','${id}')" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);font-size:.88rem" onmouseenter="this.style.background='rgba(201,168,76,.12)'" onmouseleave="this.style.background=''">
+                ${colorDot}<span style="flex:1;font-weight:700">${w.name}</span>
+                <span style="font-size:.72rem;color:${stockClr};font-weight:700;background:${stockClr}18;padding:2px 7px;border-radius:10px">${total} قطعة</span>
             </div>`;
         }).join('');
-        dd.style.display = 'block';
+        document.body.appendChild(dd);
     },
 
     selectItem(idx, name, id) {
@@ -485,7 +490,7 @@ addItemRow() {
 
     closeItemDropdown(idx) {
         const dd = document.getElementById(`item_dd_${idx}`);
-        if (dd) dd.style.display = 'none';
+        if (dd) dd.remove();
     },
 
         loadRowColors(idx) {
