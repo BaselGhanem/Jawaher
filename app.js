@@ -35,13 +35,14 @@ window.app = {
 
     // ============ LOGIN ============
     login() {
+
         const u = document.getElementById('loginUser').value.trim().toLowerCase();
         const p = document.getElementById('loginPass').value;
         const ud = USERS[u];
         if (!ud || ud.pass !== p) { this.toast('بيانات الدخول غير صحيحة', 'error'); return; }
 
         this.user = u; this.role = ud.role; this.userName = ud.name;
-        document.getElementById('authScreen').classList.remove('visible');
+localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name: ud.name }));        document.getElementById('authScreen').classList.remove('visible');
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').textContent = ud.name;
         document.getElementById('userRole').textContent = ud.role;
@@ -60,6 +61,7 @@ window.app = {
 
     logout() {
         this.user = null;
+        localStorage.removeItem('jwSession');
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('authScreen').classList.add('visible');
         document.getElementById('loginPass').value = '';
@@ -214,7 +216,7 @@ window.app = {
     updateCountry() { this.checkDuplicate(); },
 
     checkDuplicate() {
-        const mob = document.getElementById('eCustMob')?.value.replace(/\s/g, '') || '';
+const mob = document.getElementById('eCustMob')?.value.replace(/\D/g, '') || '';
         const full = '07' + mob;
         const dups = Object.values(this.orders).filter(o => o.custMob === full);
         const warn = document.getElementById('eDupWarn');
@@ -503,7 +505,7 @@ const popup = document.createElement('div');
     // ============ SAVE ORDER ============
     async saveOrder() {
         const custName = document.getElementById('eCustName').value.trim();
-        const mob = document.getElementById('eCustMob').value.replace(/\s/g, '');
+       const mob = document.getElementById('eCustMob').value.replace(/\D/g, '');
         const gov = document.getElementById('eGovernorate').value;
         const addr = document.getElementById('eAddr').value.trim();
         const price = parseFloat(document.getElementById('ePrice').value);
@@ -514,7 +516,7 @@ const popup = document.createElement('div');
         const height = document.getElementById('eHeight').value.trim();
 
         if (!custName) { this.toast('يرجى إدخال اسم الزبون', 'error'); return; }
-        if (mob.length < 7) { this.toast('رقم الموبايل غير صحيح', 'error'); return; }
+       if (mob.length !== 8) { this.toast('رقم الموبايل يجب أن يكون 8 أرقام', 'error'); return; }
         if (!addr) { this.toast('يرجى إدخال العنوان', 'error'); return; }
         if (!pageName) { this.toast('اسم الصفحة إجباري', 'error'); return; }
       if (this.role === 'User') document.getElementById('eEntryUser').value = this.userName;
@@ -1334,7 +1336,7 @@ async updateOrder() {
                                 const vColor = (v && v.color) ? v.color : (w.color || '');
                                 return `<div style="background:rgba(0,0,0,.02);border:1px solid var(--border);padding:6px;border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;width:100%">
                                     <div>
-                                        <span style="font-weight:700;font-size:.85rem">${s} ${vColor ? ' - ' + vColor : ''}</span>: 
+                                        <span style="font-weight:700;font-size:.85rem">${s}</span>${vColor ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${this._colorHex(vColor)||'#ccc'};border:1px solid rgba(0,0,0,.15);vertical-align:middle;margin:0 4px"></span><span style="font-size:.78rem;color:var(--ink-mid)">${vColor}</span>` : ''}:
                                         <strong style="${q === 0 ? 'color:var(--ruby)' : ''}">${q}</strong> قطعة
                                     </div>
                                     <div style="font-size:.7rem;font-family:monospace;background:var(--paper);padding:4px 6px;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="app.showBarcode('${vCode}','${w.name} - ${s}')" title="طباعة الباركود">
@@ -1542,8 +1544,8 @@ async updateOrder() {
                 <div style="display:flex;gap:6px;align-items:center;background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:10px;padding:.5rem .65rem">
                     <input type="text"   class="form-control-j" style="width:58px;text-align:center;font-weight:700;flex-shrink:0" placeholder="مقاس" value="${s}">
                     <input type="number" class="form-control-j" placeholder="كمية" min="0" value="0" style="width:65px;flex-shrink:0">
-                    <input type="text"   id="psc_${i}" class="form-control-j" placeholder="اللون..." readonly
-                        style="flex:1;cursor:pointer;font-size:.82rem;border-right:4px solid ${colorHex || 'var(--border)'}"
+                    <input type="text"   id="psc_${i}" class="form-control-j" placeholder="اللون *" readonly
+                        style="flex:1;cursor:pointer;font-size:.82rem;border-right:4px solid ${colorHex || 'var(--ruby-light)'}"
                         value="${colorVal}" data-hex="${colorHex}" onclick="app.openColorPicker(${i},'psc')">
                     <button id="psc_btn_${i}" class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker(${i},'psc')" style="flex-shrink:0;padding:.3rem .5rem">
                         <i class="fas fa-palette" style="color:var(--gold)"></i>
@@ -1584,7 +1586,7 @@ async updateOrder() {
         const manualBarcode = document.getElementById('pBarcode').value.trim().toUpperCase();
         const buyPrice = parseFloat(document.getElementById('pBuyPrice').value) || 0;
         const sellPrice = parseFloat(document.getElementById('pSellPrice').value) || 0;
-        const color = document.getElementById('pColor').value.trim();
+        
         const pageName = document.getElementById('pPageName').value.trim();
         const invoiceDate = document.getElementById('pInvoiceDate').value || new Date().toLocaleDateString('en-GB');
         const notes = document.getElementById('pNotes').value.trim();
@@ -1593,11 +1595,16 @@ async updateOrder() {
 
         const sizeRows = document.getElementById('pSizesGrid').querySelectorAll('.size-row-item');
         const sizes = {}; const sizeColors = {};
+        let colorMissing = false;
         sizeRows.forEach(row => {
             const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
             const sz = inputs[0]?.value.trim(); const qty = parseInt(inputs[1]?.value) || 0; const sc = inputs[2]?.value.trim() || '';
-            if (sz && qty > 0) { sizes[sz] = qty; if (sc) sizeColors[sz] = sc; }
+            if (sz && qty > 0) {
+                if (!sc) { colorMissing = true; return; }
+                sizes[sz] = qty; sizeColors[sz] = sc;
+            }
         });
+        if (colorMissing) { this.toast('اللون إجباري لكل مقاس', 'error'); return; }
         if (Object.keys(sizes).length === 0) { this.toast('يرجى إدخال مقاس وكمية', 'error'); return; }
 
         let targetId = existingId;
@@ -1976,17 +1983,34 @@ openWhatsApp(id) {
 
 // ── DOM Ready ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('jwSession');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            const ud = USERS[s.user];
+            if (ud) {
+                app.user = s.user; app.role = s.role; app.userName = s.name;
+                document.getElementById('authScreen').classList.remove('visible');
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('userName').textContent = s.name;
+                document.getElementById('userRole').textContent = s.role;
+                document.getElementById('userAvatar').textContent = s.name[0];
+                document.getElementById('eDate').value = new Date().toLocaleDateString('en-GB');
+                document.getElementById('dashDate').textContent = new Date().toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                app.applyDark();
+                app.applyPermissions();
+                app.startListeners();
+                app.updateCountry();
+            }
+        } catch(e) { localStorage.removeItem('jwSession'); }
+    }
     app.applyDark();
     app.initKeys();
 
     document.getElementById('loginPass')?.addEventListener('keydown', e => { if (e.key === 'Enter') app.login(); });
 
     document.getElementById('eCustMob')?.addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.startsWith('07')) v = v.slice(2);
-        if (v.length > 1) v = v.slice(0, 1) + ' ' + v.slice(1);
-        if (v.length > 5) v = v.slice(0, 5) + ' ' + v.slice(5);
-        e.target.value = v;
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
         app.checkDuplicate();
     });
 
