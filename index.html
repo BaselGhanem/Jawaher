@@ -792,7 +792,69 @@
             </div>
 
         </div><!-- /main-content -->
+<div id="page-movement" class="page">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1 class="page-title">حركة الصنف</h1>
+            <p class="page-subtitle" id="mvItemNameHeader">يرجى اختيار صنف من المستودع</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn-j btn-emerald btn-sm-j" onclick="app.exportMovementExcel()">
+                <i class="fas fa-file-excel"></i> تصدير Excel
+            </button>
+            <button class="btn-j btn-ghost btn-sm-j" onclick="app.gotoPage('warehouse')">
+                <i class="fas fa-arrow-right"></i> العودة للمستودع
+            </button>
+        </div>
+    </div>
 
+    <div class="card-j p-3 mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label-j">بحث في التفاصيل</label>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="mvSearch" placeholder="بحث..." oninput="app.renderMovementTable()">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">نوع الحركة</label>
+                <select id="mvType" class="form-control-j select-j" onchange="app.renderMovementTable()">
+                    <option value="">الكل</option>
+                    <option value="مشتريات">مشتريات</option>
+                    <option value="مبيعات">مبيعات</option>
+                    <option value="مرتجع">مرتجع</option>
+                    <option value="تعديل">تعديل يدوي</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">من تاريخ</label>
+                <input type="date" id="mvFrom" class="form-control-j" onchange="app.renderMovementTable()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-j">إلى تاريخ</label>
+                <input type="date" id="mvTo" class="form-control-j" onchange="app.renderMovementTable()">
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrap" style="max-height:600px; overflow-y:auto;">
+        <table class="table-j" id="movementTable">
+            <thead>
+                <tr>
+                    <th onclick="app.sortMovement('timestamp')" style="cursor:pointer">التاريخ <i class="fas fa-sort"></i></th>
+                    <th>النوع</th>
+                    <th>داخل (+)</th>
+                    <th>خارج (-)</th>
+                    <th>الرصيد</th>
+                    <th>التفاصيل</th>
+                    <th>بواسطة</th>
+                </tr>
+            </thead>
+            <tbody id="movementTableBody"></tbody>
+        </table>
+    </div>
+</div>
         <!-- ── Bottom Nav (Mobile) ──────────────────────────── -->
         <div class="bottom-nav" id="bottomNav">
             <button class="nav-btn active"    data-page="dashboard"   onclick="app.gotoPage('dashboard')"  ><i class="fas fa-chart-pie"></i>    <span>الرئيسية</span></button>

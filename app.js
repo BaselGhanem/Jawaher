@@ -109,6 +109,7 @@ window.app = {
         if (id === 'returns') this.renderReturnsList();
         if (id === 'definitions') this.renderDefinitions();
         if (id === 'logs') this.renderLogs();
+        if (id === 'movement')    this.renderMovementTable(); // أضف هذا السطر
         this.closeAllDropdowns();
     },
 
@@ -1210,20 +1211,26 @@ window.app = {
         this._renderItemCards(items);
     },
 
-    _renderItemCards(items) {
+  _renderItemCards(items) {
         const grid = document.getElementById('warehouseGrid'); if (!grid) return;
+        
+        // 1. حالة المستودع فارغ (تم تصحيحها وحذف الزر غير المنطقي هنا)
         if (items.length === 0) {
             grid.innerHTML = `<div class="col-12" style="text-align:center;padding:3rem;color:var(--ink-mid)">
                 <i class="fas fa-warehouse fa-3x" style="opacity:.2;display:block;margin-bottom:1rem"></i>المستودع فارغ
-                <br><button class="btn-j btn-gold btn-sm-j mt-3" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> إضافة منتج جديد</button></div>`;
+                <br><button class="btn-j btn-gold btn-sm-j mt-3" onclick="app.openNewItemModal()"><i class="fas fa-plus"></i> إضافة منتج جديد</button>
+            </div>`;
             return;
         }
+
+        // 2. رسم البطاقات
         grid.innerHTML = items.map(([id, w]) => {
             const sizes = Object.entries(w.sizes || {});
             const total = sizes.reduce((s, [, q]) => s + q, 0);
             const fillCls = total > 10 ? 'qty-high' : total > 3 ? 'qty-med' : 'qty-low';
             const mainColorHex = this._colorHex(w.color);
             const colorBorder = mainColorHex || 'var(--gold)';
+            
             return `<div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <div class="item-card" style="border-top:4px solid ${colorBorder}">
                     <div class="item-card-header">
@@ -1245,25 +1252,23 @@ window.app = {
                         ${w.buyPrice ? `<div style="font-size:.75rem;color:var(--ink-mid);margin-bottom:.5rem">شراء: <strong>${w.buyPrice} JOD</strong>${w.sellPrice ? ' | بيع: <strong>' + w.sellPrice + ' JOD</strong>' : ''}</div>` : ''}
                         <div class="item-sizes mb-3">
                             ${sizes.length === 0 ? `<span style="color:var(--ink-mid);font-size:.8rem">لا توجد مقاسات</span>` : sizes.map(([s, q]) => {
-                const v = w.variations ? w.variations[s] : null;
-                const vCode = v && v.barcode ? v.barcode : (w.barcode || id.slice(-8)).toUpperCase();
-                const vHex = v && v.hex ? v.hex : null;
-                // جلب اللون سواء من التنويعات أو من لون المنتج الأساسي
-                const vColor = (v && v.color) ? v.color : (w.color || '');
-                return `<div style="background:rgba(0,0,0,.02);border:1px solid var(--border);padding:6px;border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;width:100%">
-    <div>
-        <span style="font-weight:700;font-size:.85rem">${s} ${vColor ? ' - ' + vColor : ''}</span>: 
-        <strong style="${q === 0 ? 'color:var(--ruby)' : ''}">${q}</strong> قطعة
-    </div>
+                                const v = w.variations ? w.variations[s] : null;
+                                const vCode = v && v.barcode ? v.barcode : (w.barcode || id.slice(-8)).toUpperCase();
+                                const vColor = (v && v.color) ? v.color : (w.color || '');
+                                return `<div style="background:rgba(0,0,0,.02);border:1px solid var(--border);padding:6px;border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;width:100%">
+                                    <div>
+                                        <span style="font-weight:700;font-size:.85rem">${s} ${vColor ? ' - ' + vColor : ''}</span>: 
+                                        <strong style="${q === 0 ? 'color:var(--ruby)' : ''}">${q}</strong> قطعة
+                                    </div>
                                     <div style="font-size:.7rem;font-family:monospace;background:var(--paper);padding:4px 6px;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="app.showBarcode('${vCode}','${w.name} - ${s}')" title="طباعة الباركود">
                                         <i class="fas fa-barcode" style="color:var(--gold)"></i> ${vCode}
                                     </div>
                                 </div>`;
-            }).join('')}
+                            }).join('')}
                         </div>
                         <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                             <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
-                            <button class="btn-j btn-sapphire btn-xs-j" onclick="app.openMovementModal('${id}')" title="حركة الصنف"><i class="fas fa-history"></i></button>
+                            <button class="btn-j btn-sapphire btn-xs-j" onclick="app.viewMovement('${id}')" title="حركة الصنف"><i class="fas fa-history"></i></button>
                             <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -1695,9 +1700,10 @@ window.app = {
     },
 
     // ============ HELPERS ============
-    adjustQty(id, delta) {
+   adjustQty(id, delta) {
         const el = document.getElementById(id); if (!el) return;
-        el.value = Math.max(1, (parseInt(el.value) || 1) + delta);
+        // شلنا Math.max عشان نسمح بالنزول تحت الصفر (للسالب)
+        el.value = (parseInt(el.value) || 0) + delta;
     },
     openModal(id) { document.getElementById(id)?.classList.add('open'); },
     closeModal(id) { document.getElementById(id)?.classList.remove('open'); },
@@ -1729,16 +1735,18 @@ window.app = {
     mvSortKey: 'timestamp',
     mvSortDir: 1,
 
-    openMovementModal(itemId) {
+    viewMovement(itemId) {
         this.currentMvItemId = itemId;
         const item = this.warehouse[itemId];
         if (!item) return;
         
-        document.getElementById('mvItemName').textContent = item.name;
-        this.renderMovementTable();
-        this.openModal('movementModal');
+        // تحديث العنوان في الصفحة الجديدة
+        const header = document.getElementById('mvItemNameHeader');
+        if (header) header.innerHTML = `<i class="fas fa-box" style="color:var(--gold)"></i> حركة الصنف: <span style="color:var(--gold)">${item.name}</span>`;
+        
+        // الانتقال للصفحة
+        this.gotoPage('movement');
     },
-
     renderMovementTable() {
         const itemId = this.currentMvItemId;
         const movements = [];
