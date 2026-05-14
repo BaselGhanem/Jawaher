@@ -497,125 +497,110 @@
             </div>
 
             <!-- ════ PURCHASE ════ -->
-            <div id="page-purchase" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">تسجيل مشتريات</h1>
-                    <p class="page-subtitle">إضافة بضاعة جديدة للمستودع — يدعم ماسح الباركود</p>
+  <!-- ════ PURCHASE ════ -->
+<div id="page-purchase" class="page">
+    <div class="page-header">
+        <h1 class="page-title">تسجيل مشتريات</h1>
+        <p class="page-subtitle">إضافة بضاعة جديدة للمستودع — يدعم ماسح الباركود</p>
+    </div>
+    <!-- Barcode Scanner -->
+    <div class="card-j p-3 mb-4" style="border:2px dashed var(--gold);background:rgba(201,168,76,.04)">
+        <div style="font-weight:800;margin-bottom:.75rem;font-size:.9rem;color:var(--gold)">
+            <i class="fas fa-barcode me-2"></i> مسح باركود منتج موجود (اختياري)
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+            <div class="search-bar" style="flex:1;min-width:200px;border-color:rgba(201,168,76,.4)">
+                <i class="fas fa-barcode" style="color:var(--gold)"></i>
+                <input type="text" id="pBarcodeScanner"
+                    placeholder="امسح الباركود أو اكتبه واضغط Enter..." dir="ltr" autocomplete="off"
+                    style="font-family:monospace;font-size:1rem;letter-spacing:2px"
+                    onkeydown="if(event.key==='Enter') app.scanPurchaseBarcode()">
+            </div>
+            <button class="btn-j btn-gold btn-sm-j" onclick="app.scanPurchaseBarcode()"><i class="fas fa-search"></i> بحث</button>
+            <button class="btn-j btn-ghost btn-sm-j" onclick="app.clearPurchaseBarcode()"><i class="fas fa-times"></i> مسح</button>
+        </div>
+        <div id="pBarcodeResult" style="display:none;margin-top:.75rem;"></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card-j p-4">
+                <div style="font-weight:800;margin-bottom:1.25rem;font-size:1.1rem;color:var(--ink)">
+                    <i class="fas fa-shopping-cart" style="color:var(--gold)"></i> تفاصيل عملية الشراء
                 </div>
-                <!-- Barcode Scanner -->
-                <div class="card-j p-3 mb-4" style="border:2px dashed var(--gold);background:rgba(201,168,76,.04)">
-                    <div style="font-weight:800;margin-bottom:.75rem;font-size:.9rem;color:var(--gold)">
-                        <i class="fas fa-barcode me-2"></i> مسح باركود منتج موجود (اختياري)
-                    </div>
-                    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
-                        <div class="search-bar" style="flex:1;min-width:200px;border-color:rgba(201,168,76,.4)">
-                            <i class="fas fa-barcode" style="color:var(--gold)"></i>
-                            <input type="text" id="pBarcodeScanner"
-                                placeholder="امسح الباركود أو اكتبه واضغط Enter..." dir="ltr" autocomplete="off"
-                                style="font-family:monospace;font-size:1rem;letter-spacing:2px"
-                                onkeydown="if(event.key==='Enter') app.scanPurchaseBarcode()">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label-j">اختر منتجاً موجوداً</label>
+                        <div class="select-wrapper">
+                            <select id="pItem" class="form-control-j select-j" onchange="app.loadPurchaseItem()">
+                                <option value="">— اختر منتجاً —</option>
+                            </select>
                         </div>
-                        <button class="btn-j btn-gold btn-sm-j" onclick="app.scanPurchaseBarcode()"><i class="fas fa-search"></i> بحث</button>
-                        <button class="btn-j btn-ghost btn-sm-j" onclick="app.clearPurchaseBarcode()"><i class="fas fa-times"></i> مسح</button>
                     </div>
-                    <div id="pBarcodeResult" style="display:none;margin-top:.75rem;"></div>
+                    <div style="display:flex;align-items:center;justify-content:center;padding-top:1.5rem;font-weight:800;color:var(--ink-mid)">أو</div>
+                    <div class="col-md-5">
+                        <label class="form-label-j">اسم منتج جديد <span style="color:var(--ruby-light)">*</span></label>
+                        <input type="text" id="pNewItem" class="form-control-j" placeholder="اسم المنتج الجديد" list="productsList">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-j">باركود المنتج</label>
+                        <input type="text" id="pBarcode" class="form-control-j" placeholder="JW12345 أو اتركه فارغاً" dir="ltr" style="font-family:monospace;letter-spacing:1px">
+                        <div style="font-size:.72rem;color:var(--ink-mid);margin-top:3px">سيُولَّد تلقائياً إن تُرك فارغاً</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-j">سعر الشراء (JOD)</label>
+                        <input type="number" id="pBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-j">سعر البيع المقترح</label>
+                        <input type="number" id="pSellPrice" class="form-control-j" placeholder="0.00" step="0.5">
+                    </div>
+                    <!-- تم حذف حقل "لون المنتج" المنفصل -->
+                    <div class="col-md-6">
+                        <label class="form-label-j">اسم الصفحة / المصدر</label>
+                        <div class="select-wrapper">
+                            <select id="pPageName" class="form-control-j select-j">
+                                <option value="">اختر الصفحة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-j">تاريخ الفاتورة</label>
+                        <input type="date" id="pInvoiceDate" class="form-control-j">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-j">المقاسات والكميات المُشتراة <span style="color:var(--ruby-light)">*</span></label>
+                        <div style="background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:12px;padding:1rem">
+                            <div id="pSizesGrid" class="row g-2"></div>
+                            <button class="btn-j btn-ghost btn-sm-j mt-2" onclick="app.addSizeRow()">
+                                <i class="fas fa-plus"></i> إضافة مقاس
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-j">ملاحظات</label>
+                        <input type="text" id="pNotes" class="form-control-j" placeholder="أي ملاحظات إضافية...">
+                    </div>
                 </div>
-                <div class="row g-4">
-                    <div class="col-lg-7">
-                        <div class="card-j p-4">
-                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1.1rem;color:var(--ink)">
-                                <i class="fas fa-shopping-cart" style="color:var(--gold)"></i> تفاصيل عملية الشراء
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-5">
-                                    <label class="form-label-j">اختر منتجاً موجوداً</label>
-                                    <div class="select-wrapper">
-                                        <select id="pItem" class="form-control-j select-j" onchange="app.loadPurchaseItem()">
-                                            <option value="">— اختر منتجاً —</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style="display:flex;align-items:center;justify-content:center;padding-top:1.5rem;font-weight:800;color:var(--ink-mid)">أو</div>
-                                <div class="col-md-5">
-                                    <label class="form-label-j">اسم منتج جديد <span style="color:var(--ruby-light)">*</span></label>
-                                    <input type="text" id="pNewItem" class="form-control-j" placeholder="اسم المنتج الجديد" list="productsList">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-j">باركود المنتج</label>
-                                    <input type="text" id="pBarcode" class="form-control-j" placeholder="JW12345 أو اتركه فارغاً" dir="ltr" style="font-family:monospace;letter-spacing:1px">
-                                    <div style="font-size:.72rem;color:var(--ink-mid);margin-top:3px">سيُولَّد تلقائياً إن تُرك فارغاً</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-j">سعر الشراء (JOD)</label>
-                                    <input type="number" id="pBuyPrice" class="form-control-j" placeholder="0.00" step="0.5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-j">سعر البيع المقترح</label>
-                                    <input type="number" id="pSellPrice" class="form-control-j" placeholder="0.00" step="0.5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label-j">لون المنتج</label>
-                                    <div style="display:flex;gap:6px;align-items:center">
-                                        <input type="text" id="pColor" class="form-control-j" placeholder="اختر اللون..." readonly
-                                            style="cursor:pointer;font-size:.88rem;border-right:4px solid var(--border)"
-                                            onclick="app.openColorPicker('main','p_color')">
-                                        <button id="p_color_btn_main" class="btn-j btn-ghost btn-sm-j"
-                                            onclick="app.openColorPicker('main','p_color')" style="flex-shrink:0">
-                                            <i class="fas fa-palette" style="color:var(--gold)"></i>
-                                        </button>
-                                        <button class="btn-j btn-ghost btn-xs-j"
-                                            onclick="document.getElementById('pColor').value='';document.getElementById('pColor').style.borderRight='4px solid var(--border)'" title="مسح">
-                                            <i class="fas fa-times" style="font-size:.7rem"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-j">اسم الصفحة / المصدر</label>
-                                    <div class="select-wrapper">
-                                        <select id="pPageName" class="form-control-j select-j">
-                                            <option value="">اختر الصفحة</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-j">تاريخ الفاتورة</label>
-                                    <input type="date" id="pInvoiceDate" class="form-control-j">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label-j">المقاسات والكميات المُشتراة <span style="color:var(--ruby-light)">*</span></label>
-                                    <div style="background:rgba(201,168,76,.03);border:1px solid var(--border);border-radius:12px;padding:1rem">
-                                        <div id="pSizesGrid" class="row g-2"></div>
-                                        <button class="btn-j btn-ghost btn-sm-j mt-2" onclick="app.addSizeRow()">
-                                            <i class="fas fa-plus"></i> إضافة مقاس
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label-j">ملاحظات</label>
-                                    <input type="text" id="pNotes" class="form-control-j" placeholder="أي ملاحظات إضافية...">
-                                </div>
-                            </div>
-                            <div class="mt-4 d-flex gap-3">
-                                <button class="btn-j btn-gold flex-fill" onclick="app.savePurchase()">
-                                    <i class="fas fa-save"></i> تسجيل الشراء وتحديث المستودع
-                                </button>
-                                <button class="btn-j btn-ghost" onclick="app.resetPurchase()" title="مسح الحقول">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-                        <div class="card-j p-4 h-100">
-                            <div style="font-weight:800;margin-bottom:1.25rem;font-size:1rem;color:var(--ink)">
-                                <i class="fas fa-history" style="color:var(--gold)"></i> آخر عمليات الشراء
-                            </div>
-                            <div id="purchaseHistory" style="max-height:500px;overflow-y:auto;"></div>
-                        </div>
-                    </div>
+                <div class="mt-4 d-flex gap-3">
+                    <button class="btn-j btn-gold flex-fill" onclick="app.savePurchase()">
+                        <i class="fas fa-save"></i> تسجيل الشراء وتحديث المستودع
+                    </button>
+                    <button class="btn-j btn-ghost" onclick="app.resetPurchase()" title="مسح الحقول">
+                        <i class="fas fa-undo"></i>
+                    </button>
                 </div>
             </div>
-
+        </div>
+        <div class="col-lg-5">
+            <div class="card-j p-4 h-100">
+                <div style="font-weight:800;margin-bottom:1.25rem;font-size:1rem;color:var(--ink)">
+                    <i class="fas fa-history" style="color:var(--gold)"></i> آخر عمليات الشراء
+                </div>
+                <div id="purchaseHistory" style="max-height:500px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
             <!-- ════ RETURNS ════ -->
             <div id="page-returns" class="page">
                 <div class="page-header">
