@@ -2081,7 +2081,8 @@ updateRetSizes(itemIdx) {
             qtyInput.max = selectedItem.qty || 1;
             qtyInput.value = 1;
         }
-    }
+    },
+
     clearReturnSelection() {
         this.retSelectedOrderId = null;
         ['retOrderPreview', 'retForm', 'retSearchResults'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
