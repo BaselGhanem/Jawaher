@@ -1746,6 +1746,8 @@ window.app = {
         
         // الانتقال للصفحة
         this.gotoPage('movement');
+                this.renderMovementTable();
+
     },
     renderMovementTable() {
         const itemId = this.currentMvItemId;
