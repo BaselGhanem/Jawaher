@@ -111,7 +111,8 @@ localStorage.setItem('jwSession', JSON.stringify({ user: u, role: ud.role, name:
         if (id === 'returns') this.renderReturnsList();
         if (id === 'definitions') this.renderDefinitions();
         if (id === 'logs') this.renderLogs();
-        if (id === 'movement')    this.renderMovementTable(); // أضف هذا السطر
+        if (id === 'movement')    this.renderMovementTable();
+        if (id === 'customers')   { if (this.role === 'Admin') this.renderCustomers(); }
         this.closeAllDropdowns();
     },
 
@@ -147,6 +148,7 @@ onValue(purchasesRef, snap => { this.purchases = snap.val() || {}; this.updateCu
     if (id === 'definitions') this.renderDefinitions();
     if (id === 'logs') this.renderLogs();
     if (id === 'movement') this.renderMovementTable();
+    if (id === 'customers' && this.role === 'Admin') this.renderCustomers();
     },
 
     // ============ DEFINITIONS ============
@@ -1626,6 +1628,7 @@ async deductStock(orderId) {
                         </div>
                         <div style="display:flex;gap:.4rem;flex-wrap:wrap">
                             <button class="btn-j btn-gold btn-xs-j" style="flex:1" onclick="app.openAddStockModal('${id}')"><i class="fas fa-plus"></i> إضافة كمية</button>
+                            <button class="btn-j btn-emerald btn-xs-j" style="flex:1" onclick="app.openInventoryCorrection('${id}')" title="تصحيح جرد"><i class="fas fa-clipboard-check"></i> جرد</button>
                             <button class="btn-j btn-sapphire btn-xs-j" onclick="app.viewMovement('${id}')" title="حركة الصنف"><i class="fas fa-history"></i></button>
                             <button class="btn-j btn-ruby btn-xs-j" onclick="app.deleteItem('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
@@ -2228,6 +2231,470 @@ updateRetSizes(itemIdx) {
         setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-20px)'; setTimeout(() => t.remove(), 300); }, 3000);
     },
 
+    // ============================================================
+    // ██████╗ ██████╗ ███╗   ███╗    ███╗   ███╗ ██████╗ ██████╗ ██╗   ██╗██╗     ███████╗
+    // ██╔══██╗██╔══██╗████╗ ████║    ████╗ ████║██╔═══██╗██╔══██╗██║   ██║██║     ██╔════╝
+    // ██║  ██║██████╔╝██╔████╔██║    ██╔████╔██║██║   ██║██║  ██║██║   ██║██║     █████╗  
+    // ██║  ██║██╔══██╗██║╚██╔╝██║    ██║╚██╔╝██║██║   ██║██║  ██║██║   ██║██║     ██╔══╝  
+    // ██████╔╝██║  ██║██║ ╚═╝ ██║    ██║ ╚═╝ ██║╚██████╔╝██████╔╝╚██████╔╝███████╗███████╗
+    // ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝     ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
+    // ============ CRM MODULE — CUSTOMERS ============
+
+    // ── Build customer data structure from orders ────────────────
+    _buildCrmData() {
+        const customers = {};
+        Object.values(this.orders).forEach(o => {
+            const phone = o.custMob || '';
+            if (!phone) return;
+            if (!customers[phone]) {
+                customers[phone] = {
+                    name: o.custName || '',
+                    phone,
+                    governorate: o.governorate || '',
+                    address: o.custAddr || '',
+                    orders: 0,
+                    completed: 0,
+                    revenue: 0,
+                    lastOrderTs: 0,
+                    lastOrderDate: ''
+                };
+            }
+            const c = customers[phone];
+            // update name/address if newer
+            if (o.timestamp > c.lastOrderTs) {
+                c.name = o.custName || c.name;
+                c.governorate = o.governorate || c.governorate;
+                c.address = o.custAddr || c.address;
+                c.lastOrderTs = o.timestamp || 0;
+                c.lastOrderDate = o.date || '';
+            }
+            c.orders++;
+            if (o.status === 'delivered' || o.status === 'done') {
+                c.completed++;
+                c.revenue += parseFloat(o.price || 0);
+            }
+        });
+        return Object.values(customers);
+    },
+
+    // ── Render KPI cards for CRM ────────────────────────────────
+    _renderCrmKpis(data) {
+        const totalCustomers = data.length;
+        const totalRevenue = data.reduce((s, c) => s + c.revenue, 0);
+        const avgOrder = data.reduce((s, c) => s + (c.completed > 0 ? c.revenue / c.completed : 0), 0) / (totalCustomers || 1);
+        const vipCount = data.filter(c => c.orders >= 5).length;
+
+        const kpis = [
+            { label: 'إجمالي العملاء', value: totalCustomers, icon: 'fa-users', cls: 'kpi-gold' },
+            { label: 'إجمالي الإيرادات', value: totalRevenue.toFixed(2) + ' JOD', icon: 'fa-money-bill-wave', cls: 'kpi-emerald', small: true },
+            { label: 'متوسط قيمة الطلب', value: avgOrder.toFixed(2) + ' JOD', icon: 'fa-chart-line', cls: 'kpi-sapphire', small: true },
+            { label: 'عملاء VIP', value: vipCount, icon: 'fa-crown', cls: 'kpi-amethyst' },
+        ];
+        const grid = document.getElementById('crmKpiGrid');
+        if (grid) grid.innerHTML = kpis.map(k => `
+            <div class="kpi-card ${k.cls}">
+                <i class="fas ${k.icon} kpi-icon"></i>
+                <div class="kpi-label">${k.label}</div>
+                <div class="kpi-value" style="${k.small ? 'font-size:1.2rem' : ''}">${k.value}</div>
+            </div>`).join('');
+    },
+
+    // ── Populate governorate filter ──────────────────────────────
+    _populateCrmGovFilter(data) {
+        const sel = document.getElementById('crmFilterGov');
+        if (!sel) return;
+        const cur = sel.value;
+        const govs = [...new Set(data.map(c => c.governorate).filter(Boolean))].sort();
+        sel.innerHTML = '<option value="">كل المحافظات</option>' + govs.map(g => `<option value="${g}" ${cur === g ? 'selected' : ''}>${g}</option>`).join('');
+    },
+
+    // ── Main render function ─────────────────────────────────────
+    renderCustomers() {
+        const rawData = this._buildCrmData();
+        this._renderCrmKpis(rawData);
+        this._populateCrmGovFilter(rawData);
+
+        const q = (document.getElementById('crmSearch')?.value || '').toLowerCase().trim();
+        const sortBy = document.getElementById('crmSortBy')?.value || 'revenue';
+        const filterGov = document.getElementById('crmFilterGov')?.value || '';
+        const filterStatus = document.getElementById('crmFilterStatus')?.value || '';
+
+        let data = rawData.filter(c => {
+            if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(q)) return false;
+            if (filterGov && c.governorate !== filterGov) return false;
+            if (filterStatus === 'vip' && c.orders < 5) return false;
+            if (filterStatus === 'regular' && (c.orders < 2 || c.orders > 4)) return false;
+            if (filterStatus === 'new' && c.orders !== 1) return false;
+            return true;
+        });
+
+        // Sort
+        data.sort((a, b) => {
+            if (sortBy === 'revenue') return b.revenue - a.revenue;
+            if (sortBy === 'orders') return b.orders - a.orders;
+            if (sortBy === 'name') return a.name.localeCompare(b.name, 'ar');
+            if (sortBy === 'lastOrder') return b.lastOrderTs - a.lastOrderTs;
+            return 0;
+        });
+
+        document.getElementById('crmResultCount').textContent = `${data.length} عميل`;
+
+        const tbody = document.getElementById('crmTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:2.5rem;color:var(--ink-mid)">
+                <i class="fas fa-users-slash" style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.3"></i>
+                لا يوجد عملاء مطابقون
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map((c, i) => {
+            const avgOrder = c.completed > 0 ? (c.revenue / c.completed).toFixed(2) : '—';
+            const tier = c.orders >= 5 ? { label: 'VIP', cls: 'badge-delivered', icon: 'fa-crown' }
+                       : c.orders >= 2 ? { label: 'منتظم', cls: 'badge-process', icon: 'fa-star-half-alt' }
+                       : { label: 'جديد', cls: 'badge-new', icon: 'fa-seedling' };
+            const completionRate = c.orders > 0 ? Math.round(c.completed / c.orders * 100) : 0;
+            const waLink = this._buildWhatsAppLink(c.phone);
+            return `<tr style="transition:background .15s" onmouseenter="this.style.background='rgba(201,168,76,.04)'" onmouseleave="this.style.background=''">
+                <td style="color:var(--ink-mid);font-size:.78rem;font-weight:700">${i + 1}</td>
+                <td>
+                    <div style="font-weight:800;font-size:.9rem">${c.name}</div>
+                    <div style="font-size:.72rem;color:var(--ink-mid)">${completionRate}% مكتملة</div>
+                </td>
+                <td style="font-family:monospace;direction:ltr;text-align:right;font-size:.85rem;font-weight:700">${c.phone}</td>
+                <td style="font-size:.82rem">${c.governorate || '—'}</td>
+                <td style="font-size:.78rem;color:var(--ink-mid);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.address}">${c.address || '—'}</td>
+                <td style="text-align:center">
+                    <span style="font-weight:800;font-size:.95rem;color:var(--gold)">${c.orders}</span>
+                </td>
+                <td style="text-align:center">
+                    <span style="font-weight:700;color:var(--emerald)">${c.completed}</span>
+                </td>
+                <td style="text-align:center">
+                    <span style="font-weight:800;color:var(--emerald);font-size:.92rem">${c.revenue > 0 ? c.revenue.toFixed(2) + ' JOD' : '—'}</span>
+                </td>
+                <td style="text-align:center;font-size:.82rem;color:var(--ink-mid)">${avgOrder !== '—' ? avgOrder + ' JOD' : '—'}</td>
+                <td style="text-align:center;font-size:.75rem;color:var(--ink-mid)">${c.lastOrderDate || '—'}</td>
+                <td style="text-align:center">
+                    <span class="badge-j ${tier.cls}" style="font-size:.7rem;gap:3px">
+                        <i class="fas ${tier.icon}" style="font-size:.65rem"></i> ${tier.label}
+                    </span>
+                </td>
+                <td style="text-align:center">
+                    <a href="${waLink}" target="_blank" rel="noopener"
+                        style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#25D366;color:#fff;border-radius:20px;font-size:.75rem;font-weight:700;text-decoration:none;transition:opacity .2s"
+                        onmouseenter="this.style.opacity='.8'" onmouseleave="this.style.opacity='1'"
+                        title="فتح واتساب">
+                        <i class="fab fa-whatsapp" style="font-size:.9rem"></i> واتساب
+                    </a>
+                </td>
+            </tr>`;
+        }).join('');
+    },
+
+    // ── WhatsApp link builder ────────────────────────────────────
+    _buildWhatsAppLink(phone) {
+        // Normalize: remove leading 0, add Jordan code 962
+        let p = phone.replace(/\D/g, '');
+        if (p.startsWith('0')) p = p.slice(1);
+        if (!p.startsWith('962')) p = '962' + p;
+        const msg = encodeURIComponent('مرحباً، لدينا بضاعة جديدة وصلت حديثاً في المستودع، يسعدنا خدمتك في أي وقت. هل ترغب بالطلب أو الاستفسار؟');
+        return `https://wa.me/${p}?text=${msg}`;
+    },
+
+    // ── Excel export ─────────────────────────────────────────────
+    exportCustomersExcel() {
+        if (this.role !== 'Admin') { this.toast('غير مسموح', 'error'); return; }
+        const data = this._buildCrmData();
+        data.sort((a, b) => b.revenue - a.revenue);
+
+        const rows = [['#', 'اسم العميل', 'رقم الموبايل', 'المحافظة', 'العنوان', 'إجمالي الطلبات', 'الطلبات المكتملة', 'إجمالي الإيرادات (JOD)', 'متوسط الطلب (JOD)', 'آخر طلب', 'التصنيف']];
+        data.forEach((c, i) => {
+            const tier = c.orders >= 5 ? 'VIP' : c.orders >= 2 ? 'منتظم' : 'جديد';
+            const avg = c.completed > 0 ? (c.revenue / c.completed).toFixed(2) : 0;
+            rows.push([i + 1, c.name, c.phone, c.governorate, c.address, c.orders, c.completed, c.revenue.toFixed(2), avg, c.lastOrderDate, tier]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [5,25,15,15,25,12,12,18,15,12,10].map(w => ({ wch: w }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+        XLSX.writeFile(wb, `Jawaher_Customers_${new Date().toLocaleDateString('en-GB').replace(/\//g,'-')}.xlsx`);
+        this.toast('تم تصدير بيانات العملاء بنجاح ✓', 'success');
+    },
+
+    // ============================================================
+    // ██╗███╗   ██╗██╗   ██╗███████╗███╗   ██╗████████╗ ██████╗ ██████╗ ██╗   ██╗
+    // ██║████╗  ██║██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝
+    // ██║██╔██╗ ██║██║   ██║█████╗  ██╔██╗ ██║   ██║   ██║   ██║██████╔╝ ╚████╔╝ 
+    // ██║██║╚██╗██║╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██║   ██║██╔══██╗  ╚██╔╝  
+    // ██║██║ ╚████║ ╚████╔╝ ███████╗██║ ╚████║   ██║   ╚██████╔╝██║  ██║   ██║   
+    // ╚═╝╚═╝  ╚═══╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
+    // ============ ENHANCED INVENTORY CORRECTION ============
+
+    openInventoryCorrection(itemId) {
+        const item = this.warehouse[itemId]; if (!item) return;
+
+        // Build existing sizes with display labels
+        const sizeEntries = Object.entries(item.sizes || {});
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-j open'; modal.id = 'invCorrModal';
+        modal.innerHTML = `
+        <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
+        <div class="modal-sheet" style="max-width:560px">
+            <div class="modal-handle"></div>
+            <div class="modal-title">
+                <i class="fas fa-clipboard-check" style="color:var(--emerald)"></i>
+                تصحيح جرد — <span style="color:var(--gold)">${item.name}</span>
+            </div>
+
+            <!-- Current Stock Overview -->
+            <div style="background:var(--paper-warm);border-radius:12px;padding:1rem;margin-bottom:1.25rem;border:1px solid var(--border)">
+                <div style="font-size:.78rem;color:var(--ink-mid);font-weight:700;margin-bottom:.6rem">
+                    <i class="fas fa-boxes" style="color:var(--gold)"></i> الرصيد الحالي في المستودع
+                </div>
+                ${sizeEntries.length === 0
+                    ? `<div style="color:var(--ink-mid);font-size:.82rem">لا توجد مقاسات مسجلة</div>`
+                    : `<div style="display:flex;flex-wrap:wrap;gap:.4rem">
+                        ${sizeEntries.map(([k, q]) => {
+                            const dispSize = k.includes(' - ') ? k.split(' - ')[0] : k;
+                            const dispColor = k.includes(' - ') ? k.split(' - ').slice(1).join(' - ') : (item.color || '');
+                            const colorHex = this._colorHex(dispColor) || '#ccc';
+                            return `<div style="background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:.78rem;display:flex;align-items:center;gap:5px">
+                                <span style="font-weight:700">${dispSize}</span>
+                                ${dispColor ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colorHex}"></span><span style="color:var(--ink-mid)">${dispColor}</span>` : ''}
+                                <span style="font-weight:800;color:${q === 0 ? 'var(--ruby-light)' : 'var(--emerald)'}">${q}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>`
+                }
+            </div>
+
+            <!-- Step: Select target size + color -->
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label-j">اختر المقاس واللون المراد تصحيحه <span style="color:var(--ruby-light)">*</span></label>
+                    ${sizeEntries.length > 0 ? `
+                    <div class="select-wrapper mb-2">
+                        <select id="icSizeSelect" class="form-control-j select-j" onchange="app._icOnSizeSelect('${itemId}')">
+                            <option value="">— اختر من الموجود —</option>
+                            ${sizeEntries.map(([k, q]) => {
+                                const dispSize = k.includes(' - ') ? k.split(' - ')[0] : k;
+                                const dispColor = k.includes(' - ') ? k.split(' - ').slice(1).join(' - ') : (item.color || '');
+                                return `<option value="${k}" data-qty="${q}" data-size="${dispSize}" data-color="${dispColor}">${dispSize}${dispColor ? ' — ' + dispColor : ''} (رصيد: ${q})</option>`;
+                            }).join('')}
+                        </select>
+                    </div>
+                    <div style="text-align:center;font-size:.78rem;color:var(--ink-mid);margin-bottom:.5rem">— أو أدخل مقاساً جديداً —</div>` : ''}
+                    <div style="display:flex;gap:.5rem">
+                        <input type="text" id="icNewSize" class="form-control-j" placeholder="المقاس (S, M, L, XL...)" style="flex:1" oninput="app._icClearSelect()">
+                        <div style="display:flex;gap:4px;align-items:center;flex:1">
+                            <input type="text" id="icColor" class="form-control-j" placeholder="اللون..." readonly
+                                style="cursor:pointer;border-right:4px solid var(--border);flex:1"
+                                onclick="app.openColorPicker('main','icColor')">
+                            <button class="btn-j btn-ghost btn-xs-j" onclick="app.openColorPicker('main','icColor')">
+                                <i class="fas fa-palette" style="color:var(--gold)"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live current balance display -->
+                <div id="icCurrentQty" class="col-12" style="display:none">
+                    <div style="background:var(--paper-warm);border:1.5px dashed var(--gold);border-radius:10px;padding:.75rem;text-align:center">
+                        <div style="font-size:.75rem;color:var(--ink-mid)">الكمية الحالية في المستودع</div>
+                        <div id="icCurrentQtyVal" style="font-size:1.8rem;font-weight:800;color:var(--gold);line-height:1.2">0</div>
+                        <div style="font-size:.72rem;color:var(--ink-mid)">قطعة</div>
+                    </div>
+                </div>
+
+                <!-- Actual physical count input -->
+                <div class="col-12">
+                    <label class="form-label-j">
+                        <i class="fas fa-hand-paper" style="color:var(--emerald)"></i>
+                        الكمية الفعلية المعدودة يدوياً <span style="color:var(--ruby-light)">*</span>
+                    </label>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="app.adjustQty('icRealQty',-1);app._icCalcDelta()">−</button>
+                        <input type="number" id="icRealQty" class="form-control-j qty-input" value="0" min="0"
+                            oninput="app._icCalcDelta()">
+                        <button class="qty-btn" onclick="app.adjustQty('icRealQty',1);app._icCalcDelta()">+</button>
+                    </div>
+                </div>
+
+                <!-- Auto-calculated delta -->
+                <div class="col-12" id="icDeltaBox" style="display:none">
+                    <div id="icDeltaContent" style="border-radius:12px;padding:.85rem;text-align:center;border:2px solid">
+                    </div>
+                </div>
+
+                <!-- Reason + Notes -->
+                <div class="col-md-6">
+                    <label class="form-label-j">سبب التصحيح <span style="color:var(--ruby-light)">*</span></label>
+                    <div class="select-wrapper">
+                        <select id="icReason" class="form-control-j select-j">
+                            <option value="تصحيح جرد دوري">تصحيح جرد دوري</option>
+                            <option value="خسارة أو تلف">خسارة أو تلف</option>
+                            <option value="خطأ في الإدخال السابق">خطأ في الإدخال السابق</option>
+                            <option value="مرتجع غير مسجل">مرتجع غير مسجل</option>
+                            <option value="سرقة">سرقة</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-j">ملاحظات إضافية</label>
+                    <input type="text" id="icNotes" class="form-control-j" placeholder="اختياري...">
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button class="btn-j btn-emerald flex-fill" onclick="app.confirmInventoryCorrection('${itemId}')">
+                    <i class="fas fa-check-circle"></i> تأكيد التصحيح وحفظ السجل
+                </button>
+                <button class="btn-j btn-ghost" onclick="document.getElementById('invCorrModal').remove()">إلغاء</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+    },
+
+    _icOnSizeSelect(itemId) {
+        const sel = document.getElementById('icSizeSelect');
+        const opt = sel.selectedOptions[0];
+        if (!opt || !opt.value) return;
+        // Populate color and size fields from selection
+        const color = opt.dataset.color || '';
+        const size = opt.dataset.size || opt.value;
+        const qty = parseInt(opt.dataset.qty) || 0;
+        document.getElementById('icNewSize').value = size;
+        // Set color field
+        const colorInp = document.getElementById('icColor');
+        if (colorInp) {
+            colorInp.value = color;
+            const hex = this._colorHex(color);
+            colorInp.style.borderRight = `4px solid ${hex || 'var(--border)'}`;
+            if (hex) colorInp.dataset.hex = hex;
+        }
+        // Show current balance
+        document.getElementById('icCurrentQty').style.display = 'block';
+        document.getElementById('icCurrentQtyVal').textContent = qty;
+        // Set real qty to current as starting point
+        document.getElementById('icRealQty').value = qty;
+        this._icCalcDelta();
+    },
+
+    _icClearSelect() {
+        const sel = document.getElementById('icSizeSelect');
+        if (sel) sel.value = '';
+        document.getElementById('icCurrentQty').style.display = 'none';
+        document.getElementById('icDeltaBox').style.display = 'none';
+    },
+
+    _icCalcDelta() {
+        const itemId = document.querySelector('[id="invCorrModal"]')
+            ?.querySelector('[onclick*="confirmInventoryCorrection"]')
+            ?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (!itemId) return;
+
+        const item = this.warehouse[itemId];
+        const newSize = document.getElementById('icNewSize')?.value.trim();
+        const color = document.getElementById('icColor')?.value.trim();
+        if (!newSize || !color) { document.getElementById('icDeltaBox').style.display = 'none'; return; }
+
+        const key = color ? `${newSize} - ${color}` : newSize;
+        const currentQty = item?.sizes?.[key] ?? item?.sizes?.[newSize] ?? 0;
+
+        // Show current qty
+        document.getElementById('icCurrentQty').style.display = 'block';
+        document.getElementById('icCurrentQtyVal').textContent = currentQty;
+
+        const realQty = parseInt(document.getElementById('icRealQty')?.value) || 0;
+        const delta = realQty - currentQty;
+
+        const box = document.getElementById('icDeltaBox');
+        const content = document.getElementById('icDeltaContent');
+        box.style.display = 'block';
+
+        if (delta === 0) {
+            content.style.borderColor = 'var(--gold)';
+            content.style.background = 'rgba(201,168,76,.05)';
+            content.innerHTML = `<i class="fas fa-equals" style="color:var(--gold);font-size:1.2rem"></i>
+                <div style="font-weight:800;color:var(--gold);margin-top:.3rem">لا يوجد فرق — الكمية مطابقة</div>`;
+        } else if (delta > 0) {
+            content.style.borderColor = 'var(--emerald)';
+            content.style.background = 'rgba(26,107,74,.05)';
+            content.innerHTML = `<div style="font-size:.8rem;color:var(--ink-mid)">الفرق المكتشف</div>
+                <div style="font-size:2rem;font-weight:900;color:var(--emerald);line-height:1.1">+${delta}</div>
+                <div style="font-size:.78rem;color:var(--emerald)">سيتم إضافة ${delta} قطعة للمستودع</div>`;
+        } else {
+            content.style.borderColor = 'var(--ruby-light)';
+            content.style.background = 'rgba(192,37,86,.05)';
+            content.innerHTML = `<div style="font-size:.8rem;color:var(--ink-mid)">الفرق المكتشف</div>
+                <div style="font-size:2rem;font-weight:900;color:var(--ruby-light);line-height:1.1">${delta}</div>
+                <div style="font-size:.78rem;color:var(--ruby-light)">سيتم خصم ${Math.abs(delta)} قطعة من المستودع</div>`;
+        }
+    },
+
+    async confirmInventoryCorrection(itemId) {
+        const item = this.warehouse[itemId]; if (!item) return;
+
+        const newSize = document.getElementById('icNewSize')?.value.trim();
+        const color = document.getElementById('icColor')?.value.trim();
+        const realQty = parseInt(document.getElementById('icRealQty')?.value);
+        const reason = document.getElementById('icReason')?.value || 'تصحيح جرد دوري';
+        const notes = document.getElementById('icNotes')?.value.trim() || '';
+
+        if (!newSize) { this.toast('يرجى تحديد المقاس', 'error'); return; }
+        if (!color)   { this.toast('يرجى تحديد اللون', 'error'); return; }
+        if (isNaN(realQty) || realQty < 0) { this.toast('يرجى إدخال الكمية الفعلية', 'error'); return; }
+
+        const key = `${newSize} - ${color}`;
+        const currentQty = item.sizes?.[key] ?? item.sizes?.[newSize] ?? 0;
+        const delta = realQty - currentQty;
+
+        if (delta === 0) {
+            this.toast('الكمية الفعلية مطابقة للمخزون — لا حاجة لتصحيح', 'info');
+            document.getElementById('invCorrModal')?.remove();
+            return;
+        }
+
+        if (realQty < 0) {
+            this.toast('الكمية لا يمكن أن تكون سالبة', 'error'); return;
+        }
+
+        const confirmMsg = delta > 0
+            ? `سيتم إضافة ${delta} قطعة. هل أنت متأكد؟`
+            : `تحذير: سيتم خصم ${Math.abs(delta)} قطعة. الكمية الجديدة ستكون ${realQty}. متأكد؟`;
+        if (!confirm(confirmMsg)) return;
+
+        const updates = {};
+        updates[`jawaher_warehouse/${itemId}/sizes/${key}`] = realQty;
+
+        // Store variation info for color display
+        if (!item.variations?.[key]) {
+            const vHex = document.getElementById('icColor')?.dataset?.hex || '';
+            updates[`jawaher_warehouse/${itemId}/variations/${key}`] = {
+                size: newSize, color, hex: vHex,
+                barcode: 'JW' + Math.random().toString(36).substr(2, 6).toUpperCase()
+            };
+        }
+        if (!item.sizeColors?.[key]) {
+            updates[`jawaher_warehouse/${itemId}/sizeColors/${key}`] = color;
+        }
+
+        await update(ref(db), updates);
+
+        const logDetail = `تصحيح جرد: من ${currentQty} → ${realQty} (فرق: ${delta > 0 ? '+' : ''}${delta}) | اللون: ${color} | المقاس: ${newSize} | السبب: ${reason}${notes ? ' | ملاحظات: ' + notes : ''}`;
+        this.log('stock_correction', itemId, logDetail);
+
+        this.toast(`تم تصحيح الجرد بنجاح ✓ (${delta > 0 ? '+' : ''}${delta} قطعة)`, delta >= 0 ? 'success' : 'warning');
+        document.getElementById('invCorrModal')?.remove();
+    },
+
+    
     initKeys() {
         document.addEventListener('keydown', e => {
             if (!this.user) return;

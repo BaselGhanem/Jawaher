@@ -123,6 +123,7 @@
             <button class="nav-btn admin-only" data-page="returns"     onclick="app.gotoPage('returns')"    ><i class="fas fa-undo-alt"></i>     المرتجعات</button>
             <button class="nav-btn admin-only" data-page="definitions" onclick="app.gotoPage('definitions')"><i class="fas fa-cog"></i>          التعريفات</button>
             <button class="nav-btn admin-only" data-page="logs"        onclick="app.gotoPage('logs')"       ><i class="fas fa-history"></i>      السجل</button>
+            <button class="nav-btn admin-only" data-page="customers"  onclick="app.gotoPage('customers')"  ><i class="fas fa-users"></i>        العملاء</button>
         </div>
 
         <!-- ── Main Content ─────────────────────────────────── -->
@@ -835,6 +836,88 @@
                 </div>
             </div> <!-- نهاية صفحة حركة الصنف -->
 
+
+            <!-- ════ CUSTOMERS CRM ════ -->
+            <div id="page-customers" class="page">
+                <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h1 class="page-title">إدارة العملاء</h1>
+                        <p class="page-subtitle">قاعدة بيانات العملاء — CRM متكامل</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        <div class="search-bar" style="width:220px">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="crmSearch" placeholder="بحث بالاسم أو الموبايل..." oninput="app.renderCustomers()">
+                        </div>
+                        <button class="btn-j btn-emerald btn-sm-j" onclick="app.exportCustomersExcel()">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="kpi-grid" id="crmKpiGrid" style="margin-bottom:1.5rem"></div>
+                <div class="card-j p-3 mb-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-3">
+                            <div class="select-wrapper">
+                                <select id="crmSortBy" class="form-control-j select-j" onchange="app.renderCustomers()">
+                                    <option value="revenue">ترتيب: الإيرادات الأعلى</option>
+                                    <option value="orders">ترتيب: عدد الطلبات</option>
+                                    <option value="name">ترتيب: الاسم</option>
+                                    <option value="lastOrder">ترتيب: آخر طلب</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="select-wrapper">
+                                <select id="crmFilterGov" class="form-control-j select-j" onchange="app.renderCustomers()">
+                                    <option value="">كل المحافظات</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="select-wrapper">
+                                <select id="crmFilterStatus" class="form-control-j select-j" onchange="app.renderCustomers()">
+                                    <option value="">كل العملاء</option>
+                                    <option value="vip">VIP (5+ طلبات)</option>
+                                    <option value="regular">منتظم (2–4)</option>
+                                    <option value="new">جديد (1 طلب)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <span id="crmResultCount" style="font-size:.82rem;color:var(--ink-mid);font-weight:700"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-j" style="overflow:hidden">
+                    <div class="table-wrap" style="max-height:580px;overflow-y:auto">
+                        <table class="table-j">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px">#</th>
+                                    <th>العميل</th>
+                                    <th>الموبايل</th>
+                                    <th>المحافظة</th>
+                                    <th>العنوان</th>
+                                    <th style="text-align:center">الطلبات</th>
+                                    <th style="text-align:center">مكتملة</th>
+                                    <th style="text-align:center">الإيرادات</th>
+                                    <th style="text-align:center">متوسط الطلب</th>
+                                    <th style="text-align:center">آخر طلب</th>
+                                    <th style="text-align:center">تصنيف</th>
+                                    <th style="text-align:center">واتساب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crmTableBody">
+                                <tr><td colspan="12" style="text-align:center;padding:2rem;color:var(--ink-mid)">
+                                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;color:var(--gold)"></i>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- ════ END CUSTOMERS CRM ════ -->
         </div><!-- نهاية الـ main-content بشكل صحيح -->
 
         <!-- ── Bottom Nav (Mobile) ──────────────────────────── -->
